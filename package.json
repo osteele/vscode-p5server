@@ -57,7 +57,8 @@
     "test": "node ./out/test/runTest.js"
   },
   "dependencies": {
-    "p5-server": "^0.1.4"
+    "open": "^8.2.1",
+    "p5-server": "^0.1.5"
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",
