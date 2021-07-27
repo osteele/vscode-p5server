@@ -10,23 +10,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   const statusBarOpenItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarOpenItem.tooltip = "Click to start the p5 server";
-  statusBarOpenItem.command = 'p5-server.open-in-browser';
+  statusBarOpenItem.command = 'extension.p5-server.open-in-browser';
 
   const statusBarToggleItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  defaultStatusBar();
+  updateStatusBarItems();
   statusBarToggleItem.show();
 
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.start', startServer));
+  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.start', startServer));
 
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.open-in-browser', () => {
-    if (!server) {
-      startServer();
-    } else if (server?.url) {
-      open(server.url);
-    }
-  }));
-
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.stop', () => {
+  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.stop', () => {
     if (!server) { return; }
 
     let sbm = vscode.window.setStatusBarMessage("Shutting down the p5 server…");
@@ -36,15 +28,23 @@ export function activate(context: vscode.ExtensionContext) {
     sbm = vscode.window.setStatusBarMessage('p5 server has been shut down.');
     setTimeout(() => sbm.dispose(), 10000);
 
-    defaultStatusBar();
+    updateStatusBarItems();
     statusBarOpenItem.hide();
     sbm.dispose();
   }));
 
-  function defaultStatusBar() {
-    statusBarToggleItem.text = "Start p5-server";
+  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.open-in-browser', () => {
+    if (!server) {
+      startServer();
+    } else if (server?.url) {
+      open(server.url);
+    }
+  }));
+
+  function updateStatusBarItems() {
+    statusBarToggleItem.text = "$(extensions-star-empty) P5 Server";
     statusBarToggleItem.tooltip = "Click to start the p5 server";
-    statusBarToggleItem.command = 'p5-server.start';
+    statusBarToggleItem.command = 'extension.p5-server.start';
   }
 
   async function startServer() {
@@ -61,12 +61,13 @@ export function activate(context: vscode.ExtensionContext) {
     sbm = vscode.window.setStatusBarMessage(`p5-server is running at ${server.url}`);
     setTimeout(() => sbm.dispose(), 10000);
 
-    statusBarToggleItem.text = "Stop p5-server";
+    statusBarToggleItem.text = "$(extensions-star-full) P5 Server";
     statusBarToggleItem.tooltip = "Stop p5-server";
-    statusBarToggleItem.command = 'p5-server.stop';
+    statusBarToggleItem.command = 'extension.p5-server.stop';
 
-    statusBarOpenItem.text = `Open a browser`;
+    statusBarOpenItem.text = `$(ports-open-browser-icon) Open P5 browser`;
     statusBarOpenItem.tooltip = `Open ${server.url} in a browser`;
+    statusBarOpenItem.command = 'extension.p5-server.open-in-browser';
     statusBarOpenItem.show();
 
     open(server.url);

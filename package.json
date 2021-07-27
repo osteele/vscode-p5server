@@ -35,15 +35,15 @@
   "contributes": {
     "commands": [
       {
-        "command": "p5-server.start",
+        "command": "extension.p5-server.start",
         "title": "Start the P5 server"
       },
       {
-        "command": "p5-server.stop",
+        "command": "extension.p5-server.stop",
         "title": "Stop the P5 server"
       },
       {
-        "command": "p5-server.open-in-browser",
+        "command": "extension.p5-server.open-in-browser",
         "title": "Open the p5 server URL in a browser"
       }
     ]
