@@ -14,25 +14,27 @@ export function activate(context: vscode.ExtensionContext) {
   defaultStatusBar();
   statusBarToggleItem.show();
 
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.start', () => {
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.start', async () => {
     const wsFolders = vscode.workspace?.workspaceFolders;
     const wsPath = wsFolders ? wsFolders[0].uri.fsPath : '.';
+
     server?.stop();
     statusBarOpenItem.hide();
     let sbm = vscode.window.setStatusBarMessage(`Starting p5 server at ${wsPath}`);
-    server = new Server({ root: wsPath }).start((url: string) => {
-      sbm.dispose();
-      sbm = vscode.window.setStatusBarMessage(`p5-server is running at ${url}`);
-      setTimeout(() => sbm.dispose(), 10000);
 
-      statusBarToggleItem.text = "Stop p5-server";
-      statusBarToggleItem.tooltip = "Stop p5-server";
-      statusBarToggleItem.command = 'p5-server.stop';
+    server = new Server({ root: wsPath });
+    await server.start();
+    sbm.dispose();
+    sbm = vscode.window.setStatusBarMessage(`p5-server is running at ${server.url}`);
+    setTimeout(() => sbm.dispose(), 10000);
 
-      statusBarOpenItem.text = `Open a browser`;
-      statusBarOpenItem.tooltip = `Open ${url} in a browser`;
-      statusBarOpenItem.show();
-    });
+    statusBarToggleItem.text = "Stop p5-server";
+    statusBarToggleItem.tooltip = "Stop p5-server";
+    statusBarToggleItem.command = 'p5-server.stop';
+
+    statusBarOpenItem.text = `Open a browser`;
+    statusBarOpenItem.tooltip = `Open ${server.url} in a browser`;
+    statusBarOpenItem.show();
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.stop', () => {
