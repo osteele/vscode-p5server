@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/osteele/p5server-vscode-extension#readme",
   "activationEvents": [
-    "onCommand:p5-server.start"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -41,6 +41,10 @@
       {
         "command": "p5-server.stop",
         "title": "Stop the P5 server"
+      },
+      {
+        "command": "p5-server.open-in-browser",
+        "title": "Open the p5 server URL in a browser"
       }
     ]
   },
