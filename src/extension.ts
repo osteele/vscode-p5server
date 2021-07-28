@@ -25,12 +25,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     server.stop();
     server = null;
-    sbm = vscode.window.setStatusBarMessage('p5 server has been shut down.');
+
+    sbm.dispose();
+    sbm = vscode.window.setStatusBarMessage('The p5 server has been shut down.');
     setTimeout(() => sbm.dispose(), 10000);
 
     updateStatusBarItems();
     statusBarOpenItem.hide();
-    sbm.dispose();
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.open-in-browser', () => {
@@ -70,7 +71,9 @@ export function activate(context: vscode.ExtensionContext) {
     statusBarOpenItem.command = 'extension.p5-server.open-in-browser';
     statusBarOpenItem.show();
 
-    open(server.url);
+    if (server.url) {
+      open(server.url);
+    }
   };
 }
 
