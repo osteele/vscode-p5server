@@ -18,6 +18,7 @@ Launch a local developer server that knows about
   displayed in the body of the page (you don't have to check the console).
 * **P5-aware directory listings**. Viewing a directory in the browser lists the
   sketches, folders, other files in that directory.
+* **Create scripts from templates**.
 
 ## Install
 
@@ -37,11 +38,12 @@ It adds these commands to the command palette:
 'P5 Server: Start' // Start the P5 server
 'P5 Server: Stop' // Stop the P5 server
 'P5 Server: Open In Browser' // Open the p5 server URL in a browser
+'P5 Server: Create Script' // Create a new p5.js sketch
 ```
 
 ## Planned Features
 
-* Create scripts from templates
+* Add a UI for customizing generated sketches, using the options in [p5-server](https://github.com/osteele/p5-server#p5-create-sketch-name---no-html).
 
 ## Technical Notes
 
