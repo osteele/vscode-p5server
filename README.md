@@ -21,8 +21,9 @@ Launch a local developer server that knows about
 
 ## Install
 
-Follow the instructions in the Marketplace, or run the following in the command
-palette:
+Follow the instructions in the
+[Marketplace](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server),
+or run the following in the command palette:
 
 ```sh
 ext install osteele.p5-server
@@ -33,10 +34,23 @@ ext install osteele.p5-server
 It adds these commands to the command palette:
 
 ```text
-'P5 Server: Start'
-'P5 Server: Stop'
-'P5 Server: Open In Browser'
+'P5 Server: Start' // Start the P5 server
+'P5 Server: Stop' // Stop the P5 server
+'P5 Server: Open In Browser' // Open the p5 server URL in a browser
 ```
+
+## Planned Features
+
+* Create scripts from templates
+
+## Technical Notes
+
+The sketch analysis, library inference, and server features are provided by
+[p5-server](https://github.com/osteele/p5-server). That package provides much of
+the same functionality as this extension, via the command-line. See its
+documentation for [implementation
+notes](https://github.com/osteele/p5-server#implementation-notes) and
+[limitations](https://github.com/osteele/p5-server#limitations).
 
 ## Acknowledgements
 
@@ -45,9 +59,7 @@ It adds these commands to the command palette:
   [does more](#features) for p5.js sketches, but does not implement Live
   Server's [extensive list of features for general web
   development](https://github.com/ritwickdey/vscode-live-server#features).
-* The sketch analysis, library inference, and server features are provided by
-  [p5-server](https://github.com/osteele/p5-server). That package provides much
-  of the same functionality as this extension, via the command-line.
+* Uses [open](https://github.com/sindresorhus/open#readme)
 
 ## License
 
