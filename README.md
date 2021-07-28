@@ -38,7 +38,8 @@ It adds these commands to the command palette:
 'P5 Server: Start' // Start the P5 server
 'P5 Server: Stop' // Stop the P5 server
 'P5 Server: Open In Browser' // Open the p5 server URL in a browser
-'P5 Server: Create Script' // Create a new p5.js sketch
+'Create p5.js Sketch File' // Create a new p5.js JavaScript sketch file
+'Create p5.js Sketch Folder' // Create a new folder with a p5.js index.html and a sketch.js file
 ```
 
 ## Planned Features

@@ -27,38 +27,8 @@ export function activate(context: vscode.ExtensionContext) {
       open(server.url);
     }
   }));
-  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.create-sketch', async () => {
-    let sketchName = await vscode.window
-      .showInputBox({
-        value: ``,
-        prompt: `Enter the name of the p5.js sketch`,
-        ignoreFocusOut: true,
-      });
-    if (!sketchName) { return; }
-    sketchName = sketchName.trim();
-    if (sketchName.length === 0) { return; }
-    if (!sketchName.endsWith('.js')) {
-      sketchName += '.js';
-    }
-
-    const wsFolders = vscode.workspace?.workspaceFolders;
-    const wsPath = wsFolders ? wsFolders[0].uri.fsPath : '.';
-
-    const filePath = path.join(wsPath, sketchName);
-    const dirPath = path.dirname(filePath);
-    const basePath = path.basename(sketchName);
-    const sketch = new Sketch(dirPath, null, basePath);
-    try {
-      sketch.generate();
-    } catch (e) {
-      vscode.window.showErrorMessage(e.message);
-      console.error(e.message);
-      return;
-    }
-
-    vscode.commands.executeCommand("revealInExplorer", dirPath);
-    vscode.window.showTextDocument(Uri.file(filePath));
-  }));
+  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.create-sketch-file', createSketch.bind(null, false)));
+  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.create-sketch-folder', createSketch.bind(null, true)));
 
   function updateStatusBarItems() {
     statusBarToggleItem.text = "$(extensions-star-empty) P5 Server";
@@ -108,6 +78,42 @@ export function activate(context: vscode.ExtensionContext) {
 
     updateStatusBarItems();
     statusBarOpenItem.hide();
+  }
+
+
+  async function createSketch(folder: boolean) {
+    let sketchName = await vscode.window
+      .showInputBox({
+        value: ``,
+        prompt: `Enter the name of the p5.js sketch`,
+        ignoreFocusOut: true,
+      });
+    if (!sketchName) { return; }
+    sketchName = sketchName.trim();
+    if (sketchName.length === 0) { return; }
+    if (!folder && !sketchName.endsWith('.js')) {
+      sketchName += '.js';
+    }
+
+    const wsFolders = vscode.workspace?.workspaceFolders;
+    const wsPath = wsFolders ? wsFolders[0].uri.fsPath : '.';
+
+    const filePath = path.join(wsPath, sketchName);
+    const dirPath = path.dirname(filePath);
+    const basePath = path.basename(sketchName);
+    const sketch = folder
+      ? new Sketch(filePath, 'index.html', 'sketch.js', { title: sketchName })
+      : new Sketch(dirPath, null, basePath);
+    try {
+      sketch.generate();
+    } catch (e) {
+      vscode.window.showErrorMessage(e.message);
+      console.error(e.message);
+      return;
+    }
+
+    vscode.commands.executeCommand("revealInExplorer", dirPath);
+    vscode.window.showTextDocument(Uri.file(path.join(sketch.dirPath, sketch.jsSketchPath)));
   }
 }
 

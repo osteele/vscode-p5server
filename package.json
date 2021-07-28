@@ -47,8 +47,12 @@
         "title": "P5 Server: Open in Browser"
       },
       {
-        "command": "extension.p5-server.create-sketch",
-        "title": "P5 Server: Create Sketch"
+        "command": "extension.p5-server.create-sketch-file",
+        "title": "Create p5.js Sketch File"
+      },
+      {
+        "command": "extension.p5-server.create-sketch-folder",
+        "title": "Create p5.js Sketch Folder"
       }
     ]
   },
