@@ -1,61 +1,54 @@
 # p5-server
 
-Launch a local developer server that knows about p5.js sketches.
-
-The server provides features that make it easier to manage collections of
-sketches (smart directory listings, JavaScript-only sketches); and that automate
-some of the features that I see beginners struggle with (noticing syntax errors,
-adding libraries).
+Launch a local developer server that knows about
+[p5.js](https://p5js.org/libraries/) sketches.
 
 ## Features
 
-### Live reload
+* **Live reload**. The browser reloads the page, when any file in its directory is
+  modified.
+* **JavaScript-only sketches**. Run a sketch that's just a JavaScript file (e.g.
+  `p5 serve sketch.js`). You don't need to create an HTML wrapper.
+* **Automatic library includes**. If the server detects that your JavaScript-only
+  sketch requires a [p5.js library](https://p5js.org/libraries/), it will
+  automatically include it. (See
+  [here](https://github.com/osteele/p5-server#automatic-library-inclusion) for
+  how this works.)
+* **In-Page syntax errors**. If a JavaScript file has a syntax error, it is
+  displayed in the body of the page (you don't have to check the console).
+* **P5-aware directory listings**. Viewing a directory in the browser lists the
+  sketches, folders, other files in that directory.
 
-The browser reloads the page, when any file in its directory is modified.
+## Install
 
-### JavaScript-only sketches
+Follow the instructions in the Marketplace, or run the following in the command
+palette:
 
-Click on a JavaScript sketch file (or run e.g. `p5 serve sketch.js`) to run a
-p5.js sketch that consists of a single JavaScript file, without an associated
-HTML file.
+```sh
+ext install osteele.p5-server
+```
 
-### Automatic library inclusion
+## Usage
 
-JavaScript-only sketches automatically include many of the libraries that are
-isted on the [p5.js Libraries page](https://p5js.org/libraries/), as well as
-[dat.gui](https://github.com/dataarts/dat.gui). For example, if the sketch calls
-`loadSound`, it will include the p5.sound library. If it refers to `ml5`, it
-will include the ml5.js library.
+It adds these commands to the command palette:
 
-### In-Page Syntax errors
-
-Syntax error are displayed in the HTML body. This way you see them ecven if you
-don't open the browser developer console.
-
-(Yes, everybody should do program development with the console open or a
-debugger attached. I've still found this to be a barrier to getting started with
-p5.js: no matter of classroom instruction reduces the time to build that habit
-to zero.)
-
-### Directory listing
-
-Viewing a directory in the browser lists the sketches in that directory.
-
-### Sketch generation
-
-`p5 generate` creates an `index.html` / `sketch.js` pair of files.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+```text
+'P5 Server: Start'
+'P5 Server: Stop'
+'P5 Server: Open In Browser'
+```
 
 ## Acknowledgements
 
-Inspired by Ritwick Dey's [Live Server extension](https://ritwickdey.github.io/vscode-live-server/).
+* Heavily inspired by Ritwick Dey's fantastic [Live Server
+  extension](https://ritwickdey.github.io/vscode-live-server/). This extension
+  [does more](#features) for p5.js sketches, but does not implement Live
+  Server's [extensive list of features for general web
+  development](https://github.com/ritwickdey/vscode-live-server#features).
+* The sketch analysis, library inference, and server features are provided by
+  [p5-server](https://github.com/osteele/p5-server). That package provides much
+  of the same functionality as this extension, via the command-line.
+
+## License
+
+MIT © Oliver Steele
