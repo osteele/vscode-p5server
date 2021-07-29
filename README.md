@@ -9,7 +9,7 @@ Launch a local developer server that knows about
   modified.
 * **JavaScript-only sketches**. Run a sketch that's just a JavaScript file (e.g.
   `p5 serve sketch.js`). You don't need to create an HTML wrapper.
-* **Automatic library includes**. If the server detects that your JavaScript-only
+* **Automatic library includes**. If the server detects that a JavaScript-only
   sketch requires a [p5.js library](https://p5js.org/libraries/), it will
   automatically include it. (See
   [here](https://github.com/osteele/p5-server#automatic-library-inclusion) for
@@ -49,8 +49,8 @@ It adds these commands to the command palette:
 ## Technical Notes
 
 The sketch analysis, library inference, and server features are provided by
-[p5-server](https://github.com/osteele/p5-server). That package provides much of
-the same functionality as this extension, via the command-line. See its
+[p5-server](https://github.com/osteele/p5-server) library. That library provides
+much of the same functionality as this extension, via the command-line. See its
 documentation for [implementation
 notes](https://github.com/osteele/p5-server#implementation-notes) and
 [limitations](https://github.com/osteele/p5-server#limitations).
