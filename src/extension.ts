@@ -2,11 +2,15 @@ import * as vscode from 'vscode';
 import { Server, Sketch } from 'p5-server';
 import open = require('open');
 import path = require('path');
-import { Uri } from 'vscode';
+import { Uri, window } from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
   let server: Server | null;
   let state: "stopped" | "starting" | "running" | "stopping" = "stopped";
+
+  if (!vscode.workspace.workspaceFolders) {
+    return;
+  }
 
   const statusBarOpenItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarOpenItem.text = `$(ports-open-browser-icon) Open P5 browser`;
@@ -62,8 +66,13 @@ export function activate(context: vscode.ExtensionContext) {
     state = 'starting';
 
     try {
-      const wsFolders = vscode.workspace?.workspaceFolders;
-      const wsPath = wsFolders ? wsFolders[0].uri.fsPath : '.';
+      const wsFolders = vscode.workspace?.workspaceFolders?.map(f => f.uri.fsPath) || [];
+      const wsPath = wsFolders.length > 1
+        ? await vscode.window.showQuickPick(
+          wsFolders,
+          { placeHolder: 'Select a folder to serve' })
+        : (wsFolders[0] || '.');
+      if (!wsPath) { return; }
 
       server?.stop();
       server = null;
