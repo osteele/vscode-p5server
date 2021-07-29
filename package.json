@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/osteele/vscode-p5server#readme",
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {

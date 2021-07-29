@@ -6,17 +6,15 @@ import { Uri } from 'vscode';
 
 export function activate(context: vscode.ExtensionContext) {
   let server: Server | null;
-
-  console.log('Congratulations, your extension "p5-server" is now active!');
-  console.info(Server);
+  let state: "stopped" | "starting" | "running" | "stopping" = "stopped";
 
   const statusBarOpenItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarOpenItem.tooltip = "Click to start the p5 server";
+  statusBarOpenItem.text = `$(ports-open-browser-icon) Open P5 browser`;
   statusBarOpenItem.command = 'extension.p5-server.open-in-browser';
 
-  const statusBarToggleItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  const statusBarServerItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   updateStatusBarItems();
-  statusBarToggleItem.show();
+  statusBarServerItem.show();
 
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.start', startServer));
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.stop', stopServer));
@@ -31,55 +29,84 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.create-sketch-folder', createSketch.bind(null, true)));
 
   function updateStatusBarItems() {
-    statusBarToggleItem.text = "$(extensions-star-empty) P5 Server";
-    statusBarToggleItem.tooltip = "Click to start the p5 server";
-    statusBarToggleItem.command = 'extension.p5-server.start';
+    switch (state) {
+      case 'running':
+        statusBarServerItem.text = "$(extensions-star-full) P5 Server";
+        statusBarServerItem.tooltip = "Stop the P5 server";
+        statusBarServerItem.command = 'extension.p5-server.stop';
+        statusBarOpenItem.tooltip = `Open ${server!.url} in a browser`;
+        break;
+      case 'stopped':
+        statusBarServerItem.text = "$(extensions-star-empty) P5 Server";
+        statusBarServerItem.tooltip = "Click to start the P5 server";
+        statusBarServerItem.command = 'extension.p5-server.start';
+        break;
+      case 'starting':
+        statusBarServerItem.text = "$(extensions-star-full~spin) P5 Server";
+        statusBarServerItem.tooltip = "The P5 server is starting…";
+        break;
+      case 'stopping':
+        statusBarServerItem.text = "$(extensions-star-empty~spin) P5 Server";
+        statusBarServerItem.tooltip = "The P5 server is stopping";
+        break;
+    }
+    if (state === 'running') {
+      statusBarOpenItem.show();
+    } else {
+      statusBarOpenItem.hide();
+    }
   }
 
   async function startServer() {
-    const wsFolders = vscode.workspace?.workspaceFolders;
-    const wsPath = wsFolders ? wsFolders[0].uri.fsPath : '.';
+    if (state !== 'stopped') { return; }
+    state = 'starting';
 
-    server?.stop();
-    statusBarOpenItem.hide();
-    let sbm = vscode.window.setStatusBarMessage(`Starting p5 server at ${wsPath}`);
+    try {
+      const wsFolders = vscode.workspace?.workspaceFolders;
+      const wsPath = wsFolders ? wsFolders[0].uri.fsPath : '.';
 
-    server = new Server({ root: wsPath });
-    await server.start();
-    sbm.dispose();
-    sbm = vscode.window.setStatusBarMessage(`p5-server is running at ${server.url}`);
-    setTimeout(() => sbm.dispose(), 10000);
+      server?.stop();
+      server = null;
 
-    statusBarToggleItem.text = "$(extensions-star-full) P5 Server";
-    statusBarToggleItem.tooltip = "Stop p5-server";
-    statusBarToggleItem.command = 'extension.p5-server.stop';
+      let sbm = vscode.window.setStatusBarMessage(`Starting the P5 server at ${wsPath}`);
 
-    statusBarOpenItem.text = `$(ports-open-browser-icon) Open P5 browser`;
-    statusBarOpenItem.tooltip = `Open ${server.url} in a browser`;
-    statusBarOpenItem.command = 'extension.p5-server.open-in-browser';
-    statusBarOpenItem.show();
+      statusBarServerItem.text = "$(extensions-star-empty) P5 Server";
+      server = new Server({ root: wsPath });
+      await server.start();
+      state = 'running';
 
-    if (server.url) {
-      open(server.url);
+      sbm.dispose();
+      sbm = vscode.window.setStatusBarMessage(`p5-server is running at ${server.url}`);
+      setTimeout(() => sbm.dispose(), 10000);
+
+      if (server.url) {
+        open(server.url);
+      }
+    } finally {
+      if (state !== 'running') {
+        state = 'stopped';
+      }
+      updateStatusBarItems();
     }
   }
 
   function stopServer() {
     if (!server) { return; }
+    if (state !== 'running') { return; }
+    state = 'stopping';
 
     let sbm = vscode.window.setStatusBarMessage("Shutting down the p5 server…");
 
     server.stop();
     server = null;
+    state = 'stopped';
 
     sbm.dispose();
-    sbm = vscode.window.setStatusBarMessage('The p5 server has been shut down.');
+    sbm = vscode.window.setStatusBarMessage('The P5 server is no longer running.');
     setTimeout(() => sbm.dispose(), 10000);
 
     updateStatusBarItems();
-    statusBarOpenItem.hide();
   }
-
 
   async function createSketch(folder: boolean) {
     let sketchName = await vscode.window
