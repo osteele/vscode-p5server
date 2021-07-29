@@ -3,17 +3,19 @@ import { Server, Sketch } from 'p5-server';
 import open = require('open');
 import path = require('path');
 import { Uri, window } from 'vscode';
+import { stringify } from 'querystring';
 
 export function activate(context: vscode.ExtensionContext) {
   let server: Server | null;
   let state: "stopped" | "starting" | "running" | "stopping" = "stopped";
+  let wsPath: string | undefined;
 
   if (!vscode.workspace.workspaceFolders) {
     return;
   }
 
   const statusBarOpenItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarOpenItem.text = `$(ports-open-browser-icon) Open P5 browser`;
+  statusBarOpenItem.text = `$(ports-open-browser-icon)Browse P5 sketch`;
   statusBarOpenItem.command = 'extension.p5-server.open-in-browser';
 
   const statusBarServerItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -23,10 +25,10 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.start', startServer));
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.stop', stopServer));
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.open-in-browser', () => {
-    if (!server) {
+    if (state === 'stopped') {
       startServer();
-    } else if (server?.url) {
-      open(server.url);
+    } else if (state === 'running' && server?.url) {
+      openBrowser();
     }
   }));
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.create-sketch-file', createSketch.bind(null, false)));
@@ -35,22 +37,22 @@ export function activate(context: vscode.ExtensionContext) {
   function updateStatusBarItems() {
     switch (state) {
       case 'running':
-        statusBarServerItem.text = "$(extensions-star-full) P5 Server";
+        statusBarServerItem.text = "$(extensions-star-full)P5 Server";
         statusBarServerItem.tooltip = "Stop the P5 server";
         statusBarServerItem.command = 'extension.p5-server.stop';
         statusBarOpenItem.tooltip = `Open ${server!.url} in a browser`;
         break;
       case 'stopped':
-        statusBarServerItem.text = "$(extensions-star-empty) P5 Server";
+        statusBarServerItem.text = "$(extensions-star-empty)P5 Server";
         statusBarServerItem.tooltip = "Click to start the P5 server";
         statusBarServerItem.command = 'extension.p5-server.start';
         break;
       case 'starting':
-        statusBarServerItem.text = "$(extensions-star-full~spin) P5 Server";
+        statusBarServerItem.text = "$(extensions-star-full~spin)P5 Server";
         statusBarServerItem.tooltip = "The P5 server is starting…";
         break;
       case 'stopping':
-        statusBarServerItem.text = "$(extensions-star-empty~spin) P5 Server";
+        statusBarServerItem.text = "$(extensions-star-empty~spin)P5 Server";
         statusBarServerItem.tooltip = "The P5 server is stopping";
         break;
     }
@@ -67,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     try {
       const wsFolders = vscode.workspace?.workspaceFolders?.map(f => f.uri.fsPath) || [];
-      const wsPath = wsFolders.length > 1
+      wsPath = wsFolders.length > 1
         ? await vscode.window.showQuickPick(
           wsFolders,
           { placeHolder: 'Select a folder to serve' })
@@ -88,15 +90,13 @@ export function activate(context: vscode.ExtensionContext) {
       sbm = vscode.window.setStatusBarMessage(`p5-server is running at ${server.url}`);
       setTimeout(() => sbm.dispose(), 10000);
 
-      if (server.url) {
-        open(server.url);
-      }
     } finally {
       if (state !== 'running') {
         state = 'stopped';
       }
       updateStatusBarItems();
     }
+    openBrowser();
   }
 
   function stopServer() {
@@ -150,6 +150,22 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.executeCommand("revealInExplorer", dirPath);
     vscode.window.showTextDocument(Uri.file(path.join(sketch.dirPath, sketch.jsSketchPath)));
+  }
+
+  function openBrowser() {
+    if (!server?.url || !wsPath) {
+      return;
+    }
+
+    // TODO if it's a js file associated with a sketch, open the sketch instead
+    let editorPath = window.activeTextEditor?.document.fileName;
+    if (editorPath) {
+      editorPath = path.relative(wsPath, editorPath);
+    }
+    const reqPath = editorPath && /\.(js|html)/.test(editorPath) && !/^(\.){1,2}\//.test(editorPath)
+      ? '/' + editorPath
+      : '';
+    open(server.url + reqPath);
   }
 }
 
