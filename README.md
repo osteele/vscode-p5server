@@ -3,6 +3,8 @@
 Launch a local developer server that knows about
 [p5.js](https://p5js.org/libraries/) sketches.
 
+![screenshot](docs/screenshot.png)
+
 ## Features
 
 * **Live reload**. The browser reloads the page, when any file in its directory is
