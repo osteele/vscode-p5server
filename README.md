@@ -3,7 +3,15 @@
 Launch a local developer server that knows about
 [p5.js](https://p5js.org/libraries/) sketches.
 
-![screenshot](docs/screenshot.png)
+![browser directory listing](docs/screenshot.png)
+
+An explorer view shows the sketches in the current workspace.
+
+![explorer](docs/explorer.png)
+
+The status bar icons can be used to start and stop the server, and open the current editor in the browser.
+
+![status bar](docs/status-bar.png)
 
 ## Features
 
@@ -20,7 +28,10 @@ Launch a local developer server that knows about
   displayed in the body of the page (you don't have to check the console).
 * **P5-aware directory listings**. Viewing a directory in the browser lists the
   sketches, folders, other files in that directory.
-* **Create scripts from templates**.
+* **Sketch scripts generation**. Create a JavaScript-only sketch that contains a
+  minimal `setup()` and `draw()` function; or create a pair of `index.html` and
+  `sketch.js`.
+** Sketch explorer**. A view of the sketches in the current workspace.
 
 ## Install
 
