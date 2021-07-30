@@ -12,9 +12,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   const rootPath = (vscode.workspace.workspaceFolders && (vscode.workspace.workspaceFolders.length > 0))
     ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
-
-  const sketchTreeProvider = new SketchTreeProvider(rootPath || '.');
+  const sketchTreeProvider = new SketchTreeProvider(rootPath);
   vscode.window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
+  vscode.commands.registerCommand('p5sketchExplorer.refresh', () =>
+    sketchTreeProvider.refresh()
+  );
 
   if (!vscode.workspace.workspaceFolders) {
     return;
@@ -154,8 +156,9 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    vscode.commands.executeCommand("revealInExplorer", dirPath);
     vscode.window.showTextDocument(Uri.file(path.join(sketch.dirPath, sketch.jsSketchPath)));
+    vscode.commands.executeCommand('p5sketchExplorer.refresh');
+    vscode.commands.executeCommand("revealInExplorer", dirPath);
   }
 
   function openBrowser() {
