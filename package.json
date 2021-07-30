@@ -54,26 +54,17 @@
       {
         "command": "extension.p5-server.create-sketch-file",
         "title": "Create a p5.js Sketch File",
-        "icon": {
-          "light": "resources/light/folder.svg",
-          "dark": "resources/dark/folder.svg"
-        }
+        "icon": "$(file-add)"
       },
       {
         "command": "extension.p5-server.create-sketch-folder",
         "title": "Create a p5.js Sketch Folder",
-        "icon": {
-          "light": "resources/light/document.svg",
-          "dark": "resources/dark/document.svg"
-        }
+        "icon": "$(file-directory-create)"
       },
       {
         "command": "p5sketchExplorer.refresh",
         "title": "p5.js Explorer: Refresh",
-        "icon": {
-          "light": "resources/light/refresh.svg",
-          "dark": "resources/dark/refresh.svg"
-        }
+        "icon": "$(refresh)"
       }
     ],
     "menus": {

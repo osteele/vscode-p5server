@@ -81,10 +81,7 @@ class DirectoryItem extends vscode.TreeItem {
     this.tooltip = `${this.label}`;
   }
 
-  iconPath = {
-    light: path.join(__filename, '..', '..', 'resources', 'light', 'folder.svg'),
-    dark: path.join(__filename, '..', '..', 'resources', 'dark', 'folder.svg'),
-  };
+  iconPath = new vscode.ThemeIcon('file-directory');
 }
 
 class FileItem extends vscode.TreeItem {
@@ -95,10 +92,10 @@ class FileItem extends vscode.TreeItem {
     super(path.basename(filePath), collapsibleState);
     this.tooltip = filePath;
     this.command = { command: 'vscode.open', title: "Edit File", arguments: [vscode.Uri.file(filePath)] };
+    this.iconPath = new vscode.ThemeIcon(
+      /\.(gif|jpe?g|png|svg|wav|mp3|mov|mp4)/i.test(filePath) ? 'file-media'
+        : /\.css|html|js?$/i.test(filePath) ? 'file-code'
+          : /\.text$/i.test(filePath) ? 'file-text'
+            : 'file');
   }
-
-  iconPath = {
-    light: path.join(__filename, '..', '..', 'resources', 'light', 'document.svg'),
-    dark: path.join(__filename, '..', '..', 'resources', 'dark', 'document.svg'),
-  };
 }
