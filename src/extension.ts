@@ -32,11 +32,12 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.start', startServer));
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.stop', stopServer));
-  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.open-in-browser', () => {
+  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.open-in-browser', (uri?: Uri) => {
+    console.info('open in browser', uri);
     if (state === 'stopped') {
-      startServer();
+      startServer(uri);
     } else if (state === 'running' && server?.url) {
-      openBrowser();
+      openBrowser(uri);
     }
   }));
   context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.create-sketch-file', createSketch.bind(null, false)));
@@ -71,7 +72,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  async function startServer() {
+  async function startServer(uri?: Uri) {
     if (state !== 'stopped') { return; }
     state = 'starting';
 
@@ -104,7 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       updateStatusBarItems();
     }
-    openBrowser();
+    openBrowser(uri);
   }
 
   function stopServer() {
@@ -161,7 +162,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand("revealInExplorer", dirPath);
   }
 
-  function openBrowser() {
+  function openBrowser(uri?: Uri) {
     if (!server?.url || !wsPath) {
       return;
     }
@@ -171,9 +172,11 @@ export function activate(context: vscode.ExtensionContext) {
     if (editorPath) {
       editorPath = path.relative(wsPath, editorPath);
     }
-    const reqPath = editorPath && /\.(js|html)/.test(editorPath) && !/^(\.){1,2}\//.test(editorPath)
-      ? '/' + editorPath
-      : '';
+    const reqPath =
+      uri?.path ||
+      (editorPath && /\.(js|html)/.test(editorPath) && !/^(\.){1,2}\//.test(editorPath)
+        ? '/' + editorPath
+        : '');
     open(server.url + reqPath);
   }
 }

@@ -12,6 +12,10 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
       const filePath = path.join(sketch.dirPath, sketch.jsSketchPath || sketch.indexFile);
       vscode.window.showTextDocument(vscode.Uri.file(filePath));
     });
+    vscode.commands.registerCommand('p5sketchExplorer.open-selected-file-in-browser', (item: FilePathItem) => {
+      vscode.commands.executeCommand('extension.p5-server.open-in-browser',
+        vscode.Uri.file(path.relative(workspaceRoot || '', item.filePath)));
+    });
   }
 
   refresh(): void {
@@ -29,7 +33,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
     }
 
     if (element instanceof DirectoryItem) {
-      return Promise.resolve(this.getDirectoryChildren(element.dir));
+      return Promise.resolve(this.getDirectoryChildren(element.filePath));
     } else if (element instanceof SketchItem) {
       return Promise.resolve(element.sketch.files.map(f =>
         new FileItem(path.join(element.sketch.dirPath, f), vscode.TreeItemCollapsibleState.None)));
@@ -55,7 +59,11 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
   }
 }
 
-class SketchItem extends vscode.TreeItem {
+interface FilePathItem {
+  filePath: string;
+}
+
+class SketchItem extends vscode.TreeItem implements FilePathItem {
   constructor(
     public readonly sketch: Sketch,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
@@ -66,25 +74,29 @@ class SketchItem extends vscode.TreeItem {
     this.command = { command: 'p5sketchExplorer.openSketch', title: "Edit P5.js Sketch", arguments: [sketch] };
   }
 
+  get filePath() {
+    return path.join(this.sketch.dirPath, this.sketch.indexFile);
+  }
+
   iconPath = {
     light: path.join(__filename, '..', '..', 'resources', 'p5-sketch.svg'),
     dark: path.join(__filename, '..', '..', 'resources', 'p5-sketch.svg'),
   };
 }
 
-class DirectoryItem extends vscode.TreeItem {
+class DirectoryItem extends vscode.TreeItem implements FilePathItem {
   constructor(
-    public readonly dir: string,
+    public readonly filePath: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
   ) {
-    super(path.basename(dir), collapsibleState);
+    super(path.basename(filePath), collapsibleState);
     this.tooltip = `${this.label}`;
   }
 
   iconPath = new vscode.ThemeIcon('file-directory');
 }
 
-class FileItem extends vscode.TreeItem {
+class FileItem extends vscode.TreeItem implements FilePathItem {
   constructor(
     public readonly filePath: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState

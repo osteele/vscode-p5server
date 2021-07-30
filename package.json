@@ -48,7 +48,7 @@
         "title": "P5 Server: Stop"
       },
       {
-        "command": "extension.p5-server.open-in-browser",
+        "command": "extension.p5-server.start",
         "title": "P5 Server: Open in Browser"
       },
       {
@@ -65,6 +65,12 @@
         "command": "p5sketchExplorer.refresh",
         "title": "p5.js Explorer: Refresh",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "p5sketchExplorer.open-selected-file-in-browser",
+        "title": "Open in browser",
+        "when": "view == p5sketchExplorer",
+        "icon": "$(globe)"
       }
     ],
     "menus": {
@@ -78,6 +84,14 @@
           "command": "extension.p5-server.create-sketch-file",
           "when": "view == p5sketchExplorer",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "p5sketchExplorer.open-selected-file-in-browser",
+          "when": "view == p5sketchExplorer ",
+          "icon": "$(globe)",
+          "group": "inline"
         }
       ]
     },
