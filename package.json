@@ -3,7 +3,7 @@
   "displayName": "p5 Server",
   "description": "Launch a p5js-aware local server",
   "license": "MIT",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "publisher": "osteele",
   "author": {
     "name": "Oliver Steele",
@@ -57,7 +57,7 @@
       },
       {
         "command": "extension.p5-server.create-sketch-folder",
-        "title": "Create p5.js Sketch Folder"
+        "title": "Create a p5.js Sketch Folder"
       }
     ]
   },
@@ -69,11 +69,13 @@
     "vsce:package": "vsce package",
     "vsce:publish": "vsce publish",
     "vscode:prepublish": "npm run compile",
+    "p5-server:link": "npm uninstall --no-save p5-server && npm link p5-server",
+    "p5-server:unlink": "npm unlink --no-save p5-server && npm install p5-server",
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
     "open": "^8.2.1",
-    "p5-server": "^0.1.9"
+    "p5-server": "^0.2.0"
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",
