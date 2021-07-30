@@ -17,8 +17,8 @@
   ],
   "icon": "images/icon.png",
   "galleryBanner": {
-    "color": "#BDFAE9",
-    "theme": "dark"
+    "color": "#D0DCFB",
+    "theme": "light"
   },
   "keywords": [
     "live reload",
@@ -53,13 +53,21 @@
       },
       {
         "command": "extension.p5-server.create-sketch-file",
-        "title": "Create p5.js Sketch File"
+        "title": "Create a p5.js Sketch File"
       },
       {
         "command": "extension.p5-server.create-sketch-folder",
         "title": "Create a p5.js Sketch Folder"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "p5sketchExplorer",
+          "name": "P5.js Sketches"
+        }
+      ]
+    }
   },
   "scripts": {
     "compile": "tsc -p ./",

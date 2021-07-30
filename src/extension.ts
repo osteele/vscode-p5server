@@ -3,12 +3,18 @@ import { Server, Sketch } from 'p5-server';
 import open = require('open');
 import path = require('path');
 import { Uri, window } from 'vscode';
-import { stringify } from 'querystring';
+import { SketchTreeProvider } from './sketchExplorer';
 
 export function activate(context: vscode.ExtensionContext) {
   let server: Server | null;
   let state: "stopped" | "starting" | "running" | "stopping" = "stopped";
   let wsPath: string | undefined;
+
+  const rootPath = (vscode.workspace.workspaceFolders && (vscode.workspace.workspaceFolders.length > 0))
+    ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
+
+  const sketchTreeProvider = new SketchTreeProvider(rootPath || '.');
+  vscode.window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
 
   if (!vscode.workspace.workspaceFolders) {
     return;
