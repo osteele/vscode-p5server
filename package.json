@@ -101,7 +101,17 @@
         {
           "id": "p5sketchExplorer",
           "name": "P5.js Sketches",
-          "icon": "resources/light/sketch.svg"
+          "icon": "resources/light/sketch.svg",
+          "contextualTitle": "P5.js Sketch Explorer"
+        }
+      ]
+    },
+    "contributes": {
+      "viewsWelcome": [
+        {
+          "view": "p5sketchExplorer",
+          "contents": "In order to create a sketch, use the Create P5.js Sketch command.\n[Create P5.js Sketch](command:p5-server.createSketchFile)",
+          "when": "workbenchState != empty"
         }
       ]
     }

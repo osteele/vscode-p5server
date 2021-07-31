@@ -28,7 +28,6 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
 
   getChildren(element?: SketchItem) {
     if (!this.workspaceRoot) {
-      vscode.window.showInformationMessage('No sketches in empty workspace');
       return Promise.resolve([]);
     }
 

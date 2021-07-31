@@ -31,7 +31,7 @@ The status bar icons can be used to start and stop the server, and open the curr
 * **Sketch scripts generation**. Create a JavaScript-only sketch that contains a
   minimal `setup()` and `draw()` function; or create a pair of `index.html` and
   `sketch.js`.
-** Sketch explorer**. A view of the sketches in the current workspace.
+* **Sketch explorer**. A view of the sketches in the current workspace.
 
 ## Install
 

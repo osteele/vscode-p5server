@@ -14,9 +14,11 @@ export function activate(context: vscode.ExtensionContext) {
     ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
   const sketchTreeProvider = new SketchTreeProvider(rootPath);
   vscode.window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
-  vscode.commands.registerCommand('p5-explorer.refresh', () =>
-    sketchTreeProvider.refresh()
-  );
+
+  context.subscriptions.push(vscode.commands.registerCommand('p5-explorer.refresh', () => sketchTreeProvider.refresh()));
+
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)));
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)));
 
   if (!vscode.workspace.workspaceFolders) {
     return;
@@ -39,8 +41,6 @@ export function activate(context: vscode.ExtensionContext) {
       openBrowser(uri);
     }
   }));
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)));
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)));
 
   function updateStatusBarItems() {
     switch (state) {
@@ -126,6 +126,10 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   async function createSketch(folder: boolean) {
+    if (!vscode.workspace.workspaceFolders) {
+      window.showErrorMessage("You must have at least one folder open to create a sketch.");
+    }
+
     let sketchName = await vscode.window
       .showInputBox({
         value: ``,
