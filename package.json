@@ -150,11 +150,12 @@
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
+    "prepare": "husky install",
+    "p5-server:link": "npm uninstall --no-save p5-server && npm link p5-server",
+    "p5-server:unlink": "npm unlink --no-save p5-server && npm install p5-server",
     "vsce:package": "vsce package",
     "vsce:publish": "vsce publish",
     "vscode:prepublish": "npm run compile",
-    "p5-server:link": "npm uninstall --no-save p5-server && npm link p5-server",
-    "p5-server:unlink": "npm unlink --no-save p5-server && npm install p5-server",
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
@@ -170,6 +171,7 @@
     "@typescript-eslint/parser": "^4.26.0",
     "eslint": "^7.27.0",
     "glob": "^7.1.7",
+    "husky": "^7.0.1",
     "mocha": "^8.4.0",
     "typescript": "^4.3.2",
     "vscode-test": "^1.5.2"

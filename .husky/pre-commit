@@ -1,0 +1,5 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+npm run lint
+if [[ $(grep -r 'console.info' src | wc -l) -gt 0 ]]; then exit 1; fi
