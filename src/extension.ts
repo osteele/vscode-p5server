@@ -6,6 +6,7 @@ import { Uri, window } from 'vscode';
 import { SketchTreeProvider } from './sketchExplorer';
 
 export function activate(context: vscode.ExtensionContext) {
+  let servicesAvailable = false;
   let server: Server | null;
   let state: "stopped" | "starting" | "running" | "stopping" = "stopped";
   let wsPath: string | undefined;
@@ -23,10 +24,12 @@ export function activate(context: vscode.ExtensionContext) {
   if (!vscode.workspace.workspaceFolders) {
     return;
   }
+  servicesAvailable = true;
+  vscode.commands.executeCommand('setContext', 'p5-server.available', servicesAvailable);
 
   const statusBarOpenItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  statusBarOpenItem.text = `$(ports-open-browser-icon)Browse P5 sketch`;
-  statusBarOpenItem.command = 'p5-server.open-in-browser';
+  statusBarOpenItem.text = `$(ports-open-browser-icon)P5 Browser`;
+  statusBarOpenItem.command = 'p5-server.openBrowser';
 
   const statusBarServerItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   updateStatusBarItems();
@@ -34,10 +37,14 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.start', startServer));
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.stop', stopServer));
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.openInBrowser', (uri?: Uri) => {
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.openInBrowser', () => {
+    let editorPath = window.activeTextEditor?.document.fileName;
+    vscode.commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.openBrowser', (uri?: Uri) => {
     if (state === 'stopped') {
       startServer(uri);
-    } else if (state === 'running' && server?.url) {
+    } else if (state === 'running') {
       openBrowser(uri);
     }
   }));
@@ -77,6 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     try {
       const wsFolders = vscode.workspace?.workspaceFolders?.map(f => f.uri.fsPath) || [];
+      // TODO: select the folder that contains uri
       wsPath = wsFolders.length > 1
         ? await vscode.window.showQuickPick(
           wsFolders,
@@ -126,7 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   async function createSketch(folder: boolean) {
-    if (!vscode.workspace.workspaceFolders) {
+    if (!servicesAvailable) {
       window.showErrorMessage("You must have at least one folder open to create a sketch.");
     }
 
@@ -170,17 +178,16 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    // TODO if it's a js file associated with a sketch, open the sketch instead
-    let editorPath = window.activeTextEditor?.document.fileName;
-    if (editorPath) {
-      editorPath = path.relative(wsPath, editorPath);
-    }
-    const reqPath =
-      uri?.path ||
-      (editorPath && /\.(js|html)/.test(editorPath) && !/^(\.){1,2}\//.test(editorPath)
-        ? '/' + editorPath
-        : '');
-    open(server.url + reqPath);
+    // let editorPath = window.activeTextEditor?.document.fileName;
+    // if (editorPath) {
+    //   editorPath = path.relative(wsPath, editorPath);
+    // }
+    let reqPath = uri ? path.relative(wsPath, uri.fsPath) : '';
+    // if (/\.(js|html)$/.test(reqPath) && !/^(\.){1,2}\//.test(reqPath))
+    //   reqPath = '/' + reqPath;
+    const url = server.url + '/' + reqPath;
+    console.info('open', url);
+    open(url);
   }
 }
 

@@ -22,6 +22,7 @@
   },
   "keywords": [
     "live reload",
+    "web server",
     "p5",
     "p5.js"
   ],
@@ -41,15 +42,19 @@
     "commands": [
       {
         "command": "p5-server.start",
-        "title": "P5 Server: Start"
+        "title": "P5 Server: Start",
+        "enablement": "p5-server.available"
       },
       {
         "command": "p5-server.stop",
-        "title": "P5 Server: Stop"
+        "title": "P5 Server: Stop",
+        "enablement": "p5-server.available"
       },
       {
         "command": "p5-server.openInBrowser",
-        "title": "P5 Server: Open In Browser"
+        "title": "P5 Server: Open In Browser",
+        "icon": "$(globe)",
+        "enablement": "p5-server.available"
       },
       {
         "command": "p5-server.createSketchFile",
@@ -75,6 +80,13 @@
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "p5-server.openInBrowser",
+          "when": "p5-server.available && resourceExtname =~ /\\.(js|html)/",
+          "group": "navigation"
+        }
+      ],
       "view/title": [
         {
           "command": "p5-explorer.refresh",
