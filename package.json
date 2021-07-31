@@ -1,7 +1,7 @@
 {
   "name": "p5-server",
-  "displayName": "p5 Server",
-  "description": "Launch a p5js-aware local server",
+  "displayName": "P5 Server",
+  "description": "A p5.js sketch explorer and creator, that includes a sketch-aware server that automatically loads libraries.",
   "license": "MIT",
   "version": "0.1.0",
   "publisher": "osteele",
@@ -17,7 +17,7 @@
   ],
   "icon": "images/icon.png",
   "galleryBanner": {
-    "color": "#D0DCFB",
+    "color": "#FDE7EE",
     "theme": "light"
   },
   "keywords": [
