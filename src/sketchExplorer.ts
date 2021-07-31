@@ -79,8 +79,8 @@ class SketchItem extends vscode.TreeItem implements FilePathItem {
   }
 
   iconPath = {
-    light: path.join(__filename, '..', '..', 'resources', 'p5-sketch.svg'),
-    dark: path.join(__filename, '..', '..', 'resources', 'p5-sketch.svg'),
+    dark: path.join(__filename, '..', '..', 'resources', 'dark', 'sketch.svg'),
+    light: path.join(__filename, '..', '..', 'resources', 'light', 'sketch.svg'),
   };
   contextValue = 'sketch';
 }

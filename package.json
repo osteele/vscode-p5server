@@ -99,7 +99,8 @@
       "explorer": [
         {
           "id": "p5sketchExplorer",
-          "name": "P5.js Sketches"
+          "name": "P5.js Sketches",
+          "icon": "resources/light/sketch.svg"
         }
       ]
     }
