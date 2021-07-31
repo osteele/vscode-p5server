@@ -19,7 +19,7 @@ open the server root in the browser (🌐P5 Browser).
 * **Live reload**. The browser reloads the page, when any file in its directory is
   modified.
 * **JavaScript-only sketches**. Run a sketch that's just a JavaScript file (e.g.
-  `p5 serve sketch.js`). You don't need to create an HTML wrapper.
+  `sketch.js`). You don't need to create an HTML wrapper.
 * **Automatic library includes**. If the server detects that a JavaScript-only
   sketch requires a [p5.js library](https://p5js.org/libraries/), it will
   automatically include it. (See
@@ -69,10 +69,9 @@ It adds these commands to the command palette:
 
 ## Technical Notes
 
-The sketch analysis, library inference, and server features are provided by
-[p5-server](https://github.com/osteele/p5-server) library. That library provides
-much of the same functionality as this extension, via the command-line. See its
-[implementation
+The [p5-server](https://github.com/osteele/p5-server) companion project provides
+the sketch analysis, library inference, and server features used by this
+extension. See that package's [implementation
 notes](https://github.com/osteele/p5-server#implementation-notes) for
 documentation about how sketches are recognized and how library inference works.
 
@@ -87,4 +86,4 @@ documentation about how sketches are recognized and how library inference works.
 
 ## License
 
-MIT © Oliver Steele
+[MIT](LICENSE)
