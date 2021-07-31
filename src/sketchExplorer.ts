@@ -8,12 +8,12 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(private workspaceRoot?: string) {
-    vscode.commands.registerCommand('p5sketchExplorer.openSketch', (sketch: Sketch) => {
+    vscode.commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
       const filePath = path.join(sketch.dirPath, sketch.jsSketchPath || sketch.indexFile);
       vscode.window.showTextDocument(vscode.Uri.file(filePath));
     });
-    vscode.commands.registerCommand('p5sketchExplorer.open-selected-file-in-browser', (item: FilePathItem) => {
-      vscode.commands.executeCommand('extension.p5-server.open-in-browser',
+    vscode.commands.registerCommand('p5-explorer.open-selected-file-in-browser', (item: FilePathItem) => {
+      vscode.commands.executeCommand('p5-server.open-in-browser',
         vscode.Uri.file(path.relative(workspaceRoot || '', item.filePath)));
     });
   }
@@ -71,7 +71,7 @@ class SketchItem extends vscode.TreeItem implements FilePathItem {
     super(sketch.name.replace(/\/$/, ''), collapsibleState);
     this.tooltip = `p5.js sketch at ${sketch.indexFile}`;
     this.description = sketch.description;
-    this.command = { command: 'p5sketchExplorer.openSketch', title: "Edit P5.js Sketch", arguments: [sketch] };
+    this.command = { command: 'p5-explorer.openSketch', title: "Edit P5.js Sketch", arguments: [sketch] };
   }
 
   get filePath() {

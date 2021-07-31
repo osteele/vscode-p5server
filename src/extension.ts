@@ -14,7 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
     ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
   const sketchTreeProvider = new SketchTreeProvider(rootPath);
   vscode.window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
-  vscode.commands.registerCommand('p5sketchExplorer.refresh', () =>
+  vscode.commands.registerCommand('p5-explorer.refresh', () =>
     sketchTreeProvider.refresh()
   );
 
@@ -24,15 +24,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   const statusBarOpenItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBarOpenItem.text = `$(ports-open-browser-icon)Browse P5 sketch`;
-  statusBarOpenItem.command = 'extension.p5-server.open-in-browser';
+  statusBarOpenItem.command = 'p5-server.open-in-browser';
 
   const statusBarServerItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   updateStatusBarItems();
   statusBarServerItem.show();
 
-  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.start', startServer));
-  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.stop', stopServer));
-  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.open-in-browser', (uri?: Uri) => {
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.start', startServer));
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.stop', stopServer));
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.open-in-browser', (uri?: Uri) => {
     console.info('open in browser', uri);
     if (state === 'stopped') {
       startServer(uri);
@@ -40,21 +40,21 @@ export function activate(context: vscode.ExtensionContext) {
       openBrowser(uri);
     }
   }));
-  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.create-sketch-file', createSketch.bind(null, false)));
-  context.subscriptions.push(vscode.commands.registerCommand('extension.p5-server.create-sketch-folder', createSketch.bind(null, true)));
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.create-sketch-file', createSketch.bind(null, false)));
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.create-sketch-folder', createSketch.bind(null, true)));
 
   function updateStatusBarItems() {
     switch (state) {
       case 'running':
         statusBarServerItem.text = "$(extensions-star-full)P5 Server";
         statusBarServerItem.tooltip = "Stop the P5 server";
-        statusBarServerItem.command = 'extension.p5-server.stop';
+        statusBarServerItem.command = 'p5-server.stop';
         statusBarOpenItem.tooltip = `Open ${server!.url} in a browser`;
         break;
       case 'stopped':
         statusBarServerItem.text = "$(extensions-star-empty)P5 Server";
         statusBarServerItem.tooltip = "Click to start the P5 server";
-        statusBarServerItem.command = 'extension.p5-server.start';
+        statusBarServerItem.command = 'p5-server.start';
         break;
       case 'starting':
         statusBarServerItem.text = "$(extensions-star-full~spin)P5 Server";
@@ -158,7 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     vscode.window.showTextDocument(Uri.file(path.join(sketch.dirPath, sketch.jsSketchPath)));
-    vscode.commands.executeCommand('p5sketchExplorer.refresh');
+    vscode.commands.executeCommand('p5-explorer.refresh');
     vscode.commands.executeCommand("revealInExplorer", dirPath);
   }
 

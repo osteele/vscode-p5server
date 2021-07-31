@@ -4,9 +4,11 @@ All notable changes to the "p5-server" extension will be documented in this file
 
 ## [Unreleased]
 
-- Add explorer icon (for appearance in the Activity bar)
+- Add explorer icon (for use in the Activity bar)
 - Add dark icons
-- Change explorer run command's icon globe -> run; only show on sketches
+- Explorer: Change explorer run command's icon globe
+- Explorer: Display the run command only on sketch items
+- Commands: Enable the explorer commands only in that view
 
 ## [0.1.0]
 

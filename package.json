@@ -40,55 +40,56 @@
   "contributes": {
     "commands": [
       {
-        "command": "extension.p5-server.start",
+        "command": "p5-server.start",
         "title": "P5 Server: Start"
       },
       {
-        "command": "extension.p5-server.stop",
+        "command": "p5-server.stop",
         "title": "P5 Server: Stop"
       },
       {
-        "command": "extension.p5-server.start",
+        "command": "p5-server.start",
         "title": "P5 Server: Open in Browser"
       },
       {
-        "command": "extension.p5-server.create-sketch-file",
+        "command": "p5-server.create-sketch-file",
         "title": "Create a p5.js Sketch File",
         "icon": "$(file-add)"
       },
       {
-        "command": "extension.p5-server.create-sketch-folder",
+        "command": "p5-server.create-sketch-folder",
         "title": "Create a p5.js Sketch Folder",
         "icon": "$(file-directory-create)"
       },
       {
-        "command": "p5sketchExplorer.refresh",
+        "command": "p5-explorer.refresh",
         "title": "p5.js Explorer: Refresh",
+        "enablement": "view == p5sketchExplorer",
         "icon": "$(refresh)"
       },
       {
-        "command": "p5sketchExplorer.open-selected-file-in-browser",
+        "command": "p5-explorer.open-selected-file-in-browser",
         "title": "Run in browser",
-        "when": "view == p5sketchExplorer",
+        "enablement": "view == p5sketchExplorer",
         "icon": "$(run)"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "p5sketchExplorer.refresh",
+          "command": "p5-explorer.refresh",
           "when": "view == p5sketchExplorer",
           "group": "navigation"
         },
         {
-          "command": "extension.p5-server.create-sketch-file",
+          "command": "p5-server.create-sketch-file",
           "when": "view == p5sketchExplorer",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "p5sketchExplorer.open-selected-file-in-browser",
+          "command": "p5-explorer.open-selected-file-in-browser",
           "when": "view == p5sketchExplorer && viewItem == sketch",
           "icon": "$(globe)",
           "group": "inline"
