@@ -79,6 +79,23 @@
         "icon": "$(run)"
       }
     ],
+    "configuration": {
+      "title": "P5 Server",
+      "properties": {
+        "p5-server.browser": {
+          "type": "string",
+          "default": "default",
+          "enum": [
+            "default",
+            "Chrome",
+            "Edge",
+            "Firefox",
+            "Safari"
+          ],
+          "description": "The browser to use for opening sketches. “default” indicates to use the system default."
+        }
+      }
+    },
     "menus": {
       "editor/title": [
         {

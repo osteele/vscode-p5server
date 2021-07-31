@@ -173,21 +173,32 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand("revealInExplorer", dirPath);
   }
 
-  function openBrowser(uri?: Uri) {
+  async function openBrowser(uri?: Uri) {
     if (!server?.url || !wsPath) {
       return;
     }
 
-    // let editorPath = window.activeTextEditor?.document.fileName;
-    // if (editorPath) {
-    //   editorPath = path.relative(wsPath, editorPath);
-    // }
-    let reqPath = uri ? path.relative(wsPath, uri.fsPath) : '';
-    // if (/\.(js|html)$/.test(reqPath) && !/^(\.){1,2}\//.test(reqPath))
-    //   reqPath = '/' + reqPath;
-    const url = server.url + '/' + reqPath;
-    console.info('open', url);
-    open(url);
+    type BrowserKey = open.AppName | 'safari' | 'default';
+    const browserName = vscode.workspace.getConfiguration('p5-server').get<string>('browser') || 'default';
+    const browserKey = browserName.toLowerCase() as BrowserKey;
+    let openOptions: open.Options | undefined;
+    if (browserKey !== 'default') {
+      let name = browserKey === 'safari' ? browserKey : open.apps[browserKey];
+      openOptions = { app: { name } };
+    }
+
+    const url = uri ? `${server.url}/${path.relative(wsPath, uri.fsPath)}` : server.url;
+    let process = await open(url, openOptions);
+    if (process.exitCode === null) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    if (process.exitCode !== 0) {
+      let msg = "The browser failed to open.";
+      if (browserKey !== 'default') {
+        msg += ` The ${browserName} browser may not be available on your system.`;
+      }
+      vscode.window.showErrorMessage(msg);
+    }
   }
 }
 

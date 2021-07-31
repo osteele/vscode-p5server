@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased]
+
+- Added a configuration to select the browser
+
 ## [0.1.1]
 
 - A new 🌐 editor title menu opens the editor's sketch in the browser
@@ -10,8 +14,9 @@
   - Changee the run command's icon 🌐->🞂
   - Display the run command only on sketch items
   - Enable the explorer commands only in that view
-- Upgrade to p5-server@0.2.1. See the [p5-server change log] for additonal
-  changes that affect this extension.
+- Upgrade to p5-server@0.2.1. Refer to [its change
+  notes](https://github.com/osteele/p5-server/blob/master/CHANGELOG.md#change-log)
+  for additonal changes that affect this extension.
 
 ## [0.1.0]
 
