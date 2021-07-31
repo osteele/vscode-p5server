@@ -3,16 +3,16 @@
 Launch a local developer server that knows about
 [p5.js](https://p5js.org/libraries/) sketches.
 
-![browser directory listing](docs/screenshot.png)
+![browser directory listing](images/screenshot.png)
 
 An explorer view shows the sketches in the current workspace.
 
-![explorer](docs/explorer.png)
+![explorer](images/explorer.png)
 
 The status bar icons can be used to start and stop the server (✮5 Server), and
 open the server root in the browser (🌐P5 Browser).
 
-![status bar](docs/status-bar.png)
+![status bar](images/status-bar.png)
 
 ## Features
 
@@ -86,4 +86,4 @@ documentation about how sketches are recognized and how library inference works.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © by Oliver Steele
