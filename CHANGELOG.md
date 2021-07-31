@@ -4,7 +4,7 @@ All notable changes to the "p5-server" extension will be documented in this file
 
 ## [Unreleased]
 
-- wip
+- Change explorer run icon globe -> run; only show on sketches
 
 ## [0.1.0]
 

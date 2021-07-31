@@ -82,6 +82,7 @@ class SketchItem extends vscode.TreeItem implements FilePathItem {
     light: path.join(__filename, '..', '..', 'resources', 'p5-sketch.svg'),
     dark: path.join(__filename, '..', '..', 'resources', 'p5-sketch.svg'),
   };
+  contextValue = 'sketch';
 }
 
 class DirectoryItem extends vscode.TreeItem implements FilePathItem {
@@ -94,6 +95,7 @@ class DirectoryItem extends vscode.TreeItem implements FilePathItem {
   }
 
   iconPath = new vscode.ThemeIcon('file-directory');
+  contextValue = 'directory';
 }
 
 class FileItem extends vscode.TreeItem implements FilePathItem {
@@ -110,4 +112,5 @@ class FileItem extends vscode.TreeItem implements FilePathItem {
           : /\.text$/i.test(filePath) ? 'file-text'
             : 'file');
   }
+  contextValue = 'file';
 }

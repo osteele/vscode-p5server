@@ -68,9 +68,9 @@
       },
       {
         "command": "p5sketchExplorer.open-selected-file-in-browser",
-        "title": "Open in browser",
+        "title": "Run in browser",
         "when": "view == p5sketchExplorer",
-        "icon": "$(globe)"
+        "icon": "$(run)"
       }
     ],
     "menus": {
@@ -89,7 +89,7 @@
       "view/item/context": [
         {
           "command": "p5sketchExplorer.open-selected-file-in-browser",
-          "when": "view == p5sketchExplorer ",
+          "when": "view == p5sketchExplorer && viewItem == sketch",
           "icon": "$(globe)",
           "group": "inline"
         }
