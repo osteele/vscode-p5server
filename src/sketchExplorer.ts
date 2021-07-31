@@ -12,7 +12,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
       const filePath = path.join(sketch.dirPath, sketch.jsSketchPath || sketch.indexFile);
       vscode.window.showTextDocument(vscode.Uri.file(filePath));
     });
-    vscode.commands.registerCommand('p5-explorer.open-selected-file-in-browser', (item: FilePathItem) => {
+    vscode.commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem) => {
       vscode.commands.executeCommand('p5-server.open-in-browser',
         vscode.Uri.file(path.relative(workspaceRoot || '', item.filePath)));
     });

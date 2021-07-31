@@ -10,7 +10,7 @@ export function activate(context: vscode.ExtensionContext) {
   let state: "stopped" | "starting" | "running" | "stopping" = "stopped";
   let wsPath: string | undefined;
 
-  const rootPath = (vscode.workspace.workspaceFolders && (vscode.workspace.workspaceFolders.length > 0))
+  const rootPath = (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0)
     ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
   const sketchTreeProvider = new SketchTreeProvider(rootPath);
   vscode.window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
@@ -32,16 +32,15 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.start', startServer));
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.stop', stopServer));
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.open-in-browser', (uri?: Uri) => {
-    console.info('open in browser', uri);
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.openInBrowser', (uri?: Uri) => {
     if (state === 'stopped') {
       startServer(uri);
     } else if (state === 'running' && server?.url) {
       openBrowser(uri);
     }
   }));
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.create-sketch-file', createSketch.bind(null, false)));
-  context.subscriptions.push(vscode.commands.registerCommand('p5-server.create-sketch-folder', createSketch.bind(null, true)));
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)));
+  context.subscriptions.push(vscode.commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)));
 
   function updateStatusBarItems() {
     switch (state) {

@@ -48,16 +48,16 @@
         "title": "P5 Server: Stop"
       },
       {
-        "command": "p5-server.start",
-        "title": "P5 Server: Open in Browser"
+        "command": "p5-server.openInBrowser",
+        "title": "P5 Server: Open In Browser"
       },
       {
-        "command": "p5-server.create-sketch-file",
+        "command": "p5-server.createSketchFile",
         "title": "Create a p5.js Sketch File",
         "icon": "$(file-add)"
       },
       {
-        "command": "p5-server.create-sketch-folder",
+        "command": "p5-server.createSketchFolder",
         "title": "Create a p5.js Sketch Folder",
         "icon": "$(file-directory-create)"
       },
@@ -68,7 +68,7 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "p5-explorer.open-selected-file-in-browser",
+        "command": "p5-explorer.runSelectedFile",
         "title": "Run in browser",
         "enablement": "view == p5sketchExplorer",
         "icon": "$(run)"
@@ -82,14 +82,14 @@
           "group": "navigation"
         },
         {
-          "command": "p5-server.create-sketch-file",
+          "command": "p5-server.createSketchFile",
           "when": "view == p5sketchExplorer",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "p5-explorer.open-selected-file-in-browser",
+          "command": "p5-explorer.runSelectedFile",
           "when": "view == p5sketchExplorer && viewItem == sketch",
           "icon": "$(globe)",
           "group": "inline"
