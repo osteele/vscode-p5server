@@ -9,7 +9,8 @@ An explorer view shows the sketches in the current workspace.
 
 ![explorer](docs/explorer.png)
 
-The status bar icons can be used to start and stop the server, and open the current editor in the browser.
+The status bar icons can be used to start and stop the server (✮5 Server), and
+open the server root in the browser (🌐P5 Browser).
 
 ![status bar](docs/status-bar.png)
 
@@ -32,6 +33,13 @@ The status bar icons can be used to start and stop the server, and open the curr
   minimal `setup()` and `draw()` function; or create a pair of `index.html` and
   `sketch.js`.
 * **Sketch explorer**. A view of the sketches in the current workspace.
+
+## Limitations
+
+See the [p5-server
+documentation](https://github.com/osteele/p5-server#limitations) for limitations
+that also affect this extension. In particular, this code has not been tested on
+Windows.
 
 ## Install
 
@@ -64,18 +72,18 @@ It adds these commands to the command palette:
 The sketch analysis, library inference, and server features are provided by
 [p5-server](https://github.com/osteele/p5-server) library. That library provides
 much of the same functionality as this extension, via the command-line. See its
-documentation for [implementation
-notes](https://github.com/osteele/p5-server#implementation-notes) and
-[limitations](https://github.com/osteele/p5-server#limitations).
+[implementation
+notes](https://github.com/osteele/p5-server#implementation-notes) for
+documentation about how sketches are recognized and how library inference works.
 
 ## Acknowledgements
 
-* Heavily inspired by Ritwick Dey's fantastic [Live Server
+* This package is heavily inspired by Ritwick Dey's fantastic [Live Server
   extension](https://ritwickdey.github.io/vscode-live-server/). This extension
   [does more](#features) for p5.js sketches, but does not implement Live
   Server's [extensive list of features for general web
   development](https://github.com/ritwickdey/vscode-live-server#features).
-* Uses [open](https://github.com/sindresorhus/open#readme)
+* Uses the [open](https://github.com/sindresorhus/open#readme) package to open URL's in the browser
 
 ## License
 

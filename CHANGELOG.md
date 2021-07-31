@@ -1,8 +1,6 @@
 # Change Log
 
-All notable changes to the "p5-server" extension will be documented in this file.
-
-## [Unreleased]
+## [0.1.1]
 
 - A new 🌐 editor title menu opens the editor's sketch in the browser
 - The 🌐 item in the status bar opens the root
@@ -12,6 +10,8 @@ All notable changes to the "p5-server" extension will be documented in this file
   - Changee the run command's icon 🌐->🞂
   - Display the run command only on sketch items
   - Enable the explorer commands only in that view
+- Upgrade to p5-server@0.2.1. See the [p5-server change log] for additonal
+  changes that affect this extension.
 
 ## [0.1.0]
 
@@ -21,6 +21,7 @@ All notable changes to the "p5-server" extension will be documented in this file
 - Added an icon to the marketplace
 - Update p5-server version
 - Separate commands to create sketch folder or sketch file
+- Upgrade to p5-server@0.2.0
 
 ## [0.0.2]
 
