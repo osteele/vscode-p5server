@@ -52,7 +52,17 @@ See the [p5-server
 documentation](https://github.com/osteele/p5-server#limitations) for limitations
 that also affect this extension.
 
-In particular, this code has not been tested on Windows.
+In particular:
+
+* This extension has not been tested on Windows.
+* The sketches that are created by the “Create p5.js Sketch Folder” command
+  require an internet connection to run. They load the p5.js and other libraries
+  from a content delivery network (“CDN”). Browsers cache these files, so
+  reloading a page or running other sketches that use the same (or no) libraries
+  do not require additional internet access, but you will need internet access
+  the first time you use this extension or after the browser cache has expired.
+* The server requires an internet connection in order to display sketches and
+  directory listings. (It loads the Semantic UI CSS framework from a CDN.)
 
 ## Install
 
