@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 
-- Added a configuration to select the browser
+- Add configuration settings to select the browser
+- Add configuration settings to
 
 ## [0.1.1]
 

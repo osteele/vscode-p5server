@@ -93,6 +93,21 @@
             "Safari"
           ],
           "description": "The browser to use for opening sketches. “default” indicates to use the system default."
+        },
+        "p5-server.editorTitle.RunIcon.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Controls whether to show the “Open In Browser” icon in the editor title menu."
+        },
+        "p5-server.statusBar.browserItem.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Controls whether to show the “P5 Browser” item in the status bar."
+        },
+        "p5-server.statusBar.serverItem.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Controls whether to show the “P5 Server” item in the status bar."
         }
       }
     },
@@ -100,7 +115,7 @@
       "editor/title": [
         {
           "command": "p5-server.openInBrowser",
-          "when": "p5-server.available && resourceExtname =~ /\\.(js|html)/",
+          "when": "p5-server.runIconEnabled && p5-server.available && resourceExtname =~ /\\.(js|html)/",
           "group": "navigation"
         }
       ],

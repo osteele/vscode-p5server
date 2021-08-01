@@ -34,23 +34,6 @@ open the server root in the browser (🌐P5 Browser).
   `sketch.js`.
 * **Sketch explorer**. A view of the sketches in the current workspace.
 
-## Limitations
-
-See the [p5-server
-documentation](https://github.com/osteele/p5-server#limitations) for limitations
-that also affect this extension. In particular, this code has not been tested on
-Windows.
-
-## Install
-
-Follow the instructions in the
-[Marketplace](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server),
-or run the following in the command palette:
-
-```sh
-ext install osteele.p5-server
-```
-
 ## Usage
 
 It adds these commands to the command palette:
@@ -63,9 +46,30 @@ It adds these commands to the command palette:
 'Create p5.js Sketch Folder' // Create a new folder with a p5.js index.html and a sketch.js file
 ```
 
-## Planned Features
+## Limitations
 
-* Add a UI for customizing generated sketches, using the options in [p5-server](https://github.com/osteele/p5-server#p5-create-sketch-name---no-html).
+See the [p5-server
+documentation](https://github.com/osteele/p5-server#limitations) for limitations
+that also affect this extension.
+
+In particular, this code has not been tested on Windows.
+
+## Install
+
+Follow the instructions in the
+[Marketplace](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server),
+or run the following in the command palette:
+
+```sh
+ext install osteele.p5-server
+```
+
+## Configuration
+
+The extension provides configuration settings to set the browser, and to hide
+various user interface elements. Follow [these
+instructions](https://code.visualstudio.com/docs/getstarted/settings) to modify
+these settings.
 
 ## Technical Notes
 
@@ -77,12 +81,16 @@ documentation about how sketches are recognized and how library inference works.
 
 ## Acknowledgements
 
-* This package is heavily inspired by Ritwick Dey's fantastic [Live Server
+* The functionality and user interface of this extension were heavily inspired
+  by Ritwick Dey's fantastic [Live Server
   extension](https://ritwickdey.github.io/vscode-live-server/). This extension
-  [does more](#features) for p5.js sketches, but does not implement Live
+  [does more](#features) for p5.js sketches, but it does not implement Live
   Server's [extensive list of features for general web
   development](https://github.com/ritwickdey/vscode-live-server#features).
-* Uses the [open](https://github.com/sindresorhus/open#readme) package to open URL's in the browser
+* The extension uses the [open](https://github.com/sindresorhus/open#readme)
+  package to open URL's in the browser.
+* I learned a lot from reading the source code to the [vscode-project-manager
+  extension](https://github.com/alefragnani/vscode-project-manager).
 
 ## License
 

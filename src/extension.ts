@@ -33,12 +33,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   const statusBarServerItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   updateStatusBarItems();
-  statusBarServerItem.show();
 
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.start', startServer));
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.stop', stopServer));
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.openInBrowser', () => {
-    let editorPath = window.activeTextEditor?.document.fileName;
+    const editorPath = window.activeTextEditor?.document.fileName;
     vscode.commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
   }));
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.openBrowser', (uri?: Uri) => {
@@ -48,14 +47,26 @@ export function activate(context: vscode.ExtensionContext) {
       openBrowser(uri);
     }
   }));
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(updateFromConfiguration));
+
+  updateFromConfiguration();
+
+  function updateFromConfiguration() {
+    const config = vscode.workspace.getConfiguration('p5-server');
+    const runIconEnabled = config.get('editorTitle.RunIcon.enabled', true);
+    vscode.commands.executeCommand('setContext', 'p5-server.runIconEnabled', runIconEnabled);
+    updateStatusBarItems();
+  }
 
   function updateStatusBarItems() {
     switch (state) {
-      case 'running':
+      case 'running': {
+        const browserName = vscode.workspace.getConfiguration('p5-server').get<string>('browser', 'default');
         statusBarServerItem.text = "$(extensions-star-full)P5 Server";
         statusBarServerItem.tooltip = "Stop the P5 server";
         statusBarServerItem.command = 'p5-server.stop';
-        statusBarOpenItem.tooltip = `Open ${server!.url} in a browser`;
+        statusBarOpenItem.tooltip = `Open ${server!.url} in the ${browserName} browser`;
+      }
         break;
       case 'stopped':
         statusBarServerItem.text = "$(extensions-star-empty)P5 Server";
@@ -71,10 +82,16 @@ export function activate(context: vscode.ExtensionContext) {
         statusBarServerItem.tooltip = "The P5 server is stopping";
         break;
     }
-    if (state === 'running') {
+    const config = vscode.workspace.getConfiguration('p5-server');
+    if (config.get<boolean>('statusBar.browserItem.enabled', true) && state === 'running') {
       statusBarOpenItem.show();
     } else {
       statusBarOpenItem.hide();
+    }
+    if (config.get<boolean>('statusBar.serverItem.enabled', true)) {
+      statusBarServerItem.show();
+    } else {
+      statusBarServerItem.hide();
     }
   }
 
@@ -105,7 +122,6 @@ export function activate(context: vscode.ExtensionContext) {
       sbm.dispose();
       sbm = vscode.window.setStatusBarMessage(`p5-server is running at ${server.url}`);
       setTimeout(() => sbm.dispose(), 10000);
-
     } finally {
       if (state !== 'running') {
         state = 'stopped';
@@ -179,7 +195,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     type BrowserKey = open.AppName | 'safari' | 'default';
-    const browserName = vscode.workspace.getConfiguration('p5-server').get<string>('browser') || 'default';
+    const browserName = vscode.workspace.getConfiguration('p5-server').get<string>('browser', 'default');
     const browserKey = browserName.toLowerCase() as BrowserKey;
     let openOptions: open.Options | undefined;
     if (browserKey !== 'default') {
