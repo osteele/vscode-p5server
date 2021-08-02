@@ -17,7 +17,6 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
 
   context.subscriptions.push(vscode.commands.registerCommand('p5-explorer.refresh', () => sketchTreeProvider.refresh()));
-
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)));
   context.subscriptions.push(vscode.commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)));
 
@@ -136,7 +135,7 @@ export function activate(context: vscode.ExtensionContext) {
     if (state !== 'running') { return; }
     state = 'stopping';
 
-    let sbm = vscode.window.setStatusBarMessage("Shutting down the p5 server…");
+    let sbm = vscode.window.setStatusBarMessage("Shutting down the P5 server…");
 
     server.stop();
     server = null;
@@ -174,8 +173,9 @@ export function activate(context: vscode.ExtensionContext) {
     const dirPath = path.dirname(filePath);
     const basePath = path.basename(sketchName);
     const sketch = folder
-      ? new Sketch(filePath, 'index.html', 'sketch.js', { title: sketchName })
-      : new Sketch(dirPath, null, basePath);
+      ? Sketch.create(path.join(filePath, 'index.html'), { scriptPath: 'sketch.js', title: sketchName })
+      : Sketch.create(path.join(dirPath, basePath));
+
     try {
       sketch.generate();
     } catch (e) {
@@ -184,7 +184,7 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    vscode.window.showTextDocument(Uri.file(path.join(sketch.dirPath, sketch.jsSketchPath)));
+    vscode.window.showTextDocument(Uri.file(path.join(sketch.dirPath, sketch.scriptPath)));
     vscode.commands.executeCommand('p5-explorer.refresh');
     vscode.commands.executeCommand("revealInExplorer", dirPath);
   }
@@ -194,12 +194,17 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    type BrowserKey = open.AppName | 'safari' | 'default';
+    // Wrap open.xxx with versions that know about Safari
+    type AppName = open.AppName | 'safari';
+    const openApps = { safari: 'safari', ...open.apps };
+
+    type BrowserKey = AppName | 'default';
     const browserName = vscode.workspace.getConfiguration('p5-server').get<string>('browser', 'default');
     const browserKey = browserName.toLowerCase() as BrowserKey;
+    // TODO: exit with an error message if the browserKey === 'safari' and the os is not macOS
     let openOptions: open.Options | undefined;
     if (browserKey !== 'default') {
-      let name = browserKey === 'safari' ? browserKey : open.apps[browserKey];
+      let name = openApps[browserKey];
       openOptions = { app: { name } };
     }
 

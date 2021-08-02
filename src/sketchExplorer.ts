@@ -9,7 +9,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
 
   constructor(private workspaceRoot?: string) {
     vscode.commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
-      const filePath = path.join(sketch.dirPath, sketch.jsSketchPath || sketch.indexFile);
+      const filePath = path.join(sketch.dirPath, sketch.scriptPath || sketch.mainFile);
       vscode.window.showTextDocument(vscode.Uri.file(filePath));
     });
     vscode.commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem) => {
@@ -67,13 +67,14 @@ class SketchItem extends vscode.TreeItem implements FilePathItem {
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
   ) {
     super(sketch.name.replace(/\/$/, ''), collapsibleState);
-    this.tooltip = `p5.js sketch at ${sketch.indexFile}`;
+    this.tooltip = `p5.js sketch at ${this.filePath}`;
     this.description = sketch.description;
     this.command = { command: 'p5-explorer.openSketch', title: "Edit P5.js Sketch", arguments: [sketch] };
   }
 
   get filePath() {
-    return path.join(this.sketch.dirPath, this.sketch.indexFile);
+    const sketch = this.sketch;
+    return path.join(sketch.dirPath, sketch.scriptPath || sketch.mainFile);
   }
 
   iconPath = {

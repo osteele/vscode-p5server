@@ -165,17 +165,17 @@
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
     "prepare": "husky install",
-    "p5-server:link": "npm uninstall --no-save p5-server && npm link p5-server",
+    "p5-server:link": "npm uninstall --no-save p5-server && npm link ../p5-server",
     "p5-server:unlink": "npm unlink --no-save p5-server && npm install p5-server",
-    "vsce:package": "vsce package",
-    "vsce:publish": "vsce publish",
+    "publish": "vsce publish",
     "vscode:prepublish": "npm run compile",
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
     "open": "^8.2.1",
-    "p5-server": "^0.2.2"
+    "p5-server": "^0.3.0"
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",
