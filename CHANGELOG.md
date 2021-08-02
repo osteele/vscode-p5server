@@ -1,9 +1,10 @@
 # Change Log
 
-## [Unreleased]
+## [0.2.0]
 
 - Add configuration settings to select the browser
-- Add configuration settings to
+- Add configuration settings to control visibility
+- Upgrade to p5-server 0.3.0
 
 ## [0.1.1]
 
@@ -15,7 +16,7 @@
   - Changee the run command's icon 🌐->🞂
   - Display the run command only on sketch items
   - Enable the explorer commands only in that view
-- Upgrade to p5-server@0.2.1. Refer to [its change
+- Upgrade to p5-server 0.2.1. Refer to [its change
   notes](https://github.com/osteele/p5-server/blob/master/CHANGELOG.md#change-log)
   for additonal changes that affect this extension.
 

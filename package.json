@@ -3,7 +3,7 @@
   "displayName": "P5 Server",
   "description": "A p5.js sketch explorer and creator, that includes a sketch-aware server that automatically loads libraries.",
   "license": "MIT",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "osteele",
   "author": {
     "name": "Oliver Steele",
@@ -17,7 +17,7 @@
   ],
   "icon": "images/icon.png",
   "galleryBanner": {
-    "color": "#FDE7EE",
+    "color": "#E7EEFD",
     "theme": "light"
   },
   "keywords": [
