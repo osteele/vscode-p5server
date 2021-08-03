@@ -1,18 +1,9 @@
 # p5-server
 
-Launch a local developer server that knows about
+Launch a local development server that knows about
 [p5.js](https://p5js.org/libraries/) sketches.
 
-![browser directory listing](images/screenshot.png)
-
-An explorer view shows the sketches in the current workspace.
-
-![explorer](images/explorer.png)
-
-The status bar icons can be used to start and stop the server (✮5 Server), and
-open the server root in the browser (🌐P5 Browser).
-
-![status bar](images/status-bar.png)
+![browser directory listing](images/anatomy.png)
 
 ## Features
 
@@ -74,12 +65,14 @@ or run the following in the command palette:
 ext install osteele.p5-server
 ```
 
-## Configuration
+## Configure
 
 The extension provides configuration settings to set the browser, and to hide
 various user interface elements. Follow [these
 instructions](https://code.visualstudio.com/docs/getstarted/settings) to modify
 these settings.
+
+![configuration screenshot](images/configuration.png)
 
 ## Technical Notes
 
