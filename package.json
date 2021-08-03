@@ -1,9 +1,9 @@
 {
   "name": "p5-server",
   "displayName": "P5 Server",
-  "description": "A p5.js sketch explorer and creator, that includes a sketch-aware server that automatically loads libraries.",
+  "description": "A p5.js sketch explorer and creation tool. Includes a sketch-aware live server, and a tree view of a workspace's sketches.",
   "license": "MIT",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "osteele",
   "author": {
     "name": "Oliver Steele",
