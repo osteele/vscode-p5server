@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.2.1]
+
+- Upgrade to p5-server 0.3.1:
+  - Fixes filename case inconsistency that caused error on Linux
+
 ## [0.2.0]
 
 - Add configuration settings to select the browser
