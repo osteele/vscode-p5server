@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Sketch } from 'p5-server';
+import { Library, Sketch } from 'p5-server';
 
 const resourceDir = path.join(__filename, '..', '..', 'resources');
 
-export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | DirectoryItem | FileItem> {
+export class SketchTreeProvider
+  implements vscode.TreeDataProvider<SketchItem | DirectoryItem | FileItem | LibraryItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
@@ -35,11 +36,12 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
     if (element instanceof DirectoryItem) {
       return Promise.resolve(this.getDirectoryChildren(element.file));
     } else if (element instanceof SketchItem) {
-      return Promise.resolve(
-        element.sketch.files.map(
-          file => new FileItem(path.join(element.sketch.dir, file), vscode.TreeItemCollapsibleState.None)
-        )
-      );
+      return Promise.all([
+        ...element.sketch.files
+          .sort((a, b) => b.localeCompare(a))
+          .map(file => new FileItem(path.join(element.sketch.dir, file), vscode.TreeItemCollapsibleState.None)),
+        ...element.sketch.libraries.map(library => new LibraryItem(library))
+      ]);
     } else {
       return Promise.resolve(this.getDirectoryChildren(this.workspaceRoot));
     }
@@ -130,6 +132,21 @@ class FileItem extends vscode.TreeItem implements FilePathItem {
   }
 
   contextValue = 'file';
+}
+
+class LibraryItem extends vscode.TreeItem {
+  constructor(readonly library: Library) {
+    super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
+    this.tooltip = library.description;
+    this.command = {
+      command: 'vscode.open',
+      title: 'Homepage',
+      arguments: [vscode.Uri.parse(library.homepage)]
+    };
+  }
+
+  contextValue = 'library';
+  iconPath = new vscode.ThemeIcon('library');
 }
 
 function fileDisplay(file: string) {

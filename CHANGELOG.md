@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Move explorer to activity bar
+- Show sketch libraries in the explorer
 - Upgrade p5-server: can import more libraries
 - Display paths relative to home directory
 
