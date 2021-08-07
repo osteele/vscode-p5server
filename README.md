@@ -1,5 +1,7 @@
 # p5-server
 
+![vscode version](https://vsmarketplacebadge.apphb.com/version/osteele.p5-server.svg)
+
 Launch a local development server that knows about
 [p5.js](https://p5js.org/libraries/) sketches.
 
@@ -76,22 +78,28 @@ these settings.
 
 ## Technical Notes
 
-The [p5-server](https://github.com/osteele/p5-server) companion project provides
-the sketch analysis, library inference, and server features used by this
-extension. See that package's [implementation
-notes](https://github.com/osteele/p5-server#implementation-notes) for
-documentation about how sketches are recognized and how library inference works.
+This extension uses functionality from these packages:
+
+* The [p5-server](https://github.com/osteele/p5-server) companion project
+  provides the server. See that package's [implementation
+  notes](https://github.com/osteele/p5-server#implementation-notes).
+* The [p5-analysis](https://github.com/osteele/p5-analysis) companion project
+  provides the sketch recognition and library inference. See that package's
+  [implementation
+  notes](https://github.com/osteele/p5-analysis#implementation-notes) for
+  documentation about how sketches are recognized and how library inference
+  works.
 
 ## Acknowledgements
 
 * The functionality and user interface of this extension were heavily inspired
   by Ritwick Dey's fantastic [Live Server
   extension](https://ritwickdey.github.io/vscode-live-server/). This extension
-  [does more](#features) for p5.js sketches, but it does not implement Live
-  Server's [extensive list of features for general web
+  (p5 server) [does more](#features) for p5.js sketches, but it does not
+  implement Live Server's [extensive list of features for general web
   development](https://github.com/ritwickdey/vscode-live-server#features).
-* The extension uses the [open](https://github.com/sindresorhus/open#readme)
-  package to open URL's in the browser.
+* The [open](https://github.com/sindresorhus/open#readme) package is used to
+  open URL's in various browsers.
 * I learned a lot from reading the source code to the [vscode-project-manager
   extension](https://github.com/alefragnani/vscode-project-manager).
 
