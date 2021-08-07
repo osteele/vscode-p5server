@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Move explorer to activity bar
+- Display paths relative to home directory
 
 ## [0.2.1]
 

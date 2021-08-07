@@ -3,6 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Sketch } from 'p5-server';
 
+const resourceDir = path.join(__filename, '..', '..', 'resources');
+
 export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | DirectoryItem | FileItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -13,7 +15,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
       vscode.window.showTextDocument(vscode.Uri.file(filePath));
     });
     vscode.commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem) => {
-      vscode.commands.executeCommand('p5-server.openBrowser', vscode.Uri.file(item.filePath));
+      vscode.commands.executeCommand('p5-server.openBrowser', vscode.Uri.file(item.file));
     });
   }
 
@@ -31,11 +33,11 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
     }
 
     if (element instanceof DirectoryItem) {
-      return Promise.resolve(this.getDirectoryChildren(element.filePath));
+      return Promise.resolve(this.getDirectoryChildren(element.file));
     } else if (element instanceof SketchItem) {
       return Promise.resolve(
         element.sketch.files.map(
-          f => new FileItem(path.join(element.sketch.dirPath, f), vscode.TreeItemCollapsibleState.None)
+          file => new FileItem(path.join(element.sketch.dirPath, file), vscode.TreeItemCollapsibleState.None)
         )
       );
     } else {
@@ -58,23 +60,23 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
           )
       ),
       ...files
-        .filter(s => fs.statSync(s).isDirectory())
-        .map(s => new DirectoryItem(s, vscode.TreeItemCollapsibleState.Collapsed)),
+        .filter(file => fs.statSync(file).isDirectory())
+        .map(file => new DirectoryItem(file, vscode.TreeItemCollapsibleState.Collapsed)),
       ...files
-        .filter(s => !fs.statSync(s).isDirectory())
-        .map(s => new FileItem(s, vscode.TreeItemCollapsibleState.None))
+        .filter(file => !fs.statSync(file).isDirectory())
+        .map(file => new FileItem(file, vscode.TreeItemCollapsibleState.None))
     ];
   }
 }
 
 interface FilePathItem {
-  filePath: string;
+  file: string;
 }
 
 class SketchItem extends vscode.TreeItem implements FilePathItem {
   constructor(public readonly sketch: Sketch, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
     super(sketch.name.replace(/\/$/, ''), collapsibleState);
-    this.tooltip = `p5.js sketch at ${this.filePath}`;
+    this.tooltip = fileDisplay(this.file);
     this.description = sketch.description;
     this.command = {
       command: 'p5-explorer.openSketch',
@@ -83,46 +85,57 @@ class SketchItem extends vscode.TreeItem implements FilePathItem {
     };
   }
 
-  get filePath() {
+  get file() {
     const sketch = this.sketch;
     return path.join(sketch.dirPath, sketch.scriptPath || sketch.mainFile);
   }
 
   iconPath = {
-    dark: path.join(__filename, '..', '..', 'resources', 'dark', 'sketch.svg'),
-    light: path.join(__filename, '..', '..', 'resources', 'light', 'sketch.svg')
+    dark: path.join(resourceDir, 'dark', 'sketch.svg'),
+    light: path.join(resourceDir, 'light', 'sketch.svg')
   };
   contextValue = 'sketch';
 }
-
 class DirectoryItem extends vscode.TreeItem implements FilePathItem {
-  constructor(public readonly filePath: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
-    super(path.basename(filePath), collapsibleState);
-    this.tooltip = `${this.label}`;
+  constructor(public readonly file: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+    super(path.basename(file), collapsibleState);
+    this.tooltip = fileDisplay(this.file);
   }
 
   iconPath = new vscode.ThemeIcon('file-directory');
   contextValue = 'directory';
 }
 
+const fileTypeIcons = Object.fromEntries(
+  Object.entries({
+    'file-media': /(gif|jpe?g|png|svg|wav|mp3|mov|mp4)/,
+    'file-code': /(css|html|jsx?|tsx?)/,
+    'file-text': /(te?xt|json|yaml|csv|tsv)/,
+    file: new RegExp('')
+  }).map(([k, v]) => [k, new RegExp(`\.${v.source}$`)])
+);
+
 class FileItem extends vscode.TreeItem implements FilePathItem {
-  constructor(public readonly filePath: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
-    super(path.basename(filePath), collapsibleState);
-    this.tooltip = filePath;
+  constructor(public readonly file: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+    super(path.basename(file), collapsibleState);
+    this.tooltip = fileDisplay(file);
     this.command = {
       command: 'vscode.open',
       title: 'Edit File',
-      arguments: [vscode.Uri.file(filePath)]
+      arguments: [vscode.Uri.file(file)]
     };
-    this.iconPath = new vscode.ThemeIcon(
-      /\.(gif|jpe?g|png|svg|wav|mp3|mov|mp4)/i.test(filePath)
-        ? 'file-media'
-        : /\.css|html|js?$/i.test(filePath)
-        ? 'file-code'
-        : /\.text$/i.test(filePath)
-        ? 'file-text'
-        : 'file'
-    );
+
+    const iconId = Object.entries(fileTypeIcons).find(([_id, pattern]) => pattern.test(file))![0];
+    this.iconPath = new vscode.ThemeIcon(iconId);
   }
+
   contextValue = 'file';
+}
+
+function fileDisplay(file: string) {
+  if (!process.env.HOME) {
+    return file;
+  }
+  const prefix = `${process.env.HOME}/`.replace(/\/\/$/, '/');
+  return file.startsWith(prefix) ? `~${file.substr(process.env.HOME.length)}` : file;
 }
