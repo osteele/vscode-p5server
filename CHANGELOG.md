@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased]
+
+- Move explorer to activity bar
+
 ## [0.2.1]
 
 - Upgrade to p5-server 0.3.1:

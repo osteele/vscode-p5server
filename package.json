@@ -128,7 +128,7 @@
         {
           "command": "p5-server.createSketchFile",
           "when": "view == p5sketchExplorer",
-          "group": "navigation"
+          "group": "file"
         }
       ],
       "view/item/context": [
@@ -141,21 +141,33 @@
       ]
     },
     "views": {
-      "explorer": [
+      "p5js-sketch-explorer": [
         {
           "id": "p5sketchExplorer",
-          "name": "P5.js Sketches",
+          "name": "Sketches",
           "icon": "resources/light/sketch.svg",
           "contextualTitle": "P5.js Sketch Explorer"
         }
       ]
     },
-    "contributes": {
-      "viewsWelcome": [
+    "viewsWelcome": [
+      {
+        "view": "p5sketchExplorer",
+        "contents": "Create a sketch to get started.\n[Create p5.js Sketch File](command:p5-server.createSketchFile)\n[Create p5.js Sketch Folder](command:p5-server.createSketchFolder)",
+        "when": "workbenchState != empty"
+      },
+      {
+        "view": "p5sketchExplorer",
+        "contents": "Open a folder to get started.\n[Open Folder](command:workbench.action.files.openFileFolder)",
+        "when": "workbenchState == empty"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
         {
-          "view": "p5sketchExplorer",
-          "contents": "In order to create a sketch, use the Create P5.js Sketch command.\n[Create P5.js Sketch](command:p5-server.createSketchFile)",
-          "when": "workbenchState != empty"
+          "id": "p5js-sketch-explorer",
+          "title": "P5.js Sketch Explorer",
+          "icon": "resources/light/sketch.svg"
         }
       ]
     }
