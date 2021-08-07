@@ -199,7 +199,7 @@ export function activate(context: vscode.ExtensionContext) {
     const basePath = path.basename(sketchName);
     const sketch = folder
       ? Sketch.create(path.join(filePath, 'index.html'), {
-          scriptPath: 'sketch.js',
+          scriptFile: 'sketch.js',
           title: sketchName
         })
       : Sketch.create(path.join(dirPath, basePath));
@@ -212,7 +212,7 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    vscode.window.showTextDocument(Uri.file(path.join(sketch.dirPath, sketch.scriptPath)));
+    vscode.window.showTextDocument(Uri.file(path.join(sketch.dir, sketch.scriptFile)));
     vscode.commands.executeCommand('p5-explorer.refresh');
     vscode.commands.executeCommand('revealInExplorer', dirPath);
   }

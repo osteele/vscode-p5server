@@ -3,12 +3,12 @@
 ## [Unreleased]
 
 - Move explorer to activity bar
+- Upgrade p5-server: can import more libraries
 - Display paths relative to home directory
 
 ## [0.2.1]
 
-- Upgrade to p5-server 0.3.1:
-  - Fixes filename case inconsistency that caused error on Linux
+- Upgrade p5-server: fixes filename case inconsistency that caused error on Linux
 
 ## [0.2.0]
 

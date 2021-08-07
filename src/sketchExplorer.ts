@@ -11,7 +11,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
 
   constructor(private workspaceRoot?: string) {
     vscode.commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
-      const filePath = path.join(sketch.dirPath, sketch.scriptPath || sketch.mainFile);
+      const filePath = path.join(sketch.dir, sketch.scriptFile || sketch.mainFile);
       vscode.window.showTextDocument(vscode.Uri.file(filePath));
     });
     vscode.commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem) => {
@@ -37,7 +37,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchItem | 
     } else if (element instanceof SketchItem) {
       return Promise.resolve(
         element.sketch.files.map(
-          file => new FileItem(path.join(element.sketch.dirPath, file), vscode.TreeItemCollapsibleState.None)
+          file => new FileItem(path.join(element.sketch.dir, file), vscode.TreeItemCollapsibleState.None)
         )
       );
     } else {
@@ -87,7 +87,7 @@ class SketchItem extends vscode.TreeItem implements FilePathItem {
 
   get file() {
     const sketch = this.sketch;
-    return path.join(sketch.dirPath, sketch.scriptPath || sketch.mainFile);
+    return path.join(sketch.dir, sketch.scriptFile || sketch.mainFile);
   }
 
   iconPath = {
