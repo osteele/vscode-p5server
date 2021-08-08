@@ -27,6 +27,13 @@ Launch a local development server that knows about
   `sketch.js`.
 * **Sketch explorer**. A view of the sketches in the current workspace.
 
+In the image below, the extension infers that the `sound.js` sketch requires the
+p5.sound library, because of the presence of a call to `loadSound()`. No HTML
+file is required to run the sketch with the correct library. The explorer also
+detects that the file `doorbell.mp3` is associated with the sketch.
+
+![browser directory listing](images/library-inference.png)
+
 ## Usage
 
 It adds these commands to the command palette:

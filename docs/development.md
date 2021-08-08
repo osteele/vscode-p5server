@@ -16,7 +16,7 @@ code ../p5-server/p5-server/examples
 ```sh
 osascript <<'END'
 tell application "Visual Studio Code"
-    set bounds of front window to {20, 100, 870, 450}
+    set bounds of front window to {20, 100, 870, 500}
 end tell
 END
 ```
