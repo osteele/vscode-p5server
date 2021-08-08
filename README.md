@@ -1,6 +1,6 @@
 # p5-server
 
-![vscode version](https://vsmarketplacebadge.apphb.com/version/osteele.p5-server.svg)
+[![vscode version](https://vsmarketplacebadge.apphb.com/version/osteele.p5-server.svg)](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server)
 
 Launch a local development server that knows about
 [p5.js](https://p5js.org/libraries/) sketches.
