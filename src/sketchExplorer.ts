@@ -29,21 +29,24 @@ export class SketchTreeProvider
   }
 
   getChildren(element?: SketchItem) {
-    if (!this.workspaceRoot) {
-      return Promise.resolve([]);
-    }
-
-    if (element instanceof DirectoryItem) {
-      return Promise.resolve(this.getDirectoryChildren(element.file));
-    } else if (element instanceof SketchItem) {
-      return Promise.all([
-        ...element.sketch.files
-          .sort((a, b) => b.localeCompare(a))
-          .map(file => new FileItem(path.join(element.sketch.dir, file), vscode.TreeItemCollapsibleState.None)),
-        ...element.sketch.libraries.map(library => new LibraryItem(library))
-      ]);
-    } else {
-      return Promise.resolve(this.getDirectoryChildren(this.workspaceRoot));
+    try {
+      if (!this.workspaceRoot) {
+        return Promise.resolve([]);
+      }
+      if (element instanceof DirectoryItem) {
+        return Promise.resolve(this.getDirectoryChildren(element.file));
+      } else if (element instanceof SketchItem) {
+        return Promise.all([
+          ...element.sketch.files
+            .sort((a, b) => b.localeCompare(a))
+            .map(file => new FileItem(path.join(element.sketch.dir, file), vscode.TreeItemCollapsibleState.None)),
+          ...element.sketch.libraries.map(library => new LibraryItem(library))
+        ]);
+      } else {
+        return Promise.resolve(this.getDirectoryChildren(this.workspaceRoot));
+      }
+    } finally {
+      vscode.commands.executeCommand('setContext', 'p5-explorer.loaded', true);
     }
   }
 
@@ -58,7 +61,9 @@ export class SketchTreeProvider
         sketch =>
           new SketchItem(
             sketch,
-            sketch.files.length > 1 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None
+            sketch.files.length + sketch.libraries.length > 1
+              ? vscode.TreeItemCollapsibleState.Collapsed
+              : vscode.TreeItemCollapsibleState.None
           )
       ),
       ...files

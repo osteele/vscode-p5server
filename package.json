@@ -128,7 +128,7 @@
         {
           "command": "p5-server.createSketchFile",
           "when": "view == p5sketchExplorer",
-          "group": "file"
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -154,12 +154,17 @@
       {
         "view": "p5sketchExplorer",
         "contents": "Create a sketch to get started.\n[Create p5.js Sketch File](command:p5-server.createSketchFile)\n[Create p5.js Sketch Folder](command:p5-server.createSketchFolder)",
-        "when": "workbenchState != empty"
+        "when": "workbenchState != empty && p5-explorer.loaded"
       },
       {
         "view": "p5sketchExplorer",
         "contents": "Open a folder to get started.\n[Open Folder](command:workbench.action.files.openFileFolder)",
         "when": "workbenchState == empty"
+      },
+      {
+        "view": "p5sketchExplorer",
+        "contents": "Please wait for the sketch explorer to finish loading.",
+        "when": "workbenchState != empty && !p5-explorer.loaded"
       }
     ],
     "viewsContainers": {
