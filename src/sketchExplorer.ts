@@ -5,9 +5,8 @@ import { Library, Sketch } from 'p5-server';
 
 const resourceDir = path.join(__filename, '..', '..', 'resources');
 
-export class SketchTreeProvider
-  implements vscode.TreeDataProvider<SketchItem | DirectoryItem | FileItem | LibraryItem> {
-  private _onDidChangeTreeData = new vscode.EventEmitter<void>();
+export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeItem> {
+  private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(private workspaceRoot?: string) {
@@ -24,38 +23,37 @@ export class SketchTreeProvider
     this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: SketchItem): vscode.TreeItem {
+  getTreeItem(element: SketchTreeItem): vscode.TreeItem {
     return element;
   }
 
-  getChildren(element?: SketchItem) {
+  getChildren(element?: SketchTreeItem): vscode.ProviderResult<SketchTreeItem[]> {
+    if (!element) {
+      return this.getRootChildren();
+    } else if (element instanceof DirectoryItem) {
+      return this.getDirectoryChildren(element.file);
+    } else if (element instanceof SketchItem) {
+      return Promise.all([
+        ...element.sketch.files
+          .sort((a, b) => b.localeCompare(a))
+          .map(file => new FileItem(path.join(element.sketch.dir, file), vscode.TreeItemCollapsibleState.None)),
+        ...element.sketch.libraries.map(library => new LibraryItem(library))
+      ]);
+    }
+  }
+
+  private async getRootChildren(): Promise<SketchTreeItem[]> {
     try {
-      if (!this.workspaceRoot) {
-        return Promise.resolve([]);
-      }
-      if (element instanceof DirectoryItem) {
-        return Promise.resolve(this.getDirectoryChildren(element.file));
-      } else if (element instanceof SketchItem) {
-        return Promise.all([
-          ...element.sketch.files
-            .sort((a, b) => b.localeCompare(a))
-            .map(file => new FileItem(path.join(element.sketch.dir, file), vscode.TreeItemCollapsibleState.None)),
-          ...element.sketch.libraries.map(library => new LibraryItem(library))
-        ]);
-      } else {
-        return Promise.resolve(this.getDirectoryChildren(this.workspaceRoot));
-      }
+      return this.workspaceRoot ? await this.getDirectoryChildren(this.workspaceRoot) : Promise.resolve([]);
     } finally {
       vscode.commands.executeCommand('setContext', 'p5-explorer.loaded', true);
     }
   }
 
-  private getDirectoryChildren(dir: string) {
+  private async getDirectoryChildren(dir: string): Promise<SketchTreeItem[]> {
     const exclusions = ['.*', 'node_modules', 'package.json'];
-    const { sketches, unaffiliatedFiles } = Sketch.analyzeDirectory(dir, {
-      exclusions
-    });
-    const files = unaffiliatedFiles.map(s => path.join(dir, s));
+    const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
+    const files = unassociatedFiles.map(s => path.join(dir, s));
     return [
       ...sketches.map(
         sketch =>
@@ -79,6 +77,8 @@ export class SketchTreeProvider
 interface FilePathItem {
   file: string;
 }
+
+type SketchTreeItem = (FilePathItem | LibraryItem) & vscode.TreeItem;
 
 class SketchItem extends vscode.TreeItem implements FilePathItem {
   constructor(public readonly sketch: Sketch, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
@@ -113,13 +113,14 @@ class DirectoryItem extends vscode.TreeItem implements FilePathItem {
   contextValue = 'directory';
 }
 
-const fileTypeIcons = Object.fromEntries(
+const fileTypeIconMap: Record<string, RegExp> = Object.fromEntries(
+  // The `Object.entries().map` changes each /abc/ to /^abc$/i
   Object.entries({
     'file-media': /(gif|jpe?g|png|svg|wav|mp3|mov|mp4)/,
     'file-code': /(css|html|jsx?|tsx?)/,
     'file-text': /(te?xt|json|yaml|csv|tsv)/,
-    file: new RegExp('')
-  }).map(([k, v]) => [k, new RegExp(`\.${v.source}$`)])
+    file: null
+  }).map(([k, v]) => [k, new RegExp(v ? `${v.source}$` : '', 'i')])
 );
 
 class FileItem extends vscode.TreeItem implements FilePathItem {
@@ -132,7 +133,7 @@ class FileItem extends vscode.TreeItem implements FilePathItem {
       arguments: [vscode.Uri.file(file)]
     };
 
-    const iconId = Object.entries(fileTypeIcons).find(([_id, pattern]) => pattern.test(file))![0];
+    const iconId = Object.entries(fileTypeIconMap).find(([, pattern]) => pattern.test(file))![0];
     this.iconPath = new vscode.ThemeIcon(iconId);
   }
 

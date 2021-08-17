@@ -205,7 +205,7 @@ export function activate(context: vscode.ExtensionContext) {
       : Sketch.create(path.join(dirPath, basePath));
 
     try {
-      sketch.generate();
+      await sketch.generate();
     } catch (e) {
       vscode.window.showErrorMessage(e.message);
       console.error(e.message);
