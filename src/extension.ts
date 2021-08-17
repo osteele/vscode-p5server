@@ -232,12 +232,12 @@ export function activate(context: vscode.ExtensionContext) {
     // TODO: exit with an error message if the browserKey === 'safari' and the os is not macOS
     let openOptions: open.Options | undefined;
     if (browserKey !== 'default') {
-      let name = openApps[browserKey];
+      const name = openApps[browserKey];
       openOptions = { app: { name } };
     }
 
     const url = uri ? `${server.url}/${path.relative(wsPath, uri.fsPath)}` : server.url;
-    let process = await open(url, openOptions);
+    const process = await open(url, openOptions);
     if (process.exitCode === null) {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
