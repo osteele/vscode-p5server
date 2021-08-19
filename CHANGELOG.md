@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Add a config option to use the VSCode integrated (“Simple”) browser
+
+## [1.0.0]
+
 - Move explorer to activity bar
 - Show sketch libraries in the explorer
 - Upgrade p5-server: can import more libraries

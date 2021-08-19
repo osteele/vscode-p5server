@@ -4,6 +4,7 @@ import open = require('open');
 import path = require('path');
 import { Uri, window } from 'vscode';
 import { SketchTreeProvider } from './sketchExplorer';
+import { ChildProcess } from 'child_process';
 
 export function activate(context: vscode.ExtensionContext) {
   let servicesAvailable = false;
@@ -226,9 +227,17 @@ export function activate(context: vscode.ExtensionContext) {
     type AppName = open.AppName | 'safari';
     const openApps = { safari: 'safari', ...open.apps };
 
-    type BrowserKey = AppName | 'default';
+    type BrowserKey = AppName | 'default' | 'integrated';
     const browserName = vscode.workspace.getConfiguration('p5-server').get<string>('browser', 'default');
     const browserKey = browserName.toLowerCase() as BrowserKey;
+    const url = uri ? `${server.url}/${path.relative(wsPath, uri.fsPath)}` : server.url;
+    if (browserKey === 'integrated') {
+      await vscode.commands.executeCommand('simpleBrowser.api.open', url, {
+        viewColumn: vscode.ViewColumn.Beside
+      });
+      return;
+    }
+
     // TODO: exit with an error message if the browserKey === 'safari' and the os is not macOS
     let openOptions: open.Options | undefined;
     if (browserKey !== 'default') {
@@ -236,16 +245,18 @@ export function activate(context: vscode.ExtensionContext) {
       openOptions = { app: { name } };
     }
 
-    const url = uri ? `${server.url}/${path.relative(wsPath, uri.fsPath)}` : server.url;
-    const process = await open(url, openOptions);
-    if (process.exitCode === null) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    let process = await openInBrowser(url, openOptions);
+    if (process.exitCode !== 0 && browserKey !== 'default') {
+      const msg = `The ${browserName} browser failed to open. Retrying with the default system browser.`;
+      const messageStatus = vscode.window.setStatusBarMessage(msg);
+      process = await openInBrowser(url);
+      messageStatus.dispose();
     }
     if (process.exitCode !== 0) {
-      let msg = 'The browser failed to open.';
-      if (browserKey !== 'default') {
-        msg += ` The ${browserName} browser may not be available on your system.`;
-      }
+      const msg =
+        browserKey === 'default'
+          ? 'The default system browser failed to open.'
+          : `The ${browserName} browser failed to open. It may not be available on your system.`;
       vscode.window.showErrorMessage(msg);
     }
   }
@@ -253,3 +264,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export function deactivate() {}
+
+async function openInBrowser(target: string, options?: open.Options): Promise<ChildProcess> {
+  const process = await open(target, options);
+  if (process.exitCode === null) {
+    await new Promise<void>(resolve => {
+      const intervalTimer = setInterval(() => {
+        if (process.exitCode !== null) {
+          clearInterval(intervalTimer);
+          clearTimeout(timeoutTimer);
+          resolve();
+        }
+      }, 50);
+      const timeoutTimer = setTimeout(() => {
+        clearInterval(intervalTimer);
+        resolve();
+      }, 10000);
+    });
+  }
+  return process;
+}

@@ -87,12 +87,21 @@
           "default": "default",
           "enum": [
             "default",
+            "integrated",
             "Chrome",
             "Edge",
             "Firefox",
             "Safari"
           ],
-          "description": "The browser to use for opening sketches. “default” indicates to use the system default."
+          "description": "The browser to use for opening sketches.",
+          "enumDescriptions": [
+            "Open sketches in the system default browser",
+            "Open sketches in the Visual Studio Code integrated browser",
+            "Open sketches in Chrome. If Chrome is not installed, use the system default browser.",
+            "Open sketches in Edge. If Edge is not installed, use the system default browser.",
+            "Open sketches in Firefox. If Firefox is not installed, use the system default browser.",
+            "Open sketches in Safari. If Safari is not installed, use the system default browser."
+          ]
         },
         "p5-server.editorTitle.RunIcon.enabled": {
           "type": "boolean",
