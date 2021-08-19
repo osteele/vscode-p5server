@@ -87,20 +87,20 @@
           "default": "default",
           "enum": [
             "default",
-            "integrated",
             "Chrome",
             "Edge",
             "Firefox",
-            "Safari"
+            "Safari",
+            "integrated"
           ],
           "description": "The browser to use for opening sketches.",
           "enumDescriptions": [
             "Open sketches in the system default browser",
-            "Open sketches in the Visual Studio Code integrated browser",
             "Open sketches in Chrome. If Chrome is not installed, use the system default browser.",
             "Open sketches in Edge. If Edge is not installed, use the system default browser.",
             "Open sketches in Firefox. If Firefox is not installed, use the system default browser.",
-            "Open sketches in Safari. If Safari is not installed, use the system default browser."
+            "Open sketches in Safari. If Safari is not installed, use the system default browser.",
+            "Open sketches in a pane inside Visual Studio Code. This browser does not include a developer console. It is not recommended for developing sketches, only for viewing fully developed sketches that are already known to work."
           ]
         },
         "p5-server.editorTitle.RunIcon.enabled": {
