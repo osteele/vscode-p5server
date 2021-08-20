@@ -1,9 +1,10 @@
-import * as vscode from 'vscode';
+import { ChildProcess } from 'child_process';
 import { Server } from 'p5-server';
+import * as vscode from 'vscode';
+import { commands, Uri, window, workspace } from 'vscode';
+import { getWorkspaceFolderPaths } from './utils';
 import open = require('open');
 import path = require('path');
-import { Uri, window } from 'vscode';
-import { ChildProcess } from 'child_process';
 
 type ServerState = 'stopped' | 'starting' | 'running' | 'stopping';
 
@@ -23,16 +24,16 @@ export class ServerManager {
   }
 
   private registerCommands(context: vscode.ExtensionContext) {
-    context.subscriptions.push(vscode.commands.registerCommand('p5-server.start', this.startServer.bind(this)));
-    context.subscriptions.push(vscode.commands.registerCommand('p5-server.stop', this.stopServer.bind(this)));
+    context.subscriptions.push(commands.registerCommand('p5-server.start', this.startServer.bind(this)));
+    context.subscriptions.push(commands.registerCommand('p5-server.stop', this.stopServer.bind(this)));
     context.subscriptions.push(
-      vscode.commands.registerCommand('p5-server.openInBrowser', () => {
+      commands.registerCommand('p5-server.openInBrowser', () => {
         const editorPath = window.activeTextEditor?.document.fileName;
-        vscode.commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
+        commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
       })
     );
     context.subscriptions.push(
-      vscode.commands.registerCommand('p5-server.openBrowser', async (uri?: Uri) => {
+      commands.registerCommand('p5-server.openBrowser', async (uri?: Uri) => {
         if (this.state === 'stopped') {
           await this.startServer(uri);
         } else if (this.state === 'running') {
@@ -41,14 +42,14 @@ export class ServerManager {
       })
     );
 
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(this.updateFromConfiguration.bind(this)));
+    context.subscriptions.push(workspace.onDidChangeConfiguration(this.updateFromConfiguration.bind(this)));
     this.updateFromConfiguration();
   }
 
   updateFromConfiguration() {
-    const config = vscode.workspace.getConfiguration('p5-server');
+    const config = workspace.getConfiguration('p5-server');
     const runIconEnabled = config.get('editorTitle.RunIcon.enabled', true);
-    vscode.commands.executeCommand('setContext', 'p5-server.runIconEnabled', runIconEnabled);
+    commands.executeCommand('setContext', 'p5-server.runIconEnabled', runIconEnabled);
     this.updateStatusBar();
   }
 
@@ -72,11 +73,11 @@ export class ServerManager {
 
     this.state = 'starting';
     try {
-      const wsFolders = vscode.workspace?.workspaceFolders?.map(f => f.uri.fsPath) || [];
+      const wsFolders = getWorkspaceFolderPaths();
       // TODO: select the folder that contains uri
       this.wsPath =
         wsFolders.length > 1
-          ? await vscode.window.showQuickPick(wsFolders, {
+          ? await window.showQuickPick(wsFolders, {
               placeHolder: 'Select a folder to serve'
             })
           : wsFolders[0] || '.';
@@ -87,14 +88,14 @@ export class ServerManager {
       this.server?.stop();
       this.server = null;
 
-      let sbm = vscode.window.setStatusBarMessage(`Starting the P5 server at ${this.wsPath}`);
+      let sbm = window.setStatusBarMessage(`Starting the P5 server at ${this.wsPath}`);
 
       this.server = new Server({ root: this.wsPath });
       await this.server.start();
       this.state = 'running';
 
       sbm.dispose();
-      sbm = vscode.window.setStatusBarMessage(`p5-server is running at ${this.server.url}`);
+      sbm = window.setStatusBarMessage(`p5-server is running at ${this.server.url}`);
       setTimeout(() => sbm.dispose(), 10000);
     } finally {
       if (this.state !== 'running') {
@@ -113,14 +114,14 @@ export class ServerManager {
     }
     this.state = 'stopping';
 
-    let sbm = vscode.window.setStatusBarMessage('Shutting down the P5 server…');
+    let sbm = window.setStatusBarMessage('Shutting down the P5 server…');
 
     await this.server.stop();
     this.server = null;
     this.state = 'stopped';
 
     sbm.dispose();
-    sbm = vscode.window.setStatusBarMessage('The P5 server is no longer running.');
+    sbm = window.setStatusBarMessage('The P5 server is no longer running.');
     setTimeout(() => sbm.dispose(), 10000);
   }
 
@@ -135,13 +136,13 @@ export class ServerManager {
     const openApps = { safari: 'safari', ...open.apps };
 
     type BrowserKey = AppName | 'default' | 'integrated';
-    const browserName = vscode.workspace.getConfiguration('p5-server').get<string>('browser', 'default');
+    const browserName = workspace.getConfiguration('p5-server').get<string>('browser', 'default');
     const browserKey = browserName.toLowerCase() as BrowserKey;
     const url = uri ? `${server.url}/${path.relative(this.wsPath, uri.fsPath)}` : server.url;
 
     if (browserKey === 'integrated') {
-      // await vscode.commands.executeCommand('livePreview.start.internalPreview.atFile', Uri.parse(url));
-      await vscode.commands.executeCommand('simpleBrowser.api.open', url, {
+      // await commands.executeCommand('livePreview.start.internalPreview.atFile', Uri.parse(url));
+      await commands.executeCommand('simpleBrowser.api.open', url, {
         viewColumn: vscode.ViewColumn.Beside
       });
       return;
@@ -157,7 +158,7 @@ export class ServerManager {
     let process = await openInBrowser(url, openOptions);
     if (process.exitCode !== 0 && browserKey !== 'default') {
       const msg = `The ${browserName} browser failed to open. Retrying with the default system browser.`;
-      const messageStatus = vscode.window.setStatusBarMessage(msg);
+      const messageStatus = window.setStatusBarMessage(msg);
       process = await openInBrowser(url);
       messageStatus.dispose();
     }
@@ -166,7 +167,7 @@ export class ServerManager {
         browserKey === 'default'
           ? 'The default system browser failed to open.'
           : `The ${browserName} browser failed to open. It may not be available on your system.`;
-      vscode.window.showErrorMessage(msg);
+      window.showErrorMessage(msg);
     }
   }
 }
@@ -176,12 +177,12 @@ class StatusBarManager {
   private readonly statusBarServerItem: vscode.StatusBarItem;
 
   constructor() {
-    const statusBarOpenItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    const statusBarOpenItem = window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     this.statusBarOpenItem = statusBarOpenItem;
     statusBarOpenItem.text = `$(ports-open-browser-icon)P5 Browser`;
     statusBarOpenItem.command = 'p5-server.openBrowser';
 
-    this.statusBarServerItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    this.statusBarServerItem = window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   }
 
   update(server: Server | null, state: string) {
@@ -190,7 +191,7 @@ class StatusBarManager {
     switch (state) {
       case 'running':
         {
-          const browserName = vscode.workspace.getConfiguration('p5-server').get<string>('browser', 'default');
+          const browserName = workspace.getConfiguration('p5-server').get<string>('browser', 'default');
           statusBarServerItem.text = '$(extensions-star-full)P5 Server';
           statusBarServerItem.tooltip = 'Stop the P5 server';
           statusBarServerItem.command = 'p5-server.stop';
@@ -211,7 +212,7 @@ class StatusBarManager {
         statusBarServerItem.tooltip = 'The P5 server is stopping';
         break;
     }
-    const config = vscode.workspace.getConfiguration('p5-server');
+    const config = workspace.getConfiguration('p5-server');
     if (config.get<boolean>('statusBar.browserItem.enabled', true) && state === 'running') {
       statusBarOpenItem.show();
     } else {

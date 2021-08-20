@@ -1,44 +1,36 @@
-import * as vscode from 'vscode';
 import { Sketch } from 'p5-server';
-import path = require('path');
-import { Uri, window } from 'vscode';
-import { SketchTreeProvider } from './sketchExplorer';
+import * as vscode from 'vscode';
+import { commands, Uri, window, workspace } from 'vscode';
 import { ServerManager } from './serverManager';
+import { SketchTreeProvider } from './sketchExplorer';
+import { getWorkspaceFolderPaths } from './utils';
+import path = require('path');
 
 export function activate(context: vscode.ExtensionContext) {
-  const rootPath =
-    vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
-      ? vscode.workspace.workspaceFolders[0].uri.fsPath
-      : undefined;
+  const workspaceFolderPaths = getWorkspaceFolderPaths();
 
   // create sketch explorer
-  const sketchTreeProvider = new SketchTreeProvider(rootPath);
-  vscode.window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
+  const sketchTreeProvider = new SketchTreeProvider(workspaceFolderPaths);
+  window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
 
   // register commands
-  context.subscriptions.push(
-    vscode.commands.registerCommand('p5-explorer.refresh', () => sketchTreeProvider.refresh())
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false))
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true))
-  );
+  context.subscriptions.push(commands.registerCommand('p5-explorer.refresh', () => sketchTreeProvider.refresh()));
+  context.subscriptions.push(commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)));
+  context.subscriptions.push(commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)));
 
-  // set context variable
-  if (rootPath) {
-    vscode.commands.executeCommand('setContext', 'p5-server.available', Boolean(rootPath));
+  // create server manager and set context variable
+  if (getWorkspaceFolderPaths().length >= 1) {
     ServerManager.activate(context);
+    commands.executeCommand('setContext', 'p5-server.available', true);
   }
 
   async function createSketch(folder: boolean) {
-    const folders = vscode.workspace.workspaceFolders;
+    const folders = workspace.workspaceFolders;
     if (folders && folders.length > 0) {
       window.showErrorMessage('You must have at least one folder open to create a sketch.');
     }
 
-    let sketchName = await vscode.window.showInputBox({
+    let sketchName = await window.showInputBox({
       value: '',
       prompt: `Enter the name of the p5.js sketch`,
       ignoreFocusOut: true
@@ -54,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
       sketchName += '.js';
     }
 
-    const wsFolders = vscode.workspace?.workspaceFolders;
+    const wsFolders = workspace?.workspaceFolders;
     const wsPath = wsFolders ? wsFolders[0].uri.fsPath : '.';
 
     const filePath = path.join(wsPath, sketchName);
@@ -70,14 +62,14 @@ export function activate(context: vscode.ExtensionContext) {
     try {
       await sketch.generate();
     } catch (e) {
-      vscode.window.showErrorMessage(e.message);
+      window.showErrorMessage(e.message);
       console.error(e.message);
       return;
     }
 
-    vscode.window.showTextDocument(Uri.file(path.join(sketch.dir, sketch.scriptFile)));
-    vscode.commands.executeCommand('p5-explorer.refresh');
-    vscode.commands.executeCommand('revealInExplorer', dirPath);
+    window.showTextDocument(Uri.file(path.join(sketch.dir, sketch.scriptFile)));
+    commands.executeCommand('p5-explorer.refresh');
+    commands.executeCommand('revealInExplorer', dirPath);
   }
 }
 

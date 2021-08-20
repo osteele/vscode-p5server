@@ -1,7 +1,8 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as path from 'path';
 import { Library, Sketch } from 'p5-server';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { commands, Uri, window } from 'vscode';
 
 const resourceDir = path.join(__filename, '..', '..', 'resources');
 
@@ -9,13 +10,13 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(private workspaceRoot?: string) {
-    vscode.commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
+  constructor(private readonly workspaceFolderPaths: string[]) {
+    commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
       const filePath = path.join(sketch.dir, sketch.scriptFile || sketch.mainFile);
-      vscode.window.showTextDocument(vscode.Uri.file(filePath));
+      window.showTextDocument(Uri.file(filePath));
     });
-    vscode.commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem) => {
-      vscode.commands.executeCommand('p5-server.openBrowser', vscode.Uri.file(item.file));
+    commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem) => {
+      commands.executeCommand('p5-server.openBrowser', Uri.file(item.file));
     });
   }
 
@@ -44,9 +45,18 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
 
   private async getRootChildren(): Promise<SketchTreeItem[]> {
     try {
-      return this.workspaceRoot ? await this.getDirectoryChildren(this.workspaceRoot) : Promise.resolve([]);
+      switch (this.workspaceFolderPaths.length) {
+        case 0:
+          return [];
+        case 1:
+          return this.getDirectoryChildren(this.workspaceFolderPaths[0]);
+        default:
+          return Promise.all(
+            this.workspaceFolderPaths.map(dir => new DirectoryItem(dir, vscode.TreeItemCollapsibleState.Collapsed))
+          );
+      }
     } finally {
-      vscode.commands.executeCommand('setContext', 'p5-explorer.loaded', true);
+      commands.executeCommand('setContext', 'p5-explorer.loaded', true);
     }
   }
 
@@ -66,7 +76,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
       ),
       ...files
         .filter(file => fs.statSync(file).isDirectory())
-        .map(file => new DirectoryItem(file, vscode.TreeItemCollapsibleState.Collapsed)),
+        .map(dir => new DirectoryItem(dir, vscode.TreeItemCollapsibleState.Collapsed)),
       ...files
         .filter(file => !fs.statSync(file).isDirectory())
         .map(file => new FileItem(file, vscode.TreeItemCollapsibleState.None))
@@ -130,7 +140,7 @@ class FileItem extends vscode.TreeItem implements FilePathItem {
     this.command = {
       command: 'vscode.open',
       title: 'Edit File',
-      arguments: [vscode.Uri.file(file)]
+      arguments: [Uri.file(file)]
     };
 
     const iconId = Object.entries(fileTypeIconMap).find(([, pattern]) => pattern.test(file))![0];
@@ -147,7 +157,7 @@ class LibraryItem extends vscode.TreeItem {
     this.command = {
       command: 'vscode.open',
       title: 'Homepage',
-      arguments: [vscode.Uri.parse(library.homepage)]
+      arguments: [Uri.parse(library.homepage)]
     };
   }
 
