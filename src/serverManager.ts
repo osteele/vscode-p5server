@@ -69,7 +69,7 @@ export class ServerManager {
 
   private get sketchConsole() {
     if (!this._sketchConsole) {
-      this._sketchConsole = window.createOutputChannel('P5 Sketch');
+      this._sketchConsole = window.createOutputChannel('P5-Sketch');
     }
     return this._sketchConsole;
   }
@@ -83,21 +83,24 @@ export class ServerManager {
     try {
       const wsFolders = getWorkspaceFolderPaths();
       // TODO: select the folder that contains uri
-      this.wsPath =
+      const root =
         wsFolders.length > 1
           ? await window.showQuickPick(wsFolders, {
               placeHolder: 'Select a folder to serve'
             })
           : wsFolders[0] || '.';
-      if (!this.wsPath) return; // the user cancelled
+      if (!root) return; // the user cancelled
 
       this.server?.stop();
       this.server = null;
 
-      let sbm = window.setStatusBarMessage(`Starting the P5 server at ${this.wsPath}`);
+      let sbm = window.setStatusBarMessage(`Starting the P5 server at ${root}`);
 
-      this.server = new Server({ root: this.wsPath, relayConsoleMessages: true });
+      this.server = new Server({ root, relayConsoleMessages: true });
       await this.server.start();
+      this.wsPath = root;
+      this.state = 'running';
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.server.consoleEmitter.on('console', ({ method, args }: { method: string; args: any[] }) => {
         if (method === 'clear') {
@@ -109,7 +112,23 @@ export class ServerManager {
           this.sketchConsole.appendLine(`${method}: ${args.join(' ')}`);
         }
       });
-      this.state = 'running';
+      this.server.consoleEmitter.on(
+        'error',
+        ({ message, url, line, stack }: { message: string; url?: string; line?: number; stack?: string }) => {
+          if (workspace.getConfiguration('p5-server').get<boolean>('console.autoShow', true)) {
+            this.sketchConsole.show(true);
+          }
+          const urlToFsPath = (s: string) => s.replaceAll(this.server!.url!, root);
+          let msg = 'Error';
+          if (line) {
+            msg += ` at line ${line}`;
+          }
+          if (url) {
+            msg += ` of ${urlToFsPath(url)}`;
+          }
+          this.sketchConsole.appendLine(stack ? urlToFsPath(stack) : `${msg}: ${message}`);
+        }
+      );
 
       sbm.dispose();
       sbm = window.setStatusBarMessage(`p5-server is running at ${this.server.url}`);
