@@ -35,7 +35,8 @@
   },
   "homepage": "https://github.com/osteele/vscode-p5server#readme",
   "activationEvents": [
-    "onStartupFinished"
+    "onView:p5sketchExplorer",
+    "workspaceContains:**/*.js"
   ],
   "main": "./out/extension.js",
   "contributes": {
