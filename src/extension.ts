@@ -25,10 +25,18 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   async function createSketch(folder: boolean) {
-    const folders = workspace.workspaceFolders;
-    if (folders && folders.length > 0) {
+    const wsFolders = getWorkspaceFolderPaths();
+
+    if (wsFolders.length === 0) {
       window.showErrorMessage('You must have at least one folder open to create a sketch.');
+      return;
     }
+
+    const wsPath =
+      wsFolders.length > 1
+        ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
+        : wsFolders[0];
+    if (!wsPath) return; // the user cancelled
 
     let sketchName = await window.showInputBox({
       value: '',
@@ -45,9 +53,6 @@ export function activate(context: vscode.ExtensionContext) {
     if (!folder && !sketchName.endsWith('.js')) {
       sketchName += '.js';
     }
-
-    const wsFolders = workspace?.workspaceFolders;
-    const wsPath = wsFolders ? wsFolders[0].uri.fsPath : '.';
 
     const filePath = path.join(wsPath, sketchName);
     const dirPath = path.dirname(filePath);

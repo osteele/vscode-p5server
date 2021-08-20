@@ -81,9 +81,7 @@ export class ServerManager {
               placeHolder: 'Select a folder to serve'
             })
           : wsFolders[0] || '.';
-      if (!this.wsPath) {
-        return;
-      }
+      if (!this.wsPath) return; // the user cancelled
 
       this.server?.stop();
       this.server = null;
