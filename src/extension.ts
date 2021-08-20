@@ -10,7 +10,8 @@ export function activate(context: vscode.ExtensionContext) {
   const workspaceFolderPaths = getWorkspaceFolderPaths();
 
   // create sketch explorer
-  const sketchTreeProvider = new SketchTreeProvider(workspaceFolderPaths);
+  const sketchTreeProvider = new SketchTreeProvider();
+  context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => sketchTreeProvider.refresh()));
   window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
 
   // register commands

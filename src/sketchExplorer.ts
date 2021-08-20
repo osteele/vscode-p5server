@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { commands, Uri, window } from 'vscode';
+import { commands, Uri, window, workspace } from 'vscode';
 
 const resourceDir = path.join(__filename, '..', '..', 'resources');
 
@@ -10,7 +10,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(private readonly workspaceFolderPaths: string[]) {
+  constructor() {
     commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
       const filePath = path.join(sketch.dir, sketch.scriptFile || sketch.mainFile);
       window.showTextDocument(Uri.file(filePath));
@@ -44,15 +44,20 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
   }
 
   private async getRootChildren(): Promise<SketchTreeItem[]> {
+    const wsFolders = workspace.workspaceFolders
+      ? workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')
+      : [];
     try {
-      switch (this.workspaceFolderPaths.length) {
+      switch (wsFolders.length) {
         case 0:
           return [];
         case 1:
-          return this.getDirectoryChildren(this.workspaceFolderPaths[0]);
+          return this.getDirectoryChildren(wsFolders[0].uri.fsPath);
         default:
           return Promise.all(
-            this.workspaceFolderPaths.map(dir => new DirectoryItem(dir, vscode.TreeItemCollapsibleState.Collapsed))
+            wsFolders.map(
+              folder => new DirectoryItem(folder.uri.fsPath, vscode.TreeItemCollapsibleState.Collapsed, folder.name)
+            )
           );
       }
     } finally {
@@ -114,8 +119,12 @@ class SketchItem extends vscode.TreeItem implements FilePathItem {
   contextValue = 'sketch';
 }
 class DirectoryItem extends vscode.TreeItem implements FilePathItem {
-  constructor(public readonly file: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
-    super(path.basename(file), collapsibleState);
+  constructor(
+    public readonly file: string,
+    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+    name?: string
+  ) {
+    super(name || path.basename(file), collapsibleState);
     this.tooltip = fileDisplay(this.file);
   }
 
