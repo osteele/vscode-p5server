@@ -104,6 +104,11 @@
             "Open sketches in a pane inside Visual Studio Code. This browser does not include a developer console. It is not recommended for developing sketches, only for viewing fully developed sketches that are already known to work."
           ]
         },
+        "p5-server.console.autoShow": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the p5 console when the sketch calls console.info or another console method."
+        },
         "p5-server.editorTitle.RunIcon.enabled": {
           "type": "boolean",
           "default": true,

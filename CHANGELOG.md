@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Add a config option to use the VSCode integrated (“Simple”) browser
+- Display console messages from the sketch in an output channel
 
 ## [1.0.0]
 

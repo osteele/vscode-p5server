@@ -13,6 +13,7 @@ export class ServerManager {
   private _state: ServerState = 'stopped';
   private wsPath: string | undefined;
   private statusBarManager: StatusBarManager;
+  private _sketchConsole: vscode.OutputChannel | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     this.statusBarManager = new StatusBarManager();
@@ -66,6 +67,13 @@ export class ServerManager {
     this.updateStatusBar();
   }
 
+  private get sketchConsole() {
+    if (!this._sketchConsole) {
+      this._sketchConsole = window.createOutputChannel('P5 Sketch');
+    }
+    return this._sketchConsole;
+  }
+
   async startServer(uri?: Uri) {
     if (this.state !== 'stopped') {
       return;
@@ -88,8 +96,19 @@ export class ServerManager {
 
       let sbm = window.setStatusBarMessage(`Starting the P5 server at ${this.wsPath}`);
 
-      this.server = new Server({ root: this.wsPath });
+      this.server = new Server({ root: this.wsPath, relayConsoleMessages: true });
       await this.server.start();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.server.consoleEmitter.on('console', ({ method, args }: { method: string; args: any[] }) => {
+        if (method === 'clear') {
+          this.sketchConsole.clear();
+        } else {
+          if (workspace.getConfiguration('p5-server').get<boolean>('console.autoShow', true)) {
+            this.sketchConsole.show(true);
+          }
+          this.sketchConsole.appendLine(`${method}: ${args.join(' ')}`);
+        }
+      });
       this.state = 'running';
 
       sbm.dispose();
