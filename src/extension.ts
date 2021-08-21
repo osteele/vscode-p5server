@@ -7,8 +7,6 @@ import { getWorkspaceFolderPaths } from './utils';
 import path = require('path');
 
 export function activate(context: vscode.ExtensionContext) {
-  const workspaceFolderPaths = getWorkspaceFolderPaths();
-
   // create sketch explorer
   const sketchTreeProvider = new SketchTreeProvider();
   context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => sketchTreeProvider.refresh()));

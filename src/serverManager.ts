@@ -102,31 +102,28 @@ export class ServerManager {
       this.state = 'running';
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.server.consoleEmitter.on('console', ({ method, args }: { method: string; args: any[] }) => {
+      this.server.onSketchEvent('console', (data: { method: string; args: any[] }) => {
+        const { method, args } = data;
         if (method === 'clear') {
           this.sketchConsole.clear();
         } else {
-          if (workspace.getConfiguration('p5-server').get<boolean>('console.autoShow', true)) {
-            this.sketchConsole.show(true);
-          }
+          this.maybeShowConsole(method);
           this.sketchConsole.appendLine(`${method}: ${args.join(' ')}`);
         }
       });
-      this.server.consoleEmitter.on(
+      this.server.onSketchEvent(
         'error',
-        ({ message, url, line, stack }: { message: string; url?: string; line?: number; stack?: string }) => {
-          if (workspace.getConfiguration('p5-server').get<boolean>('console.autoShow', true)) {
-            this.sketchConsole.show(true);
-          }
-          const urlToFsPath = (s: string) => s.replaceAll(this.server!.url!, root);
+        (data: { message: string; file?: string; url?: string; line?: number; stack?: string }) => {
+          const { message, url, file, line, stack } = data;
+          this.maybeShowConsole('error');
           let msg = 'Error';
           if (line) {
             msg += ` at line ${line}`;
           }
-          if (url) {
-            msg += ` of ${urlToFsPath(url)}`;
+          if (file || url) {
+            msg += ` of ${file || url}`;
           }
-          this.sketchConsole.appendLine(stack ? urlToFsPath(stack) : `${msg}: ${message}`);
+          this.sketchConsole.appendLine(stack || `${msg}: ${message}`);
         }
       );
 
@@ -139,6 +136,12 @@ export class ServerManager {
       }
     }
     this.openBrowser(uri);
+  }
+
+  maybeShowConsole(_level: string) {
+    if (workspace.getConfiguration('p5-server').get<boolean>('console.autoShow', true)) {
+      this.sketchConsole.show(true);
+    }
   }
 
   async stopServer() {
