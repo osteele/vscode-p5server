@@ -85,29 +85,66 @@
       "properties": {
         "p5-server.browser": {
           "type": "string",
-          "default": "default",
+          "default": "integrated",
           "enum": [
+            "integrated",
             "default",
             "Chrome",
             "Edge",
             "Firefox",
-            "Safari",
-            "integrated"
+            "Safari"
           ],
           "description": "The browser to use for opening sketches.",
           "enumDescriptions": [
+            "Open sketches in a pane inside Visual Studio Code.",
             "Open sketches in the system default browser",
             "Open sketches in Chrome. If Chrome is not installed, use the system default browser.",
             "Open sketches in Edge. If Edge is not installed, use the system default browser.",
             "Open sketches in Firefox. If Firefox is not installed, use the system default browser.",
-            "Open sketches in Safari. If Safari is not installed, use the system default browser.",
-            "Open sketches in a pane inside Visual Studio Code. This browser does not include a developer console. It is not recommended for developing sketches, only for viewing fully developed sketches that are already known to work."
+            "Open sketches in Safari. If Safari is not installed, use the system default browser."
           ]
         },
-        "p5-server.console.autoShow": {
-          "type": "boolean",
-          "default": true,
-          "description": "Open the p5 console when the sketch calls console.info or another console method."
+        "p5-server.console.integratedBrowser.autoShow.level": {
+          "type": "string",
+          "default": "always",
+          "enum": [
+            "always",
+            "never",
+            "error",
+            "warn",
+            "log",
+            "info"
+          ],
+          "enumDescriptions": [
+            "Open the integrated console for any message",
+            "Never open the integrated P5 console automatically",
+            "Open the integrated console for errors",
+            "Open the integrated console for warnings and errors",
+            "Open the integrated console for log, warnings and errors",
+            "Open the integrated console for info, log, warnings and errors"
+          ],
+          "description": "Open the integated p5 console when the browser is set to the integrated browser, and a sketch calls a console method or an error occurs."
+        },
+        "p5-server.console.externalBrowser.autoShow.level": {
+          "type": "string",
+          "default": "error",
+          "enum": [
+            "always",
+            "never",
+            "error",
+            "warn",
+            "log",
+            "info"
+          ],
+          "enumDescriptions": [
+            "Open the integrated console for any message",
+            "Never open the integrated P5 console automatically",
+            "Open the integrated console for errors",
+            "Open the integrated console for warnings and errors",
+            "Open the integrated console for log, warnings and errors",
+            "Open the integrated console for info, log, warnings and errors"
+          ],
+          "description": "Open the integated p5 console when the browser is not set to the integrated browser, and a sketch calls a console method or an error occurs."
         },
         "p5-server.editorTitle.RunIcon.enabled": {
           "type": "boolean",

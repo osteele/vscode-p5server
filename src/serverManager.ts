@@ -126,6 +126,12 @@ export class ServerManager {
           this.sketchConsole.appendLine(stack || `${msg}: ${message}`);
         }
       );
+      this.server.onSketchEvent('window', ({ event }: { event: string }) => {
+        if (event === 'load') {
+          this.maybeShowConsole('always');
+          this.sketchConsole.appendLine('='.repeat(80));
+        }
+      });
 
       sbm.dispose();
       sbm = window.setStatusBarMessage(`p5-server is running at ${this.server.url}`);
@@ -138,9 +144,14 @@ export class ServerManager {
     this.openBrowser(uri);
   }
 
-  maybeShowConsole(_level: string) {
-    if (workspace.getConfiguration('p5-server').get<boolean>('console.autoShow', true)) {
-      this.sketchConsole.show(true);
+  maybeShowConsole(level: string) {
+    const browser = workspace.getConfiguration('p5-server').get('browser', 'integrated');
+    const [configKey, defaultValue] =
+      browser === 'integrated' ? ['integratedBrowser', 'info'] : ['externalBrowser', 'error'];
+    const levels = ['error', 'warn', 'log', 'info', 'debug', 'always'];
+    const threshold = workspace.getConfiguration('p5-server.console').get(configKey + '.autoShow.level', defaultValue);
+    if (levels.includes(level) && threshold !== 'never' && levels.indexOf(level) <= levels.indexOf(threshold)) {
+      this.sketchConsole.show();
     }
   }
 
