@@ -2,17 +2,15 @@ import { ChildProcess } from 'child_process';
 import { Server } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
+import { SketchConsole } from './integratedBrowserConsole';
 import { getWorkspaceFolderPaths } from './utils';
 import open = require('open');
-import path = require('path');
-import { SketchConsole } from './integratedBrowserConsole';
 
 type ServerState = 'stopped' | 'starting' | 'running' | 'stopping';
 
 export class ServerManager {
   private server: Server | null = null;
   private _state: ServerState = 'stopped';
-  private wsPath: string | undefined;
   private statusBarManager: StatusBarManager;
 
   constructor(context: vscode.ExtensionContext) {
@@ -30,7 +28,7 @@ export class ServerManager {
     context.subscriptions.push(
       commands.registerCommand('p5-server.openInBrowser', () => {
         const editorPath = window.activeTextEditor?.document.fileName;
-        commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
+        return commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
       })
     );
     context.subscriptions.push(
@@ -91,7 +89,6 @@ export class ServerManager {
 
       this.server = new Server({ root, relayConsoleMessages: true });
       await this.server.start();
-      this.wsPath = root;
       const consolePane = new SketchConsole();
       consolePane.subscribe(this.server);
       this.state = 'running';
@@ -129,7 +126,14 @@ export class ServerManager {
 
   async openBrowser(uri?: Uri) {
     const server = this.server;
-    if (!server?.url || !this.wsPath) {
+    if (!server?.url) {
+      return;
+    }
+    const url = uri ? server.filePathToUrl(uri.fsPath) : server.url;
+    if (!url) {
+      if (uri) {
+        window.showErrorMessage(`${uri.fsPath} is not in a directory that is served by the P5 server.`);
+      }
       return;
     }
 
@@ -140,7 +144,6 @@ export class ServerManager {
     type BrowserKey = AppName | 'default' | 'integrated';
     const browserName = workspace.getConfiguration('p5-server').get<string>('browser', 'default');
     const browserKey = browserName.toLowerCase() as BrowserKey;
-    const url = uri ? `${server.url}/${path.relative(this.wsPath, uri.fsPath)}` : server.url;
 
     if (browserKey === 'integrated') {
       await commands.executeCommand('simpleBrowser.api.open', url, {
