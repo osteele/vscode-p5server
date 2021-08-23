@@ -10,14 +10,14 @@ export class ScriptConsole {
     server.onScriptEvent(
       'console',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (data: { method: string; args: any[]; argStrings: string[]; file: string; url: string }) => {
+      (data: { method: string; args: any[]; argStrings: (string | null)[]; file: string; url: string }) => {
         const { method, args, file, url } = data;
         if (method === 'clear') {
           this.sketchConsole.clear();
         } else {
           this.setFile(file || url);
           const argStrings = data.argStrings.map((str, i) => str || String(args[i]));
-          this.sketchConsole.appendLine(`${method}: ${argStrings.join(', ')}`);
+          this.sketchConsole.appendLine(`[${method.toUpperCase()}] ${argStrings.join(', ')}`);
           this.maybeShowConsole(method);
         }
       }
@@ -59,7 +59,7 @@ export class ScriptConsole {
   private setFile(file: string | undefined, always = false) {
     if ((this.file === file || !file) && !always) return;
     this.file = file;
-    const label = ` (${file}) `;
+    const label = file ? ` (${file}) ` : '';
     const halfLen = Math.floor((80 - label.length) / 2);
     this.sketchConsole.appendLine('='.repeat(halfLen) + label + '='.repeat(halfLen));
   }

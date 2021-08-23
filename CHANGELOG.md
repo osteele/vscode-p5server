@@ -2,8 +2,15 @@
 
 ## [Unreleased]
 
+New feature:
+
 - Add a config option to use the VSCode integrated (“Simple”) browser
 - Display console messages from the sketch in an output channel
+
+Bug fixes:
+
+- Running a sketch always opens the main file
+- In the explorer, sketches don't include files outside their directory
 
 ## [1.0.0]
 

@@ -73,7 +73,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     window.showTextDocument(Uri.file(path.join(sketch.dir, sketch.scriptFile)));
     commands.executeCommand('p5-explorer.refresh');
-    commands.executeCommand('revealInExplorer', dirPath);
   }
 }
 
