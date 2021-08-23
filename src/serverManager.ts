@@ -5,6 +5,7 @@ import { commands, Uri, window, workspace } from 'vscode';
 import { getWorkspaceFolderPaths } from './utils';
 import open = require('open');
 import path = require('path');
+import { SketchConsole } from './integratedBrowserConsole';
 
 type ServerState = 'stopped' | 'starting' | 'running' | 'stopping';
 
@@ -13,7 +14,6 @@ export class ServerManager {
   private _state: ServerState = 'stopped';
   private wsPath: string | undefined;
   private statusBarManager: StatusBarManager;
-  private _sketchConsole: vscode.OutputChannel | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     this.statusBarManager = new StatusBarManager();
@@ -67,13 +67,6 @@ export class ServerManager {
     this.updateStatusBar();
   }
 
-  private get sketchConsole() {
-    if (!this._sketchConsole) {
-      this._sketchConsole = window.createOutputChannel('P5-Sketch');
-    }
-    return this._sketchConsole;
-  }
-
   async startServer(uri?: Uri) {
     if (this.state !== 'stopped') {
       return;
@@ -99,39 +92,9 @@ export class ServerManager {
       this.server = new Server({ root, relayConsoleMessages: true });
       await this.server.start();
       this.wsPath = root;
+      const consolePane = new SketchConsole();
+      consolePane.subscribe(this.server);
       this.state = 'running';
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.server.onSketchEvent('console', (data: { method: string; args: any[] }) => {
-        const { method, args } = data;
-        if (method === 'clear') {
-          this.sketchConsole.clear();
-        } else {
-          this.maybeShowConsole(method);
-          this.sketchConsole.appendLine(`${method}: ${args.join(' ')}`);
-        }
-      });
-      this.server.onSketchEvent(
-        'error',
-        (data: { message: string; file?: string; url?: string; line?: number; stack?: string }) => {
-          const { message, url, file, line, stack } = data;
-          this.maybeShowConsole('error');
-          let msg = 'Error';
-          if (line) {
-            msg += ` at line ${line}`;
-          }
-          if (file || url) {
-            msg += ` of ${file || url}`;
-          }
-          this.sketchConsole.appendLine(stack || `${msg}: ${message}`);
-        }
-      );
-      this.server.onSketchEvent('window', ({ event }: { event: string }) => {
-        if (event === 'load') {
-          this.maybeShowConsole('always');
-          this.sketchConsole.appendLine('='.repeat(80));
-        }
-      });
 
       sbm.dispose();
       sbm = window.setStatusBarMessage(`p5-server is running at ${this.server.url}`);
@@ -142,17 +105,6 @@ export class ServerManager {
       }
     }
     this.openBrowser(uri);
-  }
-
-  maybeShowConsole(level: string) {
-    const browser = workspace.getConfiguration('p5-server').get('browser', 'integrated');
-    const [configKey, defaultValue] =
-      browser === 'integrated' ? ['integratedBrowser', 'info'] : ['externalBrowser', 'error'];
-    const levels = ['error', 'warn', 'log', 'info', 'debug', 'always'];
-    const threshold = workspace.getConfiguration('p5-server.console').get(configKey + '.autoShow.level', defaultValue);
-    if (levels.includes(level) && threshold !== 'never' && levels.indexOf(level) <= levels.indexOf(threshold)) {
-      this.sketchConsole.show();
-    }
   }
 
   async stopServer() {
@@ -191,7 +143,6 @@ export class ServerManager {
     const url = uri ? `${server.url}/${path.relative(this.wsPath, uri.fsPath)}` : server.url;
 
     if (browserKey === 'integrated') {
-      // await commands.executeCommand('livePreview.start.internalPreview.atFile', Uri.parse(url));
       await commands.executeCommand('simpleBrowser.api.open', url, {
         viewColumn: vscode.ViewColumn.Beside
       });
