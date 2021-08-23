@@ -2,7 +2,7 @@ import { ChildProcess } from 'child_process';
 import { Server } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
-import { SketchConsole } from './integratedBrowserConsole';
+import { ScriptConsole } from './scriptConsole';
 import { getWorkspaceFolderPaths } from './utils';
 import open = require('open');
 
@@ -89,7 +89,7 @@ export class ServerManager {
 
       this.server = new Server({ root, relayConsoleMessages: true });
       await this.server.start();
-      const consolePane = new SketchConsole();
+      const consolePane = new ScriptConsole();
       consolePane.subscribe(this.server);
       this.state = 'running';
 

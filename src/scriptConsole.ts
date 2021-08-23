@@ -2,12 +2,12 @@ import { Server } from 'p5-server';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
 
-export class SketchConsole {
+export class ScriptConsole {
   private _sketchConsole: vscode.OutputChannel | null = null;
   private file?: string;
 
   subscribe(server: Server) {
-    server.onSketchEvent(
+    server.onScriptEvent(
       'console',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (data: { method: string; args: any[]; argStrings: string[]; file: string; url: string }) => {
@@ -23,7 +23,7 @@ export class SketchConsole {
       }
     );
 
-    server.onSketchEvent(
+    server.onScriptEvent(
       'error',
       (data: { message: string; file?: string; url?: string; line?: number; stack?: string }) => {
         const { message, url, file, line, stack } = data;
@@ -40,7 +40,7 @@ export class SketchConsole {
       }
     );
 
-    server.onSketchEvent('window', (data: { event: string; url?: string; file?: string }) => {
+    server.onScriptEvent('window', (data: { event: string; url?: string; file?: string }) => {
       const { event, file, url } = data;
       if (event === 'DOMContentLoaded') {
         this.setFile(file || url, true);
@@ -71,7 +71,7 @@ export class SketchConsole {
     const levels = ['error', 'warn', 'log', 'info', 'debug', 'always'];
     const threshold = workspace.getConfiguration('p5-server.console').get(configKey + '.autoShow.level', defaultValue);
     if (levels.includes(level) && threshold !== 'never' && levels.indexOf(level) <= levels.indexOf(threshold)) {
-      this.sketchConsole.show();
+      this.sketchConsole.show(true);
     }
   }
 }
