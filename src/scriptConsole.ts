@@ -1,49 +1,46 @@
-import { Server } from 'p5-server';
+import { Server, BrowserConsoleEvent, BrowserErrorEvent, BrowserWindowEvent } from 'p5-server';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
 
 export class ScriptConsole {
   private _sketchConsole: vscode.OutputChannel | null = null;
-  private file?: string;
+  private clientId?: string;
 
   subscribe(server: Server) {
     server.onScriptEvent(
       'console',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (data: { method: string; args: any[]; argStrings: (string | null)[]; file: string; url: string }) => {
-        const { method, args, file, url } = data;
+      (event: BrowserConsoleEvent) => {
+        const { method, args, clientId, file, url } = event;
         if (method === 'clear') {
           this.sketchConsole.clear();
         } else {
-          this.setFile(file || url);
-          const argStrings = data.argStrings.map((str, i) => str || String(args[i]));
-          this.sketchConsole.appendLine(`[${method.toUpperCase()}] ${argStrings.join(', ')}`);
+          this.setFile(clientId, file || url);
           this.maybeShowConsole(method);
+          const argStrings = event.argStrings.map((str, i) => str || String(args[i]));
+          this.sketchConsole.appendLine(`[${method.toUpperCase()}] ${argStrings.join(', ')}`);
         }
       }
     );
 
-    server.onScriptEvent(
-      'error',
-      (data: { message: string; file?: string; url?: string; line?: number; stack?: string }) => {
-        const { message, url, file, line, stack } = data;
-        this.maybeShowConsole('error');
-        let msg = 'Error';
-        if (line) {
-          msg += ` at line ${line}`;
-        }
-        if (file || url) {
-          msg += ` of ${file || url}`;
-        }
-        this.setFile(file || url);
-        this.sketchConsole.appendLine(stack || `${msg}: ${message}`);
+    server.onScriptEvent('error', (event: BrowserErrorEvent) => {
+      const { message, clientId, file, url, stack } = event;
+      this.setFile(clientId, file || url);
+      this.maybeShowConsole('error');
+      let msg = 'Error';
+      if (event.type === 'error' && event.line) {
+        msg += ` at line ${event.line}`;
       }
-    );
+      if (file || url) {
+        msg += ` of ${file || url}`;
+      }
+      this.sketchConsole.appendLine(stack || `${msg}: ${message}`);
+    });
 
-    server.onScriptEvent('window', (data: { event: string; url?: string; file?: string }) => {
-      const { event, file, url } = data;
-      if (event === 'DOMContentLoaded') {
-        this.setFile(file || url, true);
+    server.onScriptEvent('window', (event: BrowserWindowEvent) => {
+      const { type, clientId, file, url } = event;
+      if (type === 'DOMContentLoaded') {
+        this.setFile(clientId, file || url, true);
         this.maybeShowConsole('always');
       }
     });
@@ -56,9 +53,9 @@ export class ScriptConsole {
     return this._sketchConsole;
   }
 
-  private setFile(file: string | undefined, always = false) {
-    if ((this.file === file || !file) && !always) return;
-    this.file = file;
+  private setFile(clientId: string, file: string | undefined, always = false) {
+    if ((this.clientId === clientId || !clientId) && !always) return;
+    this.clientId = clientId;
     const label = file ? ` (${file}) ` : '';
     const halfLen = Math.floor((80 - label.length) / 2);
     this.sketchConsole.appendLine('='.repeat(halfLen) + label + '='.repeat(halfLen));
