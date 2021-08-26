@@ -5,6 +5,8 @@ import { window, workspace } from 'vscode';
 export class ScriptConsole {
   private _sketchConsole: vscode.OutputChannel | null = null;
   private clientId?: string;
+  private file?: string;
+  private messageCount = 0;
 
   subscribe(server: Server) {
     server.onScriptEvent(
@@ -13,12 +15,12 @@ export class ScriptConsole {
       (event: BrowserConsoleEvent) => {
         const { method, args, clientId, file, url } = event;
         if (method === 'clear') {
-          this.sketchConsole.clear();
+          this.clear();
         } else {
           this.setFile(clientId, file || url);
           this.maybeShowConsole(method);
           const argStrings = event.argStrings.map((str, i) => str || String(args[i]));
-          this.sketchConsole.appendLine(`[${method.toUpperCase()}] ${argStrings.join(', ')}`);
+          this.appendLine(`[${method.toUpperCase()}] ${argStrings.join(', ')}`);
         }
       }
     );
@@ -34,13 +36,16 @@ export class ScriptConsole {
       if (file || url) {
         msg += ` of ${file || url}`;
       }
-      this.sketchConsole.appendLine(stack || `${msg}: ${message}`);
+      this.appendLine(stack || `${msg}: ${message}`);
     });
 
     server.onScriptEvent('window', (event: BrowserWindowEvent) => {
       const { type, clientId, file, url } = event;
       if (type === 'DOMContentLoaded') {
-        this.setFile(clientId, file || url, true);
+        if (!this.setFile(clientId, file || url) && this.clientId !== clientId) {
+          this.appendLine('loaded', false);
+        }
+        this.clientId = clientId;
         this.maybeShowConsole('always');
       }
     });
@@ -53,12 +58,33 @@ export class ScriptConsole {
     return this._sketchConsole;
   }
 
-  private setFile(clientId: string, file: string | undefined, always = false) {
-    if ((this.clientId === clientId || !clientId) && !always) return;
-    this.clientId = clientId;
-    const label = file ? ` (${file}) ` : '';
-    const halfLen = Math.floor((80 - label.length) / 2);
-    this.sketchConsole.appendLine('='.repeat(halfLen) + label + '='.repeat(halfLen));
+  private appendLine(value: string, count = true) {
+    this.sketchConsole.appendLine(value);
+    if (count) {
+      this.messageCount++;
+    }
+  }
+
+  private clear() {
+    this.sketchConsole.clear();
+    this.messageCount = 0;
+  }
+
+  /** Display the banner if the console is empty, or this is a different url than was
+   * previously displayed in this console.
+   *
+   * Return true iff the banner was displayed.
+   */
+  private setFile(_clientId: string, file: string | undefined) {
+    if (this.messageCount === 0 || this.file !== file) {
+      this.file = file;
+      const label = file ? ` (${file}) ` : '';
+      const halfLen = Math.floor((80 - label.length) / 2);
+      this.sketchConsole.appendLine('='.repeat(halfLen) + label + '='.repeat(halfLen));
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private maybeShowConsole(level: string) {
