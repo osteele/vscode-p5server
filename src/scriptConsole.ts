@@ -17,7 +17,7 @@ export class ScriptConsole {
         if (method === 'clear') {
           this.clear();
         } else {
-          this.setFile(clientId, file || url);
+          this.setFile(file || url, clientId);
           this.maybeShowConsole(method);
           const argStrings = event.argStrings.map((str, i) => str || String(args[i]));
           this.appendLine(`[${method.toUpperCase()}] ${argStrings.join(', ')}`);
@@ -27,7 +27,7 @@ export class ScriptConsole {
 
     server.onScriptEvent('error', (event: BrowserErrorEvent) => {
       const { message, clientId, file, url, stack } = event;
-      this.setFile(clientId, file || url);
+      this.setFile(file || url, clientId);
       this.maybeShowConsole('error');
       let msg = 'Error';
       if (event.type === 'error' && event.line) {
@@ -39,12 +39,13 @@ export class ScriptConsole {
       this.appendLine(stack || `${msg}: ${message}`);
     });
 
-    server.onScriptEvent('window', (event: BrowserWindowEvent) => {
+    server.onScriptEvent('connection', (event: BrowserWindowEvent) => {
       const { type, clientId, file, url } = event;
-      if (type === 'DOMContentLoaded') {
-        if (!this.setFile(clientId, file || url) && this.clientId !== clientId) {
-          this.appendLine('loaded', false);
+      if (type === 'opened') {
+        if (!this.setFile(file || url, clientId)) {
+          this.appendLine('[RELOAD]');
         }
+        this.messageCount = 0;
         this.clientId = clientId;
         this.maybeShowConsole('always');
       }
@@ -58,11 +59,9 @@ export class ScriptConsole {
     return this._sketchConsole;
   }
 
-  private appendLine(value: string, count = true) {
+  private appendLine(value: string) {
     this.sketchConsole.appendLine(value);
-    if (count) {
-      this.messageCount++;
-    }
+    this.messageCount++;
   }
 
   private clear() {
@@ -75,16 +74,14 @@ export class ScriptConsole {
    *
    * Return true iff the banner was displayed.
    */
-  private setFile(_clientId: string, file: string | undefined) {
-    if (this.messageCount === 0 || this.file !== file) {
-      this.file = file;
-      const label = file ? ` (${file}) ` : '';
-      const halfLen = Math.floor((80 - label.length) / 2);
-      this.sketchConsole.appendLine('='.repeat(halfLen) + label + '='.repeat(halfLen));
-      return true;
-    } else {
-      return false;
-    }
+  private setFile(file: string | undefined, clientId: string) {
+    if (this.file === file) return false;
+    this.file = file;
+    this.clientId = clientId;
+    const label = file ? ` (${file}) ` : '';
+    const halfLen = Math.floor((80 - label.length) / 2);
+    this.sketchConsole.appendLine('='.repeat(halfLen) + label + '='.repeat(halfLen));
+    return true;
   }
 
   private maybeShowConsole(level: string) {
