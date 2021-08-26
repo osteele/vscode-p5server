@@ -1,7 +1,7 @@
 {
   "name": "p5-server",
   "displayName": "P5 Server",
-  "description": "A p5.js sketch explorer and creation tool. Includes a sketch-aware live server, and a tree view of a workspace's sketches.",
+  "description": "Create and run p5.js sketches, browse and run collections. Includes a sketch-aware live server, a tree view of a workspace's sketches, and automatic libraries.",
   "license": "MIT",
   "version": "1.0.0",
   "publisher": "osteele",
@@ -72,6 +72,12 @@
         "title": "p5.js Explorer: Refresh",
         "enablement": "view == p5sketchExplorer",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "p5-explorer.openSelectedItem",
+        "title": "Open in editor",
+        "enablement": "view == p5sketchExplorer",
+        "icon": "$(edit)"
       },
       {
         "command": "p5-explorer.runSelectedFile",
@@ -185,10 +191,22 @@
       ],
       "view/item/context": [
         {
+          "command": "p5-explorer.openSelectedItem",
+          "when": "view == p5sketchExplorer && viewItem === file",
+          "group": "inline"
+        },
+        {
           "command": "p5-explorer.runSelectedFile",
           "when": "view == p5sketchExplorer && viewItem == sketch",
-          "icon": "$(globe)",
           "group": "inline"
+        },
+        {
+          "command": "p5-explorer.openSelectedItem",
+          "when": "view == p5sketchExplorer"
+        },
+        {
+          "command": "p5-explorer.runSelectedFile",
+          "when": "view == p5sketchExplorer && viewItem == sketch"
         }
       ]
     },

@@ -11,9 +11,17 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor() {
+    this.registerCommands();
+  }
+
+  private registerCommands() {
     commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
-      const filePath = path.join(sketch.dir, sketch.mainFile);
+      const filePath = path.join(sketch.dir, sketch.scriptFile || sketch.mainFile);
       return window.showTextDocument(Uri.file(filePath));
+    });
+    commands.registerCommand('p5-explorer.openSelectedItem', (item: Sketch | FilePathItem) => {
+      const filePath = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
+      return commands.executeCommand('vscode.open', Uri.file(filePath));
     });
     commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem) => {
       return commands.executeCommand('p5-server.openBrowser', Uri.file(item.file));
