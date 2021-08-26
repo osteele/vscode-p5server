@@ -74,10 +74,20 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "p5-explorer.createFolder",
+        "title": "Create Folder",
+        "enablement": "view == p5sketchExplorer"
+      },
+      {
+        "command": "p5-explorer.duplicateSelectedSketch",
+        "title": "Duplicate",
+        "enablement": "view == p5sketchExplorer"
+      },
+      {
         "command": "p5-explorer.openSelectedItem",
         "title": "Open in editor",
         "enablement": "view == p5sketchExplorer",
-        "icon": "$(edit)"
+        "icon": "$(go-to-file)"
       },
       {
         "command": "p5-explorer.runSelectedFile",
@@ -192,21 +202,33 @@
       "view/item/context": [
         {
           "command": "p5-explorer.openSelectedItem",
-          "when": "view == p5sketchExplorer && viewItem === file",
+          "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "inline"
         },
         {
           "command": "p5-explorer.runSelectedFile",
-          "when": "view == p5sketchExplorer && viewItem == sketch",
+          "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "inline"
         },
         {
           "command": "p5-explorer.openSelectedItem",
-          "when": "view == p5sketchExplorer"
+          "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
+          "group": "1_open"
         },
         {
           "command": "p5-explorer.runSelectedFile",
-          "when": "view == p5sketchExplorer && viewItem == sketch"
+          "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
+          "group": "2_run"
+        },
+        {
+          "command": "p5-explorer.createFolder",
+          "when": "view == p5sketchExplorer && viewItem == directory",
+          "group": "3_fileoperations"
+        },
+        {
+          "command": "p5-explorer.duplicateSelectedSketch",
+          "when": "view == p5sketchExplorer && viewItem == sketch",
+          "group": "3_fileoperations"
         }
       ]
     },

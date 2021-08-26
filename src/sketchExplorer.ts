@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 
 const resourceDir = path.join(__filename, '..', '..', 'resources');
+const exclusions = ['.*', 'node_modules', 'package.json'];
 
 export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeItem> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
@@ -15,6 +16,26 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
   }
 
   private registerCommands() {
+    commands.registerCommand('p5-explorer.duplicateSelectedSketch', async (item: SketchItem) => {
+      const sketch = item.sketch;
+      // if the sketch is the only item in the directory, copy the directory
+      const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
+      if (sketches.length !== 1 || sketches[0].mainFile !== sketch.mainFile) {
+        return vscode.window.showErrorMessage('Cannot copy a sketch that is not the only item in the directory');
+      }
+      const name = await window.showInputBox();
+      if (name) {
+        await workspace.fs.copy(Uri.file(sketch.dir), Uri.file(path.join(path.dirname(sketch.dir), name)));
+        this.refresh();
+      }
+    });
+    commands.registerCommand('p5-explorer.createFolder', async (item: DirectoryItem) => {
+      const name = await window.showInputBox();
+      if (name) {
+        await workspace.fs.createDirectory(Uri.file(path.join(item.file, name)));
+        this.refresh();
+      }
+    });
     commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
       const filePath = path.join(sketch.dir, sketch.scriptFile || sketch.mainFile);
       return window.showTextDocument(Uri.file(filePath));
@@ -75,7 +96,6 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
   }
 
   private async getDirectoryChildren(dir: string): Promise<SketchTreeItem[]> {
-    const exclusions = ['.*', 'node_modules', 'package.json'];
     const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
     const files = unassociatedFiles.map(s => path.join(dir, s));
     return [
