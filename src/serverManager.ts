@@ -87,7 +87,7 @@ export class ServerManager {
 
       let sbm = window.setStatusBarMessage(`Starting the P5 server at ${root}`);
 
-      this.server = new Server({ root, relayConsoleMessages: true });
+      this.server = new Server({ root });
       await this.server.start();
       const consolePane = new ScriptConsole();
       consolePane.subscribe(this.server);
@@ -101,7 +101,7 @@ export class ServerManager {
         this.state = 'stopped';
       }
     }
-    this.openBrowser(uri);
+    this.openBrowser(uri?.with({ query: 'send-console-messages' }));
   }
 
   async stopServer() {

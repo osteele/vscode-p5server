@@ -1,4 +1,4 @@
-import { Server, BrowserConsoleEvent, BrowserErrorEvent, BrowserWindowEvent } from 'p5-server';
+import { Server, BrowserConsoleEvent, BrowserErrorEvent, BrowserConnectionEvent } from 'p5-server';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
 
@@ -9,21 +9,19 @@ export class ScriptConsole {
   private messageCount = 0;
 
   subscribe(server: Server) {
-    server.onScriptEvent(
-      'console',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (event: BrowserConsoleEvent) => {
-        const { method, args, clientId, file, url } = event;
-        if (method === 'clear') {
-          this.clear();
-        } else {
-          this.setFile(file || url, clientId);
-          this.maybeShowConsole(method);
-          const argStrings = event.argStrings.map((str, i) => str || String(args[i]));
-          this.appendLine(`[${method.toUpperCase()}] ${argStrings.join(', ')}`);
-        }
+    server.onScriptEvent('console', (event: BrowserConsoleEvent) => {
+      const { method, args, argStrings, clientId, file, url } = event;
+      if (method === 'clear') {
+        this.clear();
+      } else {
+        this.setFile(file || url, clientId);
+        this.maybeShowConsole(method);
+        const argsOrStrings = args.map((arg, i) => argStrings[i] ?? arg);
+        // TODO:
+        // const message = typeof args[0] === 'string' ? util.format(...argsOrStrings) : argsOrStrings.join(' ');
+        this.appendLine(`[${method.toUpperCase()}] ${argsOrStrings.join(', ')}`);
       }
-    );
+    });
 
     server.onScriptEvent('error', (event: BrowserErrorEvent) => {
       const { message, clientId, file, url, stack } = event;
@@ -39,11 +37,13 @@ export class ScriptConsole {
       this.appendLine(stack || `${msg}: ${message}`);
     });
 
-    server.onScriptEvent('connection', (event: BrowserWindowEvent) => {
+    server.onScriptEvent('connection', (event: BrowserConnectionEvent) => {
       const { type, clientId, file, url } = event;
       if (type === 'opened') {
         if (!this.setFile(file || url, clientId)) {
-          this.appendLine('[RELOAD]');
+          const label = '[RELOAD]';
+          const halfLen = Math.floor((80 - label.length) / 2);
+          this.sketchConsole.appendLine('-'.repeat(halfLen) + label + '-'.repeat(halfLen));
         }
         this.messageCount = 0;
         this.clientId = clientId;
