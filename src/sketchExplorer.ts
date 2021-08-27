@@ -7,7 +7,7 @@ import { commands, Uri, window, workspace } from 'vscode';
 const resourceDir = path.join(__filename, '..', '..', 'resources');
 const exclusions = ['.*', 'node_modules', 'package.json'];
 
-export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeItem> {
+export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem | Library | Sketch> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
@@ -16,36 +16,36 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
   }
 
   private registerCommands() {
-    commands.registerCommand('p5-explorer.duplicateSelectedSketch', async (item: SketchItem) => {
-      const sketch = item.sketch;
+    commands.registerCommand('p5-explorer.duplicateSelectedSketch', async (sketch: Sketch) => {
+      if (!(sketch instanceof Sketch)) throw new Error(`${sketch} is not a Sketch`);
       // if the sketch is the only item in the directory, copy the directory
       const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
       if (sketches.length !== 1 || sketches[0].mainFile !== sketch.mainFile) {
         return vscode.window.showErrorMessage('Cannot copy a sketch that is not the only item in the directory');
       }
       const name = await window.showInputBox();
-      if (name) {
-        await workspace.fs.copy(Uri.file(sketch.dir), Uri.file(path.join(path.dirname(sketch.dir), name)));
-        this.refresh();
-      }
+      if (!name) return;
+      await workspace.fs.copy(Uri.file(sketch.dir), Uri.file(path.join(path.dirname(sketch.dir), name)));
+      this.refresh();
     });
     commands.registerCommand('p5-explorer.createFolder', async (item: DirectoryItem) => {
+      if (!(item instanceof DirectoryItem)) throw new Error(`${item} is not a directory`);
       const name = await window.showInputBox();
-      if (name) {
-        await workspace.fs.createDirectory(Uri.file(path.join(item.file, name)));
-        this.refresh();
-      }
+      if (!name) return;
+      await workspace.fs.createDirectory(Uri.file(path.join(item.file, name)));
+      this.refresh();
     });
-    commands.registerCommand('p5-explorer.openSketch', (sketch: Sketch) => {
-      const filePath = path.join(sketch.dir, sketch.scriptFile || sketch.mainFile);
-      return window.showTextDocument(Uri.file(filePath));
+    commands.registerCommand('p5-explorer.openSketch', (item: FilePathItem | Sketch) => {
+      const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
+      return window.showTextDocument(Uri.file(file));
     });
-    commands.registerCommand('p5-explorer.openSelectedItem', (item: Sketch | FilePathItem) => {
-      const filePath = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
-      return commands.executeCommand('vscode.open', Uri.file(filePath));
+    commands.registerCommand('p5-explorer.openSelectedItem', (item: FilePathItem | Sketch) => {
+      const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
+      return commands.executeCommand('vscode.open', Uri.file(file));
     });
-    commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem) => {
-      return commands.executeCommand('p5-server.openBrowser', Uri.file(item.file));
+    commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem | Sketch) => {
+      const file = item instanceof Sketch ? path.join(item.dir, item.mainFile) : item.file;
+      return commands.executeCommand('p5-server.openBrowser', Uri.file(file));
     });
   }
 
@@ -53,27 +53,38 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
     this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: SketchTreeItem): vscode.TreeItem {
-    return element;
+  getTreeItem(element: FileItem | DirectoryItem | Library | Sketch): vscode.TreeItem {
+    if (element instanceof Sketch) {
+      const sketch = element;
+      return new SketchItem(
+        sketch,
+        sketch.files.length + sketch.libraries.length > 1
+          ? vscode.TreeItemCollapsibleState.Collapsed
+          : vscode.TreeItemCollapsibleState.None
+      );
+    } else if (element instanceof Library) {
+      return new LibraryItem(element);
+    } else return element;
   }
 
-  getChildren(element?: SketchTreeItem): vscode.ProviderResult<SketchTreeItem[]> {
+  getChildren(element?: FilePathItem | Sketch): vscode.ProviderResult<(FilePathItem | Library | Sketch)[]> {
     if (!element) {
       return this.getRootChildren();
     } else if (element instanceof DirectoryItem) {
       return this.getDirectoryChildren(element.file);
-    } else if (element instanceof SketchItem) {
-      return Promise.all([
-        ...element.sketch.files
+    } else if (element instanceof Sketch) {
+      const sketch = element;
+      return [
+        ...sketch.files
           .filter(file => !file.startsWith('..' + path.sep))
           .sort((a, b) => b.localeCompare(a))
-          .map(file => new FileItem(path.join(element.sketch.dir, file), vscode.TreeItemCollapsibleState.None)),
-        ...element.sketch.libraries.map(library => new LibraryItem(library))
-      ]);
+          .map(file => new FileItem(path.join(sketch.dir, file), vscode.TreeItemCollapsibleState.None)),
+        ...sketch.libraries
+      ];
     }
   }
 
-  private async getRootChildren(): Promise<SketchTreeItem[]> {
+  private async getRootChildren(): Promise<(FilePathItem | Sketch)[]> {
     const wsFolders = workspace.workspaceFolders
       ? workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')
       : [];
@@ -91,23 +102,15 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<SketchTreeIte
           );
       }
     } finally {
-      commands.executeCommand('setContext', 'p5-explorer.loaded', true);
+      setTimeout(() => commands.executeCommand('setContext', 'p5-explorer.loaded', true), 1000);
     }
   }
 
-  private async getDirectoryChildren(dir: string): Promise<SketchTreeItem[]> {
+  private async getDirectoryChildren(dir: string): Promise<(FilePathItem | Sketch)[]> {
     const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
     const files = unassociatedFiles.map(s => path.join(dir, s));
     return [
-      ...sketches.map(
-        sketch =>
-          new SketchItem(
-            sketch,
-            sketch.files.length + sketch.libraries.length > 1
-              ? vscode.TreeItemCollapsibleState.Collapsed
-              : vscode.TreeItemCollapsibleState.None
-          )
-      ),
+      ...sketches,
       ...files
         .filter(file => fs.statSync(file).isDirectory())
         .map(dir => new DirectoryItem(dir, vscode.TreeItemCollapsibleState.Collapsed)),
@@ -122,31 +125,6 @@ interface FilePathItem {
   file: string;
 }
 
-type SketchTreeItem = (FilePathItem | LibraryItem) & vscode.TreeItem;
-
-class SketchItem extends vscode.TreeItem implements FilePathItem {
-  constructor(public readonly sketch: Sketch, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
-    super(sketch.name.replace(/\/$/, ''), collapsibleState);
-    this.tooltip = fileDisplay(this.file);
-    this.description = sketch.description;
-    this.command = {
-      command: 'p5-explorer.openSketch',
-      title: 'Edit P5.js Sketch',
-      arguments: [sketch]
-    };
-  }
-
-  get file() {
-    const sketch = this.sketch;
-    return path.join(sketch.dir, sketch.mainFile);
-  }
-
-  iconPath = {
-    dark: path.join(resourceDir, 'dark', 'sketch.svg'),
-    light: path.join(resourceDir, 'light', 'sketch.svg')
-  };
-  contextValue = 'sketch';
-}
 class DirectoryItem extends vscode.TreeItem implements FilePathItem {
   constructor(
     public readonly file: string,
@@ -186,6 +164,30 @@ class FileItem extends vscode.TreeItem implements FilePathItem {
   }
 
   contextValue = 'file';
+}
+
+class SketchItem extends vscode.TreeItem {
+  constructor(public readonly sketch: Sketch, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+    super(sketch.name.replace(/\/$/, ''), collapsibleState);
+    this.tooltip = fileDisplay(this.file);
+    this.description = sketch.description;
+    this.command = {
+      command: 'p5-explorer.openSketch',
+      title: 'Edit P5.js Sketch',
+      arguments: [sketch]
+    };
+  }
+
+  get file() {
+    const sketch = this.sketch;
+    return path.join(sketch.dir, sketch.mainFile);
+  }
+
+  iconPath = {
+    dark: path.join(resourceDir, 'dark', 'sketch.svg'),
+    light: path.join(resourceDir, 'light', 'sketch.svg')
+  };
+  contextValue = 'sketch';
 }
 
 class LibraryItem extends vscode.TreeItem {
