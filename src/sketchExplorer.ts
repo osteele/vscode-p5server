@@ -5,72 +5,40 @@ import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 
 const resourceDir = path.join(__filename, '..', '..', 'resources');
-const exclusions = ['.*', 'node_modules', 'package.json'];
+export const exclusions = ['.*', 'node_modules', 'package.json'];
 
 export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem | Library | Sketch> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor() {
-    this.registerCommands();
-  }
-
-  private registerCommands() {
-    commands.registerCommand('p5-explorer.duplicateSketch', async (sketch: Sketch) => {
-      if (!(sketch instanceof Sketch)) throw new Error(`${sketch} is not a Sketch`);
-      let name = await window.showInputBox();
-      if (!name) return;
-      name = name.replace(/-?\s+-?/g, '-');
-      // if the sketch is the only item in the directory, copy the directory
-      const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
-      if (sketches.length === 1 && sketches[0].mainFile === sketch.mainFile) {
-        await workspace.fs.copy(Uri.file(sketch.dir), Uri.file(path.join(path.dirname(sketch.dir), name)));
+  public registerCommands(context: vscode.ExtensionContext) {
+    context.subscriptions.push(
+      commands.registerCommand('p5-explorer.createFolder', async (item: DirectoryItem) => {
+        if (!(item instanceof DirectoryItem)) throw new Error(`${item} is not a directory`);
+        const name = await window.showInputBox();
+        if (!name) return;
+        await workspace.fs.createDirectory(Uri.file(path.join(item.file, name)));
         this.refresh();
-      } else {
-        // copy the sketch files within the same directory
-        const basename = name.replace(/\.(js|html?)$/i, '');
-        const replacements = [sketch.mainFile, sketch.scriptFile]
-          .filter(Boolean)
-          .map(file => ({
-            src: Uri.file(path.join(sketch.dir, file)),
-            target: Uri.file(path.join(sketch.dir, basename + path.extname(file)))
-          }))
-          .map(rec => ({ ...rec, targetExists: fsExists(rec.target) }));
-        const targetsExist = await Promise.all(replacements.map(({ target }) => fsExists(target)));
-        if (targetsExist.some(Boolean)) {
-          const target = replacements[targetsExist.indexOf(true)].target;
-          window.showErrorMessage(`Can't create a duplicate named ${name}. ${target.fsPath} already exists`);
-          return;
-        }
-        await Promise.all(replacements.map(({ src, target }) => workspace.fs.copy(src, target)));
-        this.refresh();
-      }
-      async function fsExists(uri: Uri): Promise<boolean> {
-        return workspace.fs.stat(uri).then(
-          () => true,
-          () => false
-        );
-      }
-    });
-    commands.registerCommand('p5-explorer.createFolder', async (item: DirectoryItem) => {
-      if (!(item instanceof DirectoryItem)) throw new Error(`${item} is not a directory`);
-      const name = await window.showInputBox();
-      if (!name) return;
-      await workspace.fs.createDirectory(Uri.file(path.join(item.file, name)));
-      this.refresh();
-    });
-    commands.registerCommand('p5-explorer.openSketch', (item: FilePathItem | Sketch) => {
-      const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
-      return window.showTextDocument(Uri.file(file));
-    });
-    commands.registerCommand('p5-explorer.openSelectedItem', (item: FilePathItem | Sketch) => {
-      const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
-      return commands.executeCommand('vscode.open', Uri.file(file));
-    });
-    commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem | Sketch) => {
-      const file = item instanceof Sketch ? path.join(item.dir, item.mainFile) : item.file;
-      return commands.executeCommand('p5-server.openBrowser', Uri.file(file));
-    });
+      })
+    );
+    context.subscriptions.push(
+      commands.registerCommand('p5-explorer.openSketch', (item: FilePathItem | Sketch) => {
+        const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
+        return window.showTextDocument(Uri.file(file));
+      })
+    );
+    context.subscriptions.push(
+      commands.registerCommand('p5-explorer.openSelectedItem', (item: FilePathItem | Sketch) => {
+        const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
+        return commands.executeCommand('vscode.open', Uri.file(file));
+      })
+    );
+    context.subscriptions.push(
+      commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem | Sketch) => {
+        const file = item instanceof Sketch ? path.join(item.dir, item.mainFile) : item.file;
+        return commands.executeCommand('p5-server.openBrowser', Uri.file(file));
+      })
+    );
   }
 
   refresh(): void {
@@ -108,10 +76,20 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
     }
   }
 
+  private watchers: vscode.FileSystemWatcher[] = [];
+
   private async getRootChildren(): Promise<(FilePathItem | Sketch)[]> {
     const wsFolders = workspace.workspaceFolders
       ? workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')
       : [];
+    this.watchers.forEach(w => w.dispose());
+    this.watchers = wsFolders.map(folder => {
+      const w = workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, '**/*.{htm,html,js}'));
+      w.onDidCreate(() => this.refresh());
+      w.onDidChange(() => this.refresh());
+      w.onDidDelete(() => this.refresh());
+      return w;
+    });
     try {
       switch (wsFolders.length) {
         case 0:
