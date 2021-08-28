@@ -79,7 +79,7 @@
         "enablement": "view == p5sketchExplorer"
       },
       {
-        "command": "p5-explorer.duplicateSelectedSketch",
+        "command": "p5-explorer.duplicateSketch",
         "title": "Duplicate",
         "enablement": "view == p5sketchExplorer"
       },
@@ -226,7 +226,7 @@
           "group": "3_fileoperations"
         },
         {
-          "command": "p5-explorer.duplicateSelectedSketch",
+          "command": "p5-explorer.duplicateSketch",
           "when": "view == p5sketchExplorer && viewItem == sketch",
           "group": "3_fileoperations"
         }
