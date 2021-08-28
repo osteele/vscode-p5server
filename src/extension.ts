@@ -22,59 +22,59 @@ export function activate(context: vscode.ExtensionContext) {
     ServerManager.activate(context);
     commands.executeCommand('setContext', 'p5-server.available', true);
   }
-
-  async function createSketch(folder: boolean) {
-    const wsFolders = getWorkspaceFolderPaths();
-
-    if (wsFolders.length === 0) {
-      window.showErrorMessage('You must have at least one folder open to create a sketch.');
-      return;
-    }
-
-    const wsPath =
-      wsFolders.length > 1
-        ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
-        : wsFolders[0];
-    if (!wsPath) return; // the user cancelled
-
-    let sketchName = await window.showInputBox({
-      value: '',
-      prompt: `Enter the name of the p5.js sketch`,
-      ignoreFocusOut: true
-    });
-    if (!sketchName) {
-      return;
-    }
-    sketchName = sketchName.trim();
-    if (sketchName.length === 0) {
-      return;
-    }
-    if (!folder && !sketchName.endsWith('.js')) {
-      sketchName += '.js';
-    }
-
-    const filePath = path.join(wsPath, sketchName);
-    const dirPath = path.dirname(filePath);
-    const basePath = path.basename(sketchName);
-    const sketch = folder
-      ? Sketch.create(path.join(filePath, 'index.html'), {
-          scriptFile: 'sketch.js',
-          title: sketchName
-        })
-      : Sketch.create(path.join(dirPath, basePath));
-
-    try {
-      await sketch.generate();
-    } catch (e) {
-      window.showErrorMessage(e.message);
-      console.error(e.message);
-      return;
-    }
-
-    window.showTextDocument(Uri.file(path.join(sketch.dir, sketch.scriptFile)));
-    commands.executeCommand('p5-explorer.refresh');
-  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export function deactivate() {}
+
+async function createSketch(folder: boolean) {
+  const wsFolders = getWorkspaceFolderPaths();
+
+  if (wsFolders.length === 0) {
+    window.showErrorMessage('You must have at least one folder open to create a sketch.');
+    return;
+  }
+
+  const wsPath =
+    wsFolders.length > 1
+      ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
+      : wsFolders[0];
+  if (!wsPath) return; // the user cancelled
+
+  let sketchName = await window.showInputBox({
+    value: '',
+    prompt: `Enter the name of the p5.js sketch`,
+    ignoreFocusOut: true
+  });
+  if (!sketchName) {
+    return;
+  }
+  sketchName = sketchName.trim();
+  if (sketchName.length === 0) {
+    return;
+  }
+  if (!folder && !sketchName.endsWith('.js')) {
+    sketchName += '.js';
+  }
+
+  const filePath = path.join(wsPath, sketchName);
+  const dirPath = path.dirname(filePath);
+  const basePath = path.basename(sketchName);
+  const sketch = folder
+    ? Sketch.create(path.join(filePath, 'index.html'), {
+        scriptFile: 'sketch.js',
+        title: sketchName
+      })
+    : Sketch.create(path.join(dirPath, basePath));
+
+  try {
+    await sketch.generate();
+  } catch (e) {
+    window.showErrorMessage(e.message);
+    console.error(e.message);
+    return;
+  }
+
+  window.showTextDocument(Uri.file(path.join(sketch.dir, sketch.scriptFile)));
+  commands.executeCommand('p5-explorer.refresh');
+}

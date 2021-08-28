@@ -129,13 +129,16 @@ export class ServerManager {
     if (!server?.url) {
       return;
     }
-    const url = uri ? server.filePathToUrl(uri.fsPath) : server.url;
+    let url = uri ? server.filePathToUrl(uri.fsPath) : server.url;
     if (!url) {
       if (uri) {
         window.showErrorMessage(`${uri.fsPath} is not in a directory that is served by the P5 server.`);
       }
       return;
     }
+    url = Uri.parse(url)
+      .with({ query: 'send-console-messages' })
+      .toString();
 
     // Wrap open.xxx with versions that know about Safari
     type AppName = open.AppName | 'safari';
