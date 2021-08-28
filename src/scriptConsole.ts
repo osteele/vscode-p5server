@@ -140,7 +140,7 @@ class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
     let changed = false;
     for (const [key, { data }] of this.messages) {
       if ((file && data.file === file) || (clientId && data.clientId === clientId)) {
-        this.messages.delete(key);
+        this.messages.delete(key); // delete during iteration is safe in javascript
         changed = true;
       }
     }
@@ -160,6 +160,7 @@ class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
 
 class ConsoleMessageLensData implements vscode.Command {
   private messages = new Array<BrowserConsoleEvent>();
+  private count = 0;
   public readonly key: string;
 
   constructor(public readonly file: string, public readonly clientId: string, public readonly line: number) {
@@ -167,13 +168,14 @@ class ConsoleMessageLensData implements vscode.Command {
   }
 
   public static key({ file, clientId, line }: { file: string; clientId: string; line: number }): string {
-    return `${file}-${clientId}-${line}`;
+    return `${file}:${clientId}:${line}`;
   }
 
   public addMessage(message: BrowserConsoleEvent) {
-    if (this.messages.unshift(message) > 1) {
+    if (this.messages.unshift(message) > 10) {
       this.messages.pop();
     }
+    this.count++;
   }
 
   private get message() {
@@ -188,16 +190,21 @@ class ConsoleMessageLensData implements vscode.Command {
     const { method, args, argStrings } = this.message;
     const argsOrStrings = args.map((arg, i) => argStrings[i] || arg);
     const message = argsOrStrings.join(' ');
-    return `console.${method}: ${message}`;
+    let title = `console.${method}: ${message}`;
+    if (this.count > 1) {
+      title += ` (+${this.count - 1} more)`;
+    }
+    return title;
   }
 
   public get tooltip(): string {
-    return this.messages
-      .map(({ method, args, argStrings }) => {
+    return [
+      ...this.messages.map(({ args, argStrings }) => {
         const argsOrStrings = args.map((arg, i) => argStrings[i] || arg);
         // (${new Date() - timestamp} ago)
-        return `* ${method}: ${argsOrStrings.join(' ')}`;
-      })
-      .join('\n');
+        return `* ${argsOrStrings.join(' ')}`;
+      }),
+      this.count > this.messages.length ? `+${this.count - this.messages.length} more` : ''
+    ].join('\n');
   }
 }
