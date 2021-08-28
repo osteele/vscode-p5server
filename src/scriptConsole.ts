@@ -2,6 +2,7 @@ import { BrowserConnectionEvent, BrowserConsoleEvent, BrowserErrorEvent, Server 
 import { BrowserDocumentEvent } from 'p5-server/dist/server/eventTypes';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
+import util = require('util');
 
 export class ScriptConsole {
   private _sketchConsole: vscode.OutputChannel | null = null;
@@ -20,17 +21,14 @@ export class ScriptConsole {
 
   subscribe(server: Server) {
     server.onScriptEvent('console', (event: BrowserConsoleEvent) => {
-      const { method, args, argStrings, file, url, clientId } = event;
+      const { method, args, file, url, clientId } = event;
       if (method === 'clear') {
         this.clear();
         this.consoleMessages.removeMessages({ clientId });
       } else {
         this.setFile(file, url);
         this.maybeShowConsole(method);
-        const argsOrStrings = args.map((arg, i) => argStrings[i] || arg);
-        // TODO:
-        // const message = typeof args[0] === 'string' ? util.format(...argsOrStrings) : argsOrStrings.join(' ');
-        this.appendLine(`[${method.toUpperCase()}] ${argsOrStrings.join(', ')}`);
+        this.appendLine(util.format(`[${method.toUpperCase()}] ${formatArgs(event)}`));
         if (file && event.line && args.length > 0) this.consoleMessages.addMessage(event);
       }
     });
@@ -187,10 +185,8 @@ class ConsoleMessageLensData implements vscode.Command {
   }
 
   public get title(): string {
-    const { method, args, argStrings } = this.message;
-    const argsOrStrings = args.map((arg, i) => argStrings[i] || arg);
-    const message = argsOrStrings.join(' ');
-    let title = `console.${method}: ${message}`;
+    const { method } = this.message;
+    let title = `console.${method}: ${formatArgs(this.message)}`;
     if (this.count > 1) {
       title += ` (+${this.count - 1} more)`;
     }
@@ -199,12 +195,16 @@ class ConsoleMessageLensData implements vscode.Command {
 
   public get tooltip(): string {
     return [
-      ...this.messages.map(({ args, argStrings }) => {
-        const argsOrStrings = args.map((arg, i) => argStrings[i] || arg);
-        // (${new Date() - timestamp} ago)
-        return `* ${argsOrStrings.join(' ')}`;
+      ...this.messages.map(event => {
+        // const ago = `(${(new Date() as any) - (event.timestamp as any)} ago)`;
+        return formatArgs(event);
       }),
       this.count > this.messages.length ? `+${this.count - this.messages.length} more` : ''
     ].join('\n');
   }
+}
+
+function formatArgs({ args, argStrings }: BrowserConsoleEvent) {
+  const argsOrStrings = args.map((arg, i) => argStrings[i] || arg);
+  return typeof args[0] === 'string' ? util.format(...argsOrStrings) : argsOrStrings.join(' ');
 }
