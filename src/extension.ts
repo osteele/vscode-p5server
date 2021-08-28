@@ -8,15 +8,14 @@ import { getWorkspaceFolderPaths } from './utils';
 export function activate(context: vscode.ExtensionContext) {
   // create sketch explorer
   const sketchTreeProvider = new SketchTreeProvider();
-  sketchTreeProvider.registerCommands(context);
-  context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => sketchTreeProvider.refresh()));
   window.registerTreeDataProvider('p5sketchExplorer', sketchTreeProvider);
+  context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => sketchTreeProvider.refresh()));
+  sketchTreeProvider.registerCommands(context);
 
   // register commands
-  context.subscriptions.push(commands.registerCommand('p5-explorer.refresh', () => sketchTreeProvider.refresh()));
   context.subscriptions.push(commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)));
   context.subscriptions.push(commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)));
-  context.subscriptions.push(commands.registerCommand('p5-explorer.duplicateSketch', duplicateSketch));
+  context.subscriptions.push(commands.registerCommand('p5-server.duplicateSketch', duplicateSketch));
 
   // create server manager and set context variable
   if (getWorkspaceFolderPaths().length >= 1) {

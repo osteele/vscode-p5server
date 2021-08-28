@@ -9,9 +9,11 @@ export const exclusions = ['.*', 'node_modules', 'package.json'];
 
 export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem | Library | Sketch> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
-  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private watchers: vscode.FileSystemWatcher[] = [];
 
   public registerCommands(context: vscode.ExtensionContext) {
+    context.subscriptions.push(commands.registerCommand('p5-explorer.refresh', () => this.refresh()));
     context.subscriptions.push(
       commands.registerCommand('p5-explorer.createFolder', async (item: DirectoryItem) => {
         if (!(item instanceof DirectoryItem)) throw new Error(`${item} is not a directory`);
@@ -41,11 +43,11 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
     );
   }
 
-  refresh(): void {
+  public refresh(): void {
     this._onDidChangeTreeData.fire();
   }
 
-  getTreeItem(element: FileItem | DirectoryItem | Library | Sketch): vscode.TreeItem {
+  public getTreeItem(element: FileItem | DirectoryItem | Library | Sketch): vscode.TreeItem {
     if (element instanceof Sketch) {
       const sketch = element;
       return new SketchItem(
@@ -59,7 +61,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
     } else return element;
   }
 
-  getChildren(element?: FilePathItem | Sketch): vscode.ProviderResult<(FilePathItem | Library | Sketch)[]> {
+  public getChildren(element?: FilePathItem | Sketch): vscode.ProviderResult<(FilePathItem | Library | Sketch)[]> {
     if (!element) {
       return this.getRootChildren();
     } else if (element instanceof DirectoryItem) {
@@ -75,8 +77,6 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
       ];
     }
   }
-
-  private watchers: vscode.FileSystemWatcher[] = [];
 
   private async getRootChildren(): Promise<(FilePathItem | Sketch)[]> {
     const wsFolders = workspace.workspaceFolders

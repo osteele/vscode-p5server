@@ -79,7 +79,7 @@
         "enablement": "view == p5sketchExplorer"
       },
       {
-        "command": "p5-explorer.duplicateSketch",
+        "command": "p5-server.duplicateSketch",
         "title": "Duplicate",
         "enablement": "view == p5sketchExplorer"
       },
@@ -226,7 +226,7 @@
           "group": "3_fileoperations"
         },
         {
-          "command": "p5-explorer.duplicateSketch",
+          "command": "p5-server.duplicateSketch",
           "when": "view == p5sketchExplorer && viewItem == sketch",
           "group": "3_fileoperations"
         }
@@ -284,6 +284,7 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
+    "node-html-parser": "^4.1.4",
     "open": "^8.2.1",
     "p5-server": "0.5.0"
   },
