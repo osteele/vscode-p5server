@@ -90,6 +90,11 @@
         "icon": "$(go-to-file)"
       },
       {
+        "command": "p5-explorer.rename",
+        "title": "Rename",
+        "enablement": "view == p5sketchExplorer"
+      },
+      {
         "command": "p5-explorer.runSelectedFile",
         "title": "Run in browser",
         "enablement": "view == p5sketchExplorer",
@@ -206,6 +211,11 @@
         },
         {
           "command": "p5-server.duplicateSketch",
+          "when": "view == p5sketchExplorer && viewItem == sketch",
+          "group": "3_fileoperations"
+        },
+        {
+          "command": "p5-explorer.rename",
           "when": "view == p5sketchExplorer && viewItem == sketch",
           "group": "3_fileoperations"
         }

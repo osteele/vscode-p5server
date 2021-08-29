@@ -30,6 +30,29 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
       })
     );
     context.subscriptions.push(
+      commands.registerCommand('p5-explorer.rename', async (item: FilePathItem | Sketch) => {
+        const name = await window.showInputBox();
+        if (!name) return;
+        // TODO: rename single-sketch folders
+        if (item instanceof Sketch) {
+          switch (item.sketchType) {
+            case 'html':
+              return workspace.fs.rename(
+                Uri.file(path.join(item.dir, item.mainFile)),
+                Uri.file(path.join(item.dir, /\.html?$/i.test(name) ? name : name + '.html'))
+              );
+            case 'javascript':
+              return workspace.fs.rename(
+                Uri.file(path.join(item.dir, item.scriptFile)),
+                Uri.file(path.join(item.dir, /\.js$/i.test(name) ? name : name + '.js'))
+              );
+          }
+        } else {
+          return workspace.fs.rename(Uri.file(item.file), Uri.file(path.join(path.dirname(item.file), name)));
+        }
+      })
+    );
+    context.subscriptions.push(
       commands.registerCommand('p5-explorer.openSelectedItem', (item: FilePathItem | Sketch) => {
         const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
         return commands.executeCommand('vscode.open', Uri.file(file));
