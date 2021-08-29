@@ -139,28 +139,7 @@
             "Open the integrated console for log, warnings and errors",
             "Open the integrated console for info, log, warnings and errors"
           ],
-          "description": "Open the integated p5 console when the browser is set to the integrated browser, and a sketch calls a console method or an error occurs."
-        },
-        "p5-server.console.externalBrowser.autoShow.level": {
-          "type": "string",
-          "default": "error",
-          "enum": [
-            "always",
-            "never",
-            "error",
-            "warn",
-            "log",
-            "info"
-          ],
-          "enumDescriptions": [
-            "Open the integrated console for any message",
-            "Never open the integrated P5 console automatically",
-            "Open the integrated console for errors",
-            "Open the integrated console for warnings and errors",
-            "Open the integrated console for log, warnings and errors",
-            "Open the integrated console for info, log, warnings and errors"
-          ],
-          "description": "Open the integated p5 console when the browser is not set to the integrated browser, and a sketch calls a console method or an error occurs."
+          "description": "Open the integrated p5 console when the browser is set to the integrated browser, and a sketch calls a console method or an error occurs."
         },
         "p5-server.editorTitle.RunIcon.enabled": {
           "type": "boolean",

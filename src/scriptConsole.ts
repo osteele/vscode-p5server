@@ -63,6 +63,7 @@ export class ScriptConsole {
           const halfLen = Math.floor((80 - label.length) / 2);
           this.sketchConsole.appendLine('-'.repeat(halfLen) + label + '-'.repeat(halfLen));
         }
+        this.messageCount = 0;
         this.maybeShowConsole('always');
       }
     });

@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 
 const resourceDir = path.join(__filename, '..', '..', 'resources');
-export const exclusions = ['.*', 'node_modules', 'package.json'];
+export const exclusions = ['.*', '*.lock', '*.log', 'node_modules', 'package.json'];
 
 export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem | Library | Sketch> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
