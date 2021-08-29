@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 
+const enableIntegratedLibraryBrowser = false;
 const resourceDir = path.join(__filename, '..', '..', 'resources');
 export const exclusions = ['.*', '*.lock', '*.log', 'node_modules', 'package.json'];
 
@@ -62,6 +63,43 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
       commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem | Sketch) => {
         const file = item instanceof Sketch ? path.join(item.dir, item.mainFile) : item.file;
         return commands.executeCommand('p5-server.openBrowser', Uri.file(file));
+      })
+    );
+    context.subscriptions.push(
+      commands.registerCommand('p5-explorer.openLibrary', (library: Library) => {
+        if (!enableIntegratedLibraryBrowser) {
+          return commands.executeCommand('vscode.open', Uri.parse(library.homepage));
+          // return commands.executeCommand('simpleBrowser.api.open', Uri.parse(library.homepage));
+        }
+        const panel = vscode.window.createWebviewPanel('p5LibraryHomepage', library.name, vscode.ViewColumn.One, {enableScripts: true});
+        panel.webview.html = `
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta http-equiv="X-UA-Compatible" content="ie=edge">
+              <title>${library.name}</title>
+              <style type="text/css">
+                body,html {
+                  height: 100%;
+                  min-height: 100%;
+                  padding: 0;
+                  margin: 0;
+                }
+                iframe {
+                  width: 100%;
+                  height: 100%;
+                  border: none;
+                  background: white;
+                }
+              </style>
+            </head>
+            <body>
+                <iframe src="${library.homepage}"></iframe>
+            </body>
+          </html>
+        `;
       })
     );
   }
@@ -218,11 +256,11 @@ class SketchItem extends vscode.TreeItem {
 class LibraryItem extends vscode.TreeItem {
   constructor(readonly library: Library) {
     super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
-    this.tooltip = library.description;
+    this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${library.description}.\nClick on item to view the library home page.`;
     this.command = {
-      command: 'vscode.open',
+      command: 'p5-explorer.openLibrary',
       title: 'Homepage',
-      arguments: [Uri.parse(library.homepage)]
+      arguments: [library]
     };
   }
 

@@ -90,6 +90,11 @@
         "icon": "$(go-to-file)"
       },
       {
+        "command": "p5-explorer.openLibrary",
+        "title": "View P5.js Library Homepage",
+        "enablement": "view == p5sketchExplorer"
+      },
+      {
         "command": "p5-explorer.rename",
         "title": "Rename",
         "enablement": "view == p5sketchExplorer"
