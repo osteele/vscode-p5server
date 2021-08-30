@@ -223,38 +223,28 @@ class DirectoryItem extends vscode.TreeItem implements FilePathItem {
     name?: string
   ) {
     super(name || path.basename(file), collapsibleState);
+    this.resourceUri = Uri.file(file);
     this.tooltip = fileDisplay(this.file);
   }
 
-  iconPath = new vscode.ThemeIcon('file-directory');
   contextValue = 'directory';
+  iconPath = new vscode.ThemeIcon('file-directory');
 }
-
-const fileTypeIconMap: Record<string, RegExp> = Object.fromEntries(
-  // The `Object.entries().map` changes each /abc/ to /^abc$/i
-  Object.entries({
-    'file-media': /(gif|jpe?g|png|svg|wav|mp3|mov|mp4)/,
-    'file-code': /(css|html|jsx?|tsx?)/,
-    'file-text': /(te?xt|json|yaml|csv|tsv)/,
-    file: null
-  }).map(([k, v]) => [k, new RegExp(v ? `${v.source}$` : '', 'i')])
-);
 
 class FileItem extends vscode.TreeItem implements FilePathItem {
   constructor(public readonly file: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
     super(path.basename(file), collapsibleState);
+    this.resourceUri = Uri.file(file);
     this.tooltip = fileDisplay(file);
     this.command = {
       command: 'vscode.open',
       title: 'Edit File',
       arguments: [Uri.file(file)]
     };
-
-    const iconId = Object.entries(fileTypeIconMap).find(([, pattern]) => pattern.test(file))![0];
-    this.iconPath = new vscode.ThemeIcon(iconId);
   }
 
   contextValue = 'file';
+  iconPath = new vscode.ThemeIcon('file');
 }
 
 class SketchItem extends vscode.TreeItem {
