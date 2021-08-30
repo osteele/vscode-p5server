@@ -29,7 +29,9 @@ export class ScriptConsole {
         this.setFile(file, url);
         this.maybeShowConsole(method);
         this.appendLine(util.format(`[${method.toUpperCase()}] ${formatArgs(event)}`));
-        if (file && event.line && args.length > 0) this.consoleMessages.addMessage(event);
+        if (file && event.line && args.length > 0) {
+          this.consoleMessages.addMessage(event);
+        }
       }
     });
 
@@ -52,6 +54,9 @@ export class ScriptConsole {
         msg += ` of ${file || url}`;
       }
       this.appendLine(stack || `${msg}: ${message}`);
+      if (file && event.type === 'error' && event.line) {
+        this.consoleMessages.addMessage(event);
+      }
     });
 
     server.onScriptEvent('connection', (event: BrowserConnectionEvent) => {
@@ -118,7 +123,8 @@ class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
-  public addMessage(message: BrowserConsoleEvent) {
+  public addMessage(message: BrowserConsoleEvent | BrowserErrorEvent) {
+    if (message.type === 'unhandledRejection') return;
     const { file, clientId, line } = message;
     if (!file || !line) return;
     const key = ConsoleMessageLensData.key({ file, clientId, line });
@@ -158,7 +164,7 @@ class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
 }
 
 class ConsoleMessageLensData implements vscode.Command {
-  private messages = new Array<BrowserConsoleEvent>();
+  private messages = new Array<BrowserConsoleEvent | BrowserErrorEvent>();
   private count = 0;
   public readonly key: string;
 
@@ -170,15 +176,11 @@ class ConsoleMessageLensData implements vscode.Command {
     return `${file}:${clientId}:${line}`;
   }
 
-  public addMessage(message: BrowserConsoleEvent) {
+  public addMessage(message: BrowserConsoleEvent | BrowserErrorEvent) {
     if (this.messages.unshift(message) > 10) {
       this.messages.pop();
     }
     this.count++;
-  }
-
-  private get message() {
-    return this.messages[0];
   }
 
   public get command(): string {
@@ -186,19 +188,37 @@ class ConsoleMessageLensData implements vscode.Command {
   }
 
   public get title(): string {
-    const { method } = this.message;
-    let title = `console.${method}: ${formatArgs(this.message)}`;
-    if (this.count > 1) {
-      title += ` (+${this.count - 1} more)`;
+    const top = this.messages[0];
+    if (top.type === 'error') {
+      return top.message;
+    } else if (top.type === 'unhandledRejection') {
+      throw new Error('unandledRejection');
+    } else {
+      const { method } = top;
+      let title = `console.${method}: ${formatArgs(top)}`;
+      if (this.count > 1) {
+        title += ` (+${this.count - 1} more)`;
+      }
+      return title;
     }
-    return title;
   }
 
   public get tooltip(): string {
+    const top = this.messages[0];
+    if (top.type === 'error') {
+      return top.stack || top.message;
+    }
     return [
       ...this.messages.map(event => {
         // const ago = `(${(new Date() as any) - (event.timestamp as any)} ago)`;
-        return formatArgs(event);
+        switch (event.type) {
+          case 'error':
+            return `${event.message}`;
+          case 'unhandledRejection':
+            return `${event.message}`;
+          default:
+            return formatArgs(event);
+        }
       }),
       this.count > this.messages.length ? `+${this.count - this.messages.length} more` : ''
     ].join('\n');
