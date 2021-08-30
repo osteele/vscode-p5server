@@ -62,7 +62,12 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
     context.subscriptions.push(
       commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem | Sketch) => {
         const file = item instanceof Sketch ? path.join(item.dir, item.mainFile) : item.file;
-        return commands.executeCommand('p5-server.openBrowser', Uri.file(file));
+        return Promise.all([
+          workspace.getConfiguration('p5-server').get<boolean>('run.openEditor')
+            ? commands.executeCommand('vscode.open', Uri.file(file), { preview: true, viewColumn: 1 })
+            : null,
+          commands.executeCommand('p5-server.openBrowser', Uri.file(file), {})
+        ]);
       })
     );
     context.subscriptions.push(
@@ -71,7 +76,9 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
           return commands.executeCommand('vscode.open', Uri.parse(library.homepage));
           // return commands.executeCommand('simpleBrowser.api.open', Uri.parse(library.homepage));
         }
-        const panel = vscode.window.createWebviewPanel('p5LibraryHomepage', library.name, vscode.ViewColumn.One, {enableScripts: true});
+        const panel = vscode.window.createWebviewPanel('p5LibraryHomepage', library.name, vscode.ViewColumn.One, {
+          enableScripts: true
+        });
         panel.webview.html = `
           <!DOCTYPE html>
           <html lang="en">

@@ -151,6 +151,16 @@
           ],
           "description": "Open the integrated p5 console when the browser is set to the integrated browser, and a sketch calls a console method or an error occurs."
         },
+        "p5-server.editor.infoLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Display console and error information in the editor"
+        },
+        "p5-server.run.openEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "The Run command opens the script file on the left and run the sketch on the right."
+        },
         "p5-server.editorTitle.RunIcon.enabled": {
           "type": "boolean",
           "default": true,

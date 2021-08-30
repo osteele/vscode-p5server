@@ -9,6 +9,7 @@ export class ScriptConsole {
   private file?: string;
   private messageCount = 0;
   private consoleMessages: ConsoleMessageLensProvider;
+  private banner: string | null = null;
 
   constructor() {
     const provider = new ConsoleMessageLensProvider();
@@ -82,12 +83,17 @@ export class ScriptConsole {
   }
 
   private appendLine(value: string) {
+    if (this.banner) {
+      this.sketchConsole.appendLine(this.banner);
+      this.banner = null;
+    }
     this.sketchConsole.appendLine(value);
     this.messageCount++;
   }
 
   private clear() {
     this.sketchConsole.clear();
+    this.banner = null;
     this.messageCount = 0;
   }
 
@@ -100,8 +106,8 @@ export class ScriptConsole {
     if (this.file === file) return false;
     this.file = file;
     const label = file ? ` (${file || url}) ` : '';
-    const halfLen = Math.floor((80 - label.length) / 2);
-    this.sketchConsole.appendLine('='.repeat(halfLen) + label + '='.repeat(halfLen));
+    const halfLen = (80 - label.length) / 2;
+    this.banner = '='.repeat(Math.floor(halfLen)) + label + '='.repeat(Math.ceil(halfLen));
     this.messageCount = 0;
     return true;
   }
@@ -122,6 +128,14 @@ class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   private messages = new Map<string, { data: ConsoleMessageLensData; lens: vscode.CodeLens }>();
   private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
+
+  constructor() {
+    workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('p5-server.editor.infoLens')) {
+        this._onDidChangeCodeLenses.fire();
+      }
+    });
+  }
 
   public addMessage(message: BrowserConsoleEvent | BrowserErrorEvent) {
     if (message.type === 'unhandledRejection') return;
@@ -153,6 +167,7 @@ class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   }
 
   public provideCodeLenses(document: vscode.TextDocument): vscode.ProviderResult<vscode.CodeLens[]> {
+    if (!workspace.getConfiguration('p5-server').get<boolean>('editor.infoLens')) return [];
     const lenses = [];
     for (const { data, lens } of this.messages.values()) {
       if (data.file === document.fileName) {
