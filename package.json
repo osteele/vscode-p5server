@@ -79,6 +79,12 @@
         "enablement": "view == p5sketchExplorer"
       },
       {
+        "command": "p5-explorer.createSketch",
+        "title": "Create Sketch",
+        "icon": "$(file-add)",
+        "enablement": "view == p5sketchExplorer"
+      },
+      {
         "command": "p5-server.duplicateSketch",
         "title": "Duplicate",
         "enablement": "view == p5sketchExplorer"
@@ -193,7 +199,7 @@
           "group": "navigation"
         },
         {
-          "command": "p5-server.createSketchFile",
+          "command": "p5-explorer.createSketch",
           "when": "view == p5sketchExplorer",
           "group": "navigation"
         }

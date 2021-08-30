@@ -5,7 +5,7 @@ import { exclusions } from './sketchExplorer';
 import { getWorkspaceFolderPaths } from './utils';
 import path = require('path');
 
-export async function createSketch(folder: boolean) {
+export async function createSketch(isFolderSketch: boolean, dir?: string) {
   const wsFolders = getWorkspaceFolderPaths();
 
   if (wsFolders.length === 0) {
@@ -14,9 +14,10 @@ export async function createSketch(folder: boolean) {
   }
 
   const wsPath =
-    wsFolders.length > 1
+    dir ??
+    (wsFolders.length > 1
       ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
-      : wsFolders[0];
+      : wsFolders[0]);
   if (!wsPath) return; // the user cancelled
 
   let sketchName = await window.showInputBox({
@@ -31,14 +32,14 @@ export async function createSketch(folder: boolean) {
   if (sketchName.length === 0) {
     return;
   }
-  if (!folder && !sketchName.endsWith('.js')) {
+  if (!isFolderSketch && !sketchName.endsWith('.js')) {
     sketchName += '.js';
   }
 
   const filePath = path.join(wsPath, sketchName);
   const dirPath = path.dirname(filePath);
   const basePath = path.basename(sketchName);
-  const sketch = folder
+  const sketch = isFolderSketch
     ? Sketch.create(path.join(filePath, 'index.html'), {
         scriptFile: 'sketch.js',
         title: sketchName

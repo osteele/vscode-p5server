@@ -12,6 +12,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private watchers: vscode.FileSystemWatcher[] = [];
+  public selection: FilePathItem | Library | Sketch | null = null;
 
   public registerCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('p5-explorer.refresh', () => this.refresh()));
@@ -21,7 +22,24 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
         const name = await window.showInputBox();
         if (!name) return;
         await workspace.fs.createDirectory(Uri.file(path.join(item.file, name)));
-        this.refresh();
+      })
+    );
+    context.subscriptions.push(
+      commands.registerCommand('p5-explorer.createSketch', async () => {
+        const selection = this.selection;
+        const dir =
+          selection instanceof DirectoryItem
+            ? selection.file
+            : selection instanceof Sketch
+            ? (await sketchIsEntireDirectory(selection))
+              ? path.dirname(selection.dir)
+              : selection.dir
+            : selection instanceof Library
+            ? undefined
+            : selection
+            ? path.dirname(selection.file)
+            : undefined;
+        return commands.executeCommand('p5-server.createSketchFile', dir);
       })
     );
     context.subscriptions.push(
@@ -180,10 +198,13 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
     const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
     const files = unassociatedFiles.map(s => path.join(dir, s));
     return [
-      ...sketches,
+      // sketches
+      ...sketches.sort((a, b) => a.name.localeCompare(b.name)),
+      // directories
       ...files
         .filter(file => fs.statSync(file).isDirectory())
         .map(dir => new DirectoryItem(dir, vscode.TreeItemCollapsibleState.Collapsed)),
+      // files
       ...files
         .filter(file => !fs.statSync(file).isDirectory())
         .map(file => new FileItem(file, vscode.TreeItemCollapsibleState.None))
@@ -281,4 +302,11 @@ function fileDisplay(file: string) {
   }
   const prefix = `${process.env.HOME}/`.replace(/\/\/$/, '/');
   return file.startsWith(prefix) ? `~${file.substr(process.env.HOME.length)}` : file;
+}
+
+async function sketchIsEntireDirectory(sketch: Sketch) {
+  const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
+  return (
+    sketches.length === 1 && sketches[0].sketchType === sketch.sketchType && sketches[0].mainFile === sketch.mainFile
+  );
 }
