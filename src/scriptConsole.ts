@@ -1,5 +1,5 @@
 import { BrowserConnectionEvent, BrowserConsoleEvent, BrowserErrorEvent, Server } from 'p5-server';
-import { BrowserDocumentEvent } from 'p5-server/dist/server/eventTypes';
+import { BrowserConsoleEventMethods, BrowserDocumentEvent } from 'p5-server/dist/server/eventTypes';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
 import util = require('util');
@@ -8,12 +8,12 @@ export class ScriptConsole {
   private _sketchConsole: vscode.OutputChannel | null = null;
   private file?: string;
   private messageCount = 0;
-  private consoleMessages: ConsoleMessageLensProvider;
+  private lensProvider: ConsoleMessageLensProvider;
   private banner: string | null = null;
 
   constructor() {
     const provider = new ConsoleMessageLensProvider();
-    this.consoleMessages = provider;
+    this.lensProvider = provider;
     vscode.languages.registerCodeLensProvider('javascript', provider);
     vscode.commands.registerCommand('p5-explorer.showScriptConsole', () => {
       this.sketchConsole.show(true);
@@ -25,13 +25,13 @@ export class ScriptConsole {
       const { method, args, file, url, clientId } = event;
       if (method === 'clear') {
         this.clear();
-        this.consoleMessages.removeMessages({ clientId });
+        this.lensProvider.removeMessages({ clientId });
       } else {
         this.setFile(file, url);
         this.maybeShowConsole(method);
         this.appendLine(util.format(`[${method.toUpperCase()}] ${formatArgs(event)}`));
         if (file && event.line && args.length > 0) {
-          this.consoleMessages.addMessage(event);
+          this.lensProvider.addMessage(event);
         }
       }
     });
@@ -39,7 +39,7 @@ export class ScriptConsole {
     server.onScriptEvent('document', (event: BrowserDocumentEvent) => {
       const { type, clientId, visibilityState } = event;
       if (type === 'visibilitychange' && !visibilityState) {
-        this.consoleMessages.removeMessages({ clientId });
+        this.lensProvider.removeMessages({ clientId });
       }
     });
 
@@ -56,14 +56,14 @@ export class ScriptConsole {
       }
       this.appendLine(stack || `${msg}: ${message}`);
       if (file && event.type === 'error' && event.line) {
-        this.consoleMessages.addMessage(event);
+        this.lensProvider.addMessage(event);
       }
     });
 
     server.onScriptEvent('connection', (event: BrowserConnectionEvent) => {
       const { type, file, url } = event;
       if (type === 'opened') {
-        if (file) this.consoleMessages.removeMessages({ file });
+        if (file) this.lensProvider.removeMessages({ file });
         if (!this.setFile(file, url) && this.messageCount > 0) {
           const label = '[RELOAD]';
           const halfLen = Math.floor((80 - label.length) / 2);
@@ -112,13 +112,30 @@ export class ScriptConsole {
     return true;
   }
 
-  private maybeShowConsole(level: string) {
+  /** Show the console if the method's log level is greater than the
+   * configuration's p5-server.integratedBrowser.autoShow.level. */
+  private maybeShowConsole(level: BrowserConsoleEventMethods | 'always') {
+    // This supports using different configuration for the integrated and
+    // external browser, although the configuration for this has been removed.
     const browser = workspace.getConfiguration('p5-server').get('browser', 'integrated');
-    const [configKey, defaultValue] =
+    const [configKey, defaultValue]: [string, BrowserConsoleEventMethods] =
       browser === 'integrated' ? ['integratedBrowser', 'info'] : ['externalBrowser', 'error'];
-    const levels = ['error', 'warn', 'log', 'info', 'debug', 'always'];
-    const threshold = workspace.getConfiguration('p5-server.console').get(configKey + '.autoShow.level', defaultValue);
-    if (levels.includes(level) && threshold !== 'never' && levels.indexOf(level) <= levels.indexOf(threshold)) {
+    const threshold = workspace
+      .getConfiguration('p5-server.console')
+      .get<BrowserConsoleEventMethods | 'always' | 'never'>(configKey + '.autoShow.level', defaultValue);
+    const logLevelOrder: (BrowserConsoleEventMethods | 'always')[] = [
+      'error',
+      'warn',
+      'log',
+      'info',
+      'debug',
+      'always'
+    ];
+    if (
+      logLevelOrder.includes(level) &&
+      threshold !== 'never' &&
+      logLevelOrder.indexOf(level) <= logLevelOrder.indexOf(threshold)
+    ) {
       this.sketchConsole.show(true);
     }
   }
@@ -178,9 +195,10 @@ class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   }
 }
 
+/** Aggregated console and error messages for a single (file, line) location. */
 class ConsoleMessageLensData implements vscode.Command {
   private messages = new Array<BrowserConsoleEvent | BrowserErrorEvent>();
-  private count = 0;
+  private count = 0; // number of messages ever, including messages windowed out from this.messages
   public readonly key: string;
 
   constructor(public readonly file: string, public readonly clientId: string, public readonly line: number) {

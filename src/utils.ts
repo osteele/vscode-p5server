@@ -1,6 +1,7 @@
 import { workspace } from 'vscode';
 
-export function getWorkspaceFolderPaths() {
+// Return a list of the file paths for workspace folder with scheme 'file'
+export function getWorkspaceFolderPaths(): string[] {
   return workspace.workspaceFolders
     ? workspace.workspaceFolders
         .map(folder => folder.uri)

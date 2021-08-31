@@ -1,20 +1,13 @@
 import * as vscode from 'vscode';
-import { commands, workspace } from 'vscode';
+import { commands } from 'vscode';
 import { createSketch, duplicateSketch } from './commands';
 import { ServerManager } from './serverManager';
-import { SketchTreeProvider } from './sketchExplorer';
+import { SketchExplorer } from './sketchExplorer';
 import { getWorkspaceFolderPaths } from './utils';
 
 export function activate(context: vscode.ExtensionContext) {
   // create sketch explorer
-  const sketchTreeProvider = new SketchTreeProvider();
-  const treeView = vscode.window.createTreeView('p5sketchExplorer', {
-    showCollapseAll: true,
-    treeDataProvider: sketchTreeProvider
-  });
-  treeView.onDidChangeSelection(e => (sketchTreeProvider.selection = e.selection[0]));
-  context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => sketchTreeProvider.refresh()));
-  sketchTreeProvider.registerCommands(context);
+  new SketchExplorer(context);
 
   // register commands
   context.subscriptions.push(commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)));

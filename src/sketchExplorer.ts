@@ -3,74 +3,40 @@ import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
+import { getWorkspaceFolderPaths } from './utils';
 
 const enableIntegratedLibraryBrowser = false;
 const resourceDir = path.join(__filename, '..', '..', 'resources');
 export const exclusions = ['.*', '*.lock', '*.log', 'node_modules', 'package.json'];
 
-export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem | Library | Sketch> {
-  private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
-  public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
-  private watchers: vscode.FileSystemWatcher[] = [];
-  public selection: FilePathItem | Library | Sketch | null = null;
+export class SketchExplorer {
+  private readonly provider: SketchTreeProvider;
+  private selection: FilePathItem | Library | Sketch | null = null;
+
+  constructor(context: vscode.ExtensionContext) {
+    this.provider = new SketchTreeProvider();
+    const treeView = vscode.window.createTreeView('p5sketchExplorer', {
+      showCollapseAll: true,
+      treeDataProvider: this.provider
+    });
+    treeView.onDidChangeSelection(e => {
+      this.selection = e.selection[0];
+    });
+    context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => this.provider.refresh()));
+    this.registerCommands(context);
+  }
 
   public registerCommands(context: vscode.ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('p5-explorer.refresh', () => this.refresh()));
-    context.subscriptions.push(
-      commands.registerCommand('p5-explorer.createFolder', async (item: DirectoryItem) => {
-        if (!(item instanceof DirectoryItem)) throw new Error(`${item} is not a directory`);
-        const name = await window.showInputBox();
-        if (!name) return;
-        await workspace.fs.createDirectory(Uri.file(path.join(item.file, name)));
-      })
-    );
-    context.subscriptions.push(
-      commands.registerCommand('p5-explorer.createSketch', async () => {
-        const selection = this.selection;
-        const dir =
-          selection instanceof DirectoryItem
-            ? selection.file
-            : selection instanceof Sketch
-            ? (await sketchIsEntireDirectory(selection))
-              ? path.dirname(selection.dir)
-              : selection.dir
-            : selection instanceof Library
-            ? undefined
-            : selection
-            ? path.dirname(selection.file)
-            : undefined;
-        return commands.executeCommand('p5-server.createSketchFile', dir);
-      })
-    );
+    context.subscriptions.push(commands.registerCommand('p5-explorer.refresh', () => this.provider.refresh()));
+    context.subscriptions.push(commands.registerCommand('p5-explorer.createFolder', () => this.createFolder()));
+    context.subscriptions.push(commands.registerCommand('p5-explorer.createSketch', () => this.createSketch()));
     context.subscriptions.push(
       commands.registerCommand('p5-explorer.openSketch', (item: FilePathItem | Sketch) => {
         const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
         return window.showTextDocument(Uri.file(file));
       })
     );
-    context.subscriptions.push(
-      commands.registerCommand('p5-explorer.rename', async (item: FilePathItem | Sketch) => {
-        const name = await window.showInputBox();
-        if (!name) return;
-        // TODO: rename single-sketch folders
-        if (item instanceof Sketch) {
-          switch (item.sketchType) {
-            case 'html':
-              return workspace.fs.rename(
-                Uri.file(path.join(item.dir, item.mainFile)),
-                Uri.file(path.join(item.dir, /\.html?$/i.test(name) ? name : name + '.html'))
-              );
-            case 'javascript':
-              return workspace.fs.rename(
-                Uri.file(path.join(item.dir, item.scriptFile)),
-                Uri.file(path.join(item.dir, /\.js$/i.test(name) ? name : name + '.js'))
-              );
-          }
-        } else {
-          return workspace.fs.rename(Uri.file(item.file), Uri.file(path.join(path.dirname(item.file), name)));
-        }
-      })
-    );
+    context.subscriptions.push(commands.registerCommand('p5-explorer.rename', this.rename.bind(this)));
     context.subscriptions.push(
       commands.registerCommand('p5-explorer.openSelectedItem', (item: FilePathItem | Sketch) => {
         const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
@@ -128,6 +94,69 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
       })
     );
   }
+
+  // commands
+
+  private async createFolder(): Promise<void> {
+    const wsFolders = getWorkspaceFolderPaths();
+    const dir =
+      (await this.getSelectionDirectory()) ||
+      (wsFolders.length > 1
+        ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
+        : wsFolders[0]);
+    if (!dir) return; // the user cancelled
+    const name = await window.showInputBox();
+    if (!name) return;
+    await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
+  }
+
+  private async createSketch(): Promise<void> {
+    const dir = await this.getSelectionDirectory();
+    return commands.executeCommand('p5-server.createSketchFile', dir);
+  }
+
+  private async getSelectionDirectory() {
+    const selection = this.selection;
+    return selection instanceof DirectoryItem
+      ? selection.file
+      : selection instanceof Sketch
+      ? (await sketchIsEntireDirectory(selection))
+        ? path.dirname(selection.dir)
+        : selection.dir
+      : selection instanceof Library
+      ? undefined
+      : selection
+      ? path.dirname(selection.file)
+      : undefined;
+  }
+
+  private async rename(item: FilePathItem | Sketch): Promise<void> {
+    const name = await window.showInputBox();
+    if (!name) return;
+    // TODO: rename single-sketch folders
+    if (item instanceof Sketch) {
+      switch (item.sketchType) {
+        case 'html':
+          return workspace.fs.rename(
+            Uri.file(path.join(item.dir, item.mainFile)),
+            Uri.file(path.join(item.dir, /\.html?$/i.test(name) ? name : name + '.html'))
+          );
+        case 'javascript':
+          return workspace.fs.rename(
+            Uri.file(path.join(item.dir, item.scriptFile)),
+            Uri.file(path.join(item.dir, /\.js$/i.test(name) ? name : name + '.js'))
+          );
+      }
+    } else {
+      return workspace.fs.rename(Uri.file(item.file), Uri.file(path.join(path.dirname(item.file), name)));
+    }
+  }
+}
+
+export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem | Library | Sketch> {
+  private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
+  public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private watchers: vscode.FileSystemWatcher[] = [];
 
   public refresh(): void {
     this._onDidChangeTreeData.fire();
