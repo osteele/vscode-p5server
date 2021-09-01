@@ -162,6 +162,11 @@
           "default": true,
           "description": "Display console and error information in the editor"
         },
+        "p5-server.explorer.autoReveal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically select the file in the Sketch explorer when an editor is activated. This will only select items that are already present in the explorer."
+        },
         "p5-server.run.openEditor": {
           "type": "boolean",
           "default": true,
@@ -221,6 +226,11 @@
           "group": "1_open"
         },
         {
+          "command": "p5-explorer.openLibrary",
+          "when": "view == p5sketchExplorer && viewItem == library",
+          "group": "inline"
+        },
+        {
           "command": "p5-explorer.runSelectedFile",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "2_run"
@@ -265,7 +275,7 @@
       },
       {
         "view": "p5sketchExplorer",
-        "contents": "Please wait for the sketch explorer to finish loading.",
+        "contents": "The Sketch Explorer is scanning the workspace folder(s).",
         "when": "workbenchState != empty && !p5-explorer.loaded"
       }
     ],

@@ -11,7 +11,7 @@ export const exclusions = ['.*', '*.lock', '*.log', 'node_modules', 'package.jso
 
 export class SketchExplorer {
   private readonly provider: SketchTreeProvider;
-  private selection: FilePathItem | Library | Sketch | null = null;
+  private selection: Element | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     this.provider = new SketchTreeProvider();
@@ -24,33 +24,40 @@ export class SketchExplorer {
     });
     context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => this.provider.refresh()));
     this.registerCommands(context);
+
+    context.subscriptions.push(
+      window.onDidChangeActiveTextEditor(editor => {
+        if (editor && workspace.getConfiguration('p5-server').get<boolean>('p5-server.explorer.autoReveal')) {
+          const file = editor.document.uri.fsPath;
+          const element = this.provider.getElementForFile(file);
+          if (element) treeView.reveal(element);
+        }
+      })
+    );
   }
 
   public registerCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('p5-explorer.refresh', () => this.provider.refresh()));
     context.subscriptions.push(commands.registerCommand('p5-explorer.createFolder', () => this.createFolder()));
     context.subscriptions.push(commands.registerCommand('p5-explorer.createSketch', () => this.createSketch()));
+    context.subscriptions.push(commands.registerCommand('p5-explorer.rename', () => this.rename.bind(this)));
     context.subscriptions.push(
-      commands.registerCommand('p5-explorer.openSketch', (item: FilePathItem | Sketch) => {
-        const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
-        return window.showTextDocument(Uri.file(file));
-      })
-    );
-    context.subscriptions.push(commands.registerCommand('p5-explorer.rename', this.rename.bind(this)));
-    context.subscriptions.push(
-      commands.registerCommand('p5-explorer.openSelectedItem', (item: FilePathItem | Sketch) => {
-        const file = item instanceof Sketch ? path.join(item.dir, item.scriptFile || item.mainFile) : item.file;
-        return commands.executeCommand('vscode.open', Uri.file(file));
+      commands.registerCommand('p5-explorer.openSelectedItem', (item: Element) => {
+        if (item instanceof Library) return;
+        const uri =
+          item instanceof Sketch ? Uri.file(path.join(item.dir, item.scriptFile || item.mainFile)) : item.resourceUri;
+        return commands.executeCommand('vscode.open', uri);
       })
     );
     context.subscriptions.push(
-      commands.registerCommand('p5-explorer.runSelectedFile', (item: FilePathItem | Sketch) => {
-        const file = item instanceof Sketch ? path.join(item.dir, item.mainFile) : item.file;
+      commands.registerCommand('p5-explorer.runSelectedFile', (item: Element) => {
+        if (item instanceof Library) return;
+        const uri = item instanceof Sketch ? Uri.file(path.join(item.dir, item.mainFile)) : item.resourceUri;
         return Promise.all([
           workspace.getConfiguration('p5-server').get<boolean>('run.openEditor')
-            ? commands.executeCommand('vscode.open', Uri.file(file), { preview: true, viewColumn: 1 })
+            ? commands.executeCommand('vscode.open', uri, { preview: true, viewColumn: 1 })
             : null,
-          commands.executeCommand('p5-server.openBrowser', Uri.file(file), {})
+          commands.executeCommand('p5-server.openBrowser', uri, {})
         ]);
       })
     );
@@ -115,19 +122,19 @@ export class SketchExplorer {
     return commands.executeCommand('p5-server.createSketchFile', dir);
   }
 
-  private async getSelectionDirectory() {
+  private async getSelectionDirectory(): Promise<string | null> {
     const selection = this.selection;
-    return selection instanceof DirectoryItem
-      ? selection.file
-      : selection instanceof Sketch
+    return selection instanceof Sketch
       ? (await sketchIsEntireDirectory(selection))
         ? path.dirname(selection.dir)
         : selection.dir
       : selection instanceof Library
-      ? undefined
-      : selection
+      ? null
+      : selection instanceof DirectoryItem
       ? path.dirname(selection.file)
-      : undefined;
+      : selection instanceof FileItem
+      ? selection.file
+      : null;
   }
 
   private async rename(item: FilePathItem | Sketch): Promise<void> {
@@ -148,52 +155,78 @@ export class SketchExplorer {
           );
       }
     } else {
-      return workspace.fs.rename(Uri.file(item.file), Uri.file(path.join(path.dirname(item.file), name)));
+      const file = item.file;
+      return workspace.fs.rename(item.resourceUri!, Uri.file(path.join(path.dirname(file), name)));
     }
   }
 }
 
-export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem | Library | Sketch> {
+export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private watchers: vscode.FileSystemWatcher[] = [];
+  private elementMap: Map<string, Element> = new Map();
 
   public refresh(): void {
     this._onDidChangeTreeData.fire();
   }
 
-  public getTreeItem(element: FileItem | DirectoryItem | Library | Sketch): vscode.TreeItem {
+  public getElementForFile(file: string): Element | undefined {
+    // TODO: If it's not in the map, analyze its directory.
+    // If it's the main file for a sketch in that directory, return the sketch.
+    // Otherwise create a FileItem and return that.
+    return this.elementMap.get(file);
+  }
+
+  public getTreeItem(element: Element): vscode.TreeItem {
     if (element instanceof Sketch) {
       const sketch = element;
-      return new SketchItem(
+      const item = new SketchItem(
         sketch,
         sketch.files.length + sketch.libraries.length > 1
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None
       );
+      this.elementMap.set(path.join(sketch.dir, sketch.mainFile), element);
+      return item;
     } else if (element instanceof Library) {
       return new LibraryItem(element);
-    } else return element;
+    } else {
+      if (element instanceof FileItem) {
+        this.elementMap.set(element.file, element);
+      }
+      return element;
+    }
   }
 
-  public getChildren(element?: FilePathItem | Sketch): vscode.ProviderResult<(FilePathItem | Library | Sketch)[]> {
+  public getChildren(element?: Element): vscode.ProviderResult<Element[]> {
     if (!element) {
       return this.getRootChildren();
-    } else if (element instanceof DirectoryItem) {
-      return this.getDirectoryChildren(element.file);
+    } else if (element instanceof Library) {
+      return [];
     } else if (element instanceof Sketch) {
       const sketch = element;
       return [
         ...sketch.files
           .filter(file => !file.startsWith('..' + path.sep))
           .sort((a, b) => b.localeCompare(a))
-          .map(file => new FileItem(path.join(sketch.dir, file), vscode.TreeItemCollapsibleState.None)),
+          .map(file => new FileItem(path.join(sketch.dir, file))),
         ...sketch.libraries
       ];
+    } else if (element instanceof DirectoryItem) {
+      return this.getDirectoryChildren(element.resourceUri!.fsPath);
     }
   }
 
-  private async getRootChildren(): Promise<(FilePathItem | Sketch)[]> {
+  public getParent(_element: Element): vscode.ProviderResult<Element> {
+    // TODO:
+    // If it's a directory, return the parent.
+    // If it's a file, analyze the directory that it's in. If it's an unaffiliated file, return that directory.
+    // Otherwise return the sketch that contains it.
+    return null;
+  }
+
+  private async getRootChildren(): Promise<Element[]> {
     const wsFolders = workspace.workspaceFolders
       ? workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')
       : [];
@@ -205,6 +238,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
       w.onDidDelete(() => this.refresh());
       return w;
     });
+    this.elementMap.clear();
     try {
       switch (wsFolders.length) {
         case 0:
@@ -212,57 +246,47 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<FilePathItem 
         case 1:
           return this.getDirectoryChildren(wsFolders[0].uri.fsPath);
         default:
-          return Promise.all(
-            wsFolders.map(
-              folder => new DirectoryItem(folder.uri.fsPath, vscode.TreeItemCollapsibleState.Collapsed, folder.name)
-            )
-          );
+          return wsFolders
+            .filter(folder => folder.uri.scheme === 'file')
+            .map(folder => new DirectoryItem(folder.uri.fsPath, folder.name));
       }
     } finally {
       setTimeout(() => commands.executeCommand('setContext', 'p5-explorer.loaded', true), 1000);
     }
   }
 
-  private async getDirectoryChildren(dir: string): Promise<(FilePathItem | Sketch)[]> {
+  private async getDirectoryChildren(dir: string): Promise<Element[]> {
     const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
     const files = unassociatedFiles.map(s => path.join(dir, s));
     return [
       // sketches
       ...sketches.sort((a, b) => a.name.localeCompare(b.name)),
       // directories
-      ...files
-        .filter(file => fs.statSync(file).isDirectory())
-        .map(dir => new DirectoryItem(dir, vscode.TreeItemCollapsibleState.Collapsed)),
+      ...files.filter(file => fs.statSync(file).isDirectory()).map(dir => new DirectoryItem(dir)),
       // files
-      ...files
-        .filter(file => !fs.statSync(file).isDirectory())
-        .map(file => new FileItem(file, vscode.TreeItemCollapsibleState.None))
+      ...files.filter(file => !fs.statSync(file).isDirectory()).map(file => new FileItem(file))
     ];
   }
 }
 
-interface FilePathItem {
-  file: string;
-}
+type Element = Library | Sketch | FilePathItem;
 
-class DirectoryItem extends vscode.TreeItem implements FilePathItem {
-  constructor(
-    public readonly file: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-    name?: string
-  ) {
-    super(name || path.basename(file), collapsibleState);
+type FilePathItem = FileItem | DirectoryItem;
+
+class DirectoryItem extends vscode.TreeItem {
+  constructor(public readonly file: string, name?: string) {
+    super(name || path.basename(file), vscode.TreeItemCollapsibleState.Collapsed);
     this.resourceUri = Uri.file(file);
-    this.tooltip = fileDisplay(this.file);
+    this.tooltip = fileDisplay(file);
   }
 
   contextValue = 'directory';
   iconPath = new vscode.ThemeIcon('file-directory');
 }
 
-class FileItem extends vscode.TreeItem implements FilePathItem {
-  constructor(public readonly file: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
-    super(path.basename(file), collapsibleState);
+class FileItem extends vscode.TreeItem {
+  constructor(public readonly file: string) {
+    super(path.basename(file), vscode.TreeItemCollapsibleState.None);
     this.resourceUri = Uri.file(file);
     this.tooltip = fileDisplay(file);
     this.command = {
@@ -277,12 +301,12 @@ class FileItem extends vscode.TreeItem implements FilePathItem {
 }
 
 class SketchItem extends vscode.TreeItem {
-  constructor(public readonly sketch: Sketch, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+  constructor(public readonly sketch: Sketch, collapsibleState: vscode.TreeItemCollapsibleState) {
     super(sketch.name.replace(/\/$/, ''), collapsibleState);
     this.tooltip = fileDisplay(this.file);
     this.description = sketch.description;
     this.command = {
-      command: 'p5-explorer.openSketch',
+      command: 'p5-explorer.openSelectedItem',
       title: 'Edit P5.js Sketch',
       arguments: [sketch]
     };
@@ -304,11 +328,11 @@ class LibraryItem extends vscode.TreeItem {
   constructor(readonly library: Library) {
     super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
     this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${library.description}.\nClick on item to view the library home page.`;
-    this.command = {
-      command: 'p5-explorer.openLibrary',
-      title: 'Homepage',
-      arguments: [library]
-    };
+    // this.command = {
+    //   command: 'p5-explorer.openLibrary',
+    //   title: 'Homepage',
+    //   arguments: [library]
+    // };
   }
 
   contextValue = 'library';

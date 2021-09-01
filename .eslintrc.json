@@ -15,6 +15,7 @@
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/naming-convention": "warn",
     "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/semi": "warn",
     "eqeqeq": "warn",
     "no-console": ["warn", { "allow": ["warn", "error"] }],
