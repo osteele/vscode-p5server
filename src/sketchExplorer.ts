@@ -44,15 +44,14 @@ export class SketchExplorer {
     context.subscriptions.push(
       commands.registerCommand('p5-explorer.openSelectedItem', (item: Element) => {
         if (item instanceof Library) return;
-        const uri =
-          item instanceof Sketch ? Uri.file(path.join(item.dir, item.scriptFile || item.mainFile)) : item.resourceUri;
+        const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
         return commands.executeCommand('vscode.open', uri);
       })
     );
     context.subscriptions.push(
       commands.registerCommand('p5-explorer.runSelectedFile', (item: Element) => {
         if (item instanceof Library) return;
-        const uri = item instanceof Sketch ? Uri.file(path.join(item.dir, item.mainFile)) : item.resourceUri;
+        const uri = item instanceof Sketch ? Uri.file(item.mainFilePath) : item.resourceUri;
         return Promise.all([
           workspace.getConfiguration('p5-server').get<boolean>('run.openEditor')
             ? commands.executeCommand('vscode.open', uri, { preview: true, viewColumn: 1 })
@@ -145,18 +144,19 @@ export class SketchExplorer {
       switch (item.sketchType) {
         case 'html':
           return workspace.fs.rename(
-            Uri.file(path.join(item.dir, item.mainFile)),
+            Uri.file(item.mainFilePath),
             Uri.file(path.join(item.dir, /\.html?$/i.test(name) ? name : name + '.html'))
           );
         case 'javascript':
           return workspace.fs.rename(
-            Uri.file(path.join(item.dir, item.scriptFile)),
+            Uri.file(item.scriptFilePath),
             Uri.file(path.join(item.dir, /\.js$/i.test(name) ? name : name + '.js'))
           );
       }
     } else {
       const file = item.file;
-      return workspace.fs.rename(item.resourceUri!, Uri.file(path.join(path.dirname(file), name)));
+      const uri = Uri.file(path.join(path.dirname(file), name));
+      return workspace.fs.rename(item.resourceUri!, uri);
     }
   }
 }
@@ -187,7 +187,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None
       );
-      this.elementMap.set(path.join(sketch.dir, sketch.mainFile), element);
+      this.elementMap.set(sketch.mainFilePath, element);
       return item;
     } else if (element instanceof Library) {
       return new LibraryItem(element);
@@ -257,14 +257,14 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
 
   private async getDirectoryChildren(dir: string): Promise<Element[]> {
     const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
-    const files = unassociatedFiles.map(s => path.join(dir, s));
+    const files = unassociatedFiles.map(name => path.join(dir, name));
     return [
       // sketches
       ...sketches.sort((a, b) => a.name.localeCompare(b.name)),
       // directories
-      ...files.filter(file => fs.statSync(file).isDirectory()).map(dir => new DirectoryItem(dir)),
+      ...files.filter(filepath => fs.statSync(filepath).isDirectory()).map(dirpath => new DirectoryItem(dirpath)),
       // files
-      ...files.filter(file => !fs.statSync(file).isDirectory()).map(file => new FileItem(file))
+      ...files.filter(filepath => !fs.statSync(filepath).isDirectory()).map(filepath => new FileItem(filepath))
     ];
   }
 }
@@ -313,8 +313,7 @@ class SketchItem extends vscode.TreeItem {
   }
 
   get file() {
-    const sketch = this.sketch;
-    return path.join(sketch.dir, sketch.mainFile);
+    return this.sketch.mainFilePath;
   }
 
   iconPath = {
@@ -350,6 +349,8 @@ function fileDisplay(file: string) {
 async function sketchIsEntireDirectory(sketch: Sketch) {
   const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
   return (
-    sketches.length === 1 && sketches[0].sketchType === sketch.sketchType && sketches[0].mainFile === sketch.mainFile
+    sketches.length === 1 &&
+    sketches[0].sketchType === sketch.sketchType &&
+    sketches[0].mainFilePath === sketch.mainFilePath
   );
 }

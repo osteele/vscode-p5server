@@ -55,7 +55,7 @@ export class ScriptConsole {
         msg += ` of ${file || url}`;
       }
       this.appendLine(stack || `${msg}: ${message}`);
-      if (file && event.type === 'error' && event.line) {
+      if (event.type === 'error' && file && event.line) {
         this.lensProvider.addMessage(event);
       }
     });

@@ -54,7 +54,7 @@ export async function createSketch(isFolderSketch: boolean, dir?: string) {
     return;
   }
 
-  window.showTextDocument(Uri.file(path.join(sketch.dir, sketch.scriptFile)));
+  window.showTextDocument(Uri.file(sketch.scriptFilePath));
   commands.executeCommand('p5-explorer.refresh');
 }
 
@@ -64,14 +64,14 @@ export async function duplicateSketch(sketch: Sketch) {
   if (!name) return;
   // if the sketch is the only sketch in the directory, copy the directory
   const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
-  if (sketches.length === 1 && sketches[0].mainFile === sketch.mainFile) {
+  if (sketches.length === 1 && sketches[0].mainFilePath === sketch.mainFilePath) {
     await workspace.fs.copy(Uri.file(sketch.dir), Uri.file(path.join(path.dirname(sketch.dir), name)));
   } else {
     // copy the sketch files within the same directory
     const basename = name.replace(/\.(js|html?)$/i, '');
-    const replacements = ([sketch.scriptFile, sketch.htmlFile].filter(Boolean) as string[]).map(file => ({
-      src: Uri.file(path.join(sketch.dir, file)),
-      target: Uri.file(path.join(sketch.dir, basename + path.extname(file)))
+    const replacements = ([sketch.scriptFile, sketch.htmlFile].filter(Boolean) as string[]).map(name => ({
+      src: Uri.file(path.join(sketch.dir, name)),
+      target: Uri.file(path.join(sketch.dir, basename + path.extname(name)))
     }));
     const targetsExist = await Promise.all(replacements.map(({ target }) => fsExists(target)));
     if (targetsExist.some(Boolean)) {
