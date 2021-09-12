@@ -94,10 +94,11 @@ export async function duplicateSketch(sketch: Sketch) {
       await workspace.fs.writeFile(htmlFile, Buffer.from(htmlRoot.toString(), 'utf-8'));
     }
   }
-  async function fsExists(uri: Uri): Promise<boolean> {
-    return workspace.fs.stat(uri).then(
-      () => true,
-      () => false
-    );
-  }
+}
+
+async function fsExists(uri: Uri): Promise<boolean> {
+  return workspace.fs.stat(uri).then(
+    () => true,
+    () => false
+  );
 }

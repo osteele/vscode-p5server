@@ -163,6 +163,8 @@ and related projects.
   open URL's in various browsers.
 * I learned a lot from reading the source code to the [vscode-project-manager
   extension](https://github.com/alefragnani/vscode-project-manager).
+* The What's New page uses the HTML structure and the CSS from the GitHub
+  Desktop web site.
 
 ## License
 
