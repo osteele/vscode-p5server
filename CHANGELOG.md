@@ -3,12 +3,15 @@
 ## [1.1.0]
 
 - The Run Sketch command defaults to the new integrated browser. Change the
-  `p5-server.browser` setting to `default` in order to open sketches in an
+  `p5-server.browser` setting to `system` in order to open sketches in an
   external browser (such as Chrome, Edge, or Safari), or change it to the name
   of a specific browser.
 
 - Enable the `p5-server.explorer.autoRunSketchOnSide` setting in order to run
   sketches when they are selected in the sketch explorer.
+
+- In the `p5-server.browser setting`, renamed the default system browser from
+  `default` => `system`
 
 ## [1.0.9]
 

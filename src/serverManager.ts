@@ -132,7 +132,7 @@ export class ServerManager {
     const url = uri ? server.filePathToUrl(uri.fsPath) : server.url;
     if (!url) {
       if (uri) {
-        window.showErrorMessage(`${uri.fsPath} is not in a directory that is served by the P5 server.`);
+        await window.showErrorMessage(`${uri.fsPath} is not in a directory that is served by the P5 server.`);
       }
       return;
     }
@@ -141,9 +141,10 @@ export class ServerManager {
     type AppName = open.AppName | 'safari';
     const openApps = { safari: 'safari', ...open.apps };
 
-    type BrowserKey = AppName | 'default' | 'integrated';
-    const browserName = options?.browser ?? workspace.getConfiguration('p5-server').get<string>('browser', 'default');
-    const browserKey = browserName.toLowerCase() as BrowserKey;
+    type BrowserKey = AppName | 'system' | 'integrated';
+    const browserName =
+      options?.browser ?? workspace.getConfiguration('p5-server').get<string>('browser', 'integrated');
+    const browserKey = browserName.replace('default', 'integrated').toLowerCase() as BrowserKey;
 
     if (browserKey === 'integrated') {
       await commands.executeCommand('simpleBrowser.api.open', url, {
@@ -154,24 +155,24 @@ export class ServerManager {
 
     // TODO: exit with an error message if the browserKey === 'safari' and the os is not macOS
     let openOptions: open.Options | undefined;
-    if (browserKey !== 'default') {
+    if (browserKey !== 'system') {
       const name = openApps[browserKey];
       openOptions = { app: { name } };
     }
 
     let process = await openInBrowser(url, openOptions);
-    if (process.exitCode !== 0 && browserKey !== 'default') {
+    if (process.exitCode !== 0 && browserKey !== 'system') {
       const msg = `The ${browserName} browser failed to open. Retrying with the default system browser.`;
       const messageStatus = window.setStatusBarMessage(msg);
       process = await openInBrowser(url);
-      messageStatus.dispose();
+      await messageStatus.dispose();
     }
     if (process.exitCode !== 0) {
       const msg =
-        browserKey === 'default'
+        browserKey === 'system'
           ? 'The default system browser failed to open.'
           : `The ${browserName} browser failed to open. It may not be available on your system.`;
-      window.showErrorMessage(msg);
+      await window.showErrorMessage(msg);
     }
   }
 }
@@ -195,7 +196,7 @@ class StatusBarManager {
     switch (state) {
       case 'running':
         {
-          const browserName = workspace.getConfiguration('p5-server').get<string>('browser', 'default');
+          const browserName = workspace.getConfiguration('p5-server').get<string>('browser', 'integrated');
           statusBarServerItem.text = '$(extensions-star-full)P5 Server';
           statusBarServerItem.tooltip = 'Stop the P5 server';
           statusBarServerItem.command = 'p5-server.stop';
