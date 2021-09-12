@@ -40,17 +40,28 @@ export class SketchExplorer {
     context.subscriptions.push(commands.registerCommand('p5-server.explorer.refresh', () => this.provider.refresh()));
     context.subscriptions.push(commands.registerCommand('p5-server.explorer.createFolder', () => this.createFolder()));
     context.subscriptions.push(commands.registerCommand('p5-server.explorer.createSketch', () => this.createSketch()));
-    context.subscriptions.push(commands.registerCommand('p5-server.explorer.rename', () => this.rename.bind(this)));
+    context.subscriptions.push(commands.registerCommand('p5-server.explorer.rename', this.rename.bind(this)));
     context.subscriptions.push(
-      commands.registerCommand('p5-server.explorer.openSelectedItem', (item: Element) => {
-        if (item instanceof Library) return;
+      commands.registerCommand('p5-server.explorer.open', (item: Element) => {
+        if (item instanceof Library) return; // This shouldn't happen, but it makes the TS compiler happy
         const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
         return commands.executeCommand('vscode.open', uri);
       })
     );
     context.subscriptions.push(
-      commands.registerCommand('p5-server.explorer.runSelectedFile', (item: Element) => {
-        if (item instanceof Library) return;
+      commands.registerCommand('p5-server.explorer.openSketch', (sketch: Sketch) => {
+        const uri = Uri.file(sketch.scriptFilePath);
+        return workspace.getConfiguration('p5-server.explorer').get<boolean>('autoRunSketchOnSide')
+          ? Promise.all([
+              commands.executeCommand('vscode.open', uri, { preview: true, viewColumn: 1 }),
+              commands.executeCommand('p5-server.openBrowser', uri, { browser: 'integrated' })
+            ])
+          : commands.executeCommand('vscode.open', uri);
+      })
+    );
+    context.subscriptions.push(
+      commands.registerCommand('p5-server.explorer.run', (item: Element) => {
+        if (item instanceof Library) return; // This shouldn't happen, but it makes the TS compiler happy
         const uri = item instanceof Sketch ? Uri.file(item.mainFilePath) : item.resourceUri;
         return Promise.all([
           workspace.getConfiguration('p5-server').get<boolean>('run.openEditor')
@@ -306,7 +317,7 @@ class SketchItem extends vscode.TreeItem {
     this.tooltip = fileDisplay(this.file);
     this.description = sketch.description;
     this.command = {
-      command: 'p5-server.explorer.openSelectedItem',
+      command: 'p5-server.explorer.openSketch',
       title: 'Edit P5.js Sketch',
       arguments: [sketch]
     };
@@ -327,11 +338,6 @@ class LibraryItem extends vscode.TreeItem {
   constructor(readonly library: Library) {
     super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
     this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${library.description}.\nClick on item to view the library home page.`;
-    // this.command = {
-    //   command: 'p5-server.explorer.openLibrary',
-    //   title: 'Homepage',
-    //   arguments: [library]
-    // };
   }
 
   contextValue = 'library';

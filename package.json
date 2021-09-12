@@ -90,7 +90,7 @@
         "enablement": "view == p5sketchExplorer"
       },
       {
-        "command": "p5-server.explorer.openSelectedItem",
+        "command": "p5-server.explorer.open",
         "title": "Open in editor",
         "enablement": "view == p5sketchExplorer",
         "icon": "$(go-to-file)"
@@ -106,7 +106,7 @@
         "enablement": "view == p5sketchExplorer"
       },
       {
-        "command": "p5-server.explorer.runSelectedFile",
+        "command": "p5-server.explorer.run",
         "title": "Run in browser",
         "enablement": "view == p5sketchExplorer",
         "icon": "$(run)"
@@ -167,9 +167,14 @@
           "default": true,
           "description": "Automatically select the file in the Sketch explorer when an editor is activated. This will only select items that are already present in the explorer."
         },
-        "p5-server.run.openEditor": {
+        "p5-server.explorer.autoRunSketchOnSide": {
           "type": "boolean",
           "default": true,
+          "description": "Automatically run a sketch to the side of the editor, when it is selected in the sketch explorer."
+        },
+        "p5-server.run.openEditor": {
+          "type": "boolean",
+          "default": false,
           "description": "The Run command opens the script file on the left and run the sketch on the right."
         },
         "p5-server.editorTitle.RunIcon.enabled": {
@@ -211,17 +216,17 @@
       ],
       "view/item/context": [
         {
-          "command": "p5-server.explorer.openSelectedItem",
+          "command": "p5-server.explorer.open",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "inline"
         },
         {
-          "command": "p5-server.explorer.runSelectedFile",
-          "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
+          "command": "p5-server.explorer.run",
+          "when": "view == p5sketchExplorer && viewItem == sketch",
           "group": "inline"
         },
         {
-          "command": "p5-server.explorer.openSelectedItem",
+          "command": "p5-server.explorer.open",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "1_open"
         },
@@ -231,7 +236,7 @@
           "group": "inline"
         },
         {
-          "command": "p5-server.explorer.runSelectedFile",
+          "command": "p5-server.explorer.run",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "2_run"
         },

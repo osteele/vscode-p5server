@@ -32,11 +32,11 @@ export class ServerManager {
       })
     );
     context.subscriptions.push(
-      commands.registerCommand('p5-server.openBrowser', async (uri?: Uri) => {
+      commands.registerCommand('p5-server.openBrowser', async (uri?: Uri, options?: { browser: string }) => {
         if (this.state === 'stopped') {
-          await this.startServer(uri);
+          await this.startServer(uri, options);
         } else if (this.state === 'running') {
-          await this.openBrowser(uri);
+          await this.openBrowser(uri, options);
         }
       })
     );
@@ -65,7 +65,7 @@ export class ServerManager {
     this.updateStatusBar();
   }
 
-  async startServer(uri?: Uri) {
+  async startServer(uri?: Uri, options?: { browser: string }) {
     if (this.state !== 'stopped') {
       return;
     }
@@ -101,7 +101,7 @@ export class ServerManager {
         this.state = 'stopped';
       }
     }
-    this.openBrowser(uri?.with({ query: 'send-console-messages' }));
+    this.openBrowser(uri?.with({ query: 'send-console-messages' }), options);
   }
 
   async stopServer() {
@@ -124,7 +124,7 @@ export class ServerManager {
     setTimeout(() => sbm.dispose(), 10000);
   }
 
-  async openBrowser(uri?: Uri) {
+  async openBrowser(uri?: Uri, options?: { browser: string }) {
     const server = this.server;
     if (!server?.url) {
       return;
@@ -142,7 +142,7 @@ export class ServerManager {
     const openApps = { safari: 'safari', ...open.apps };
 
     type BrowserKey = AppName | 'default' | 'integrated';
-    const browserName = workspace.getConfiguration('p5-server').get<string>('browser', 'default');
+    const browserName = options?.browser ?? workspace.getConfiguration('p5-server').get<string>('browser', 'default');
     const browserKey = browserName.toLowerCase() as BrowserKey;
 
     if (browserKey === 'integrated') {

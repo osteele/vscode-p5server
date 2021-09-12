@@ -1,8 +1,26 @@
 # Change Log
 
+## [1.1.0]
+
+- The Run Sketch command defaults to the new integrated browser. Change the
+  `p5-server.browser` setting to `default` in order to open sketches in an
+  external browser (such as Chrome, Edge, or Safari), or change it to the name
+  of a specific browser.
+
+- Enable the `p5-server.explorer.autoRunSketchOnSide` setting in order to run
+  sketches when they are selected in the sketch explorer.
+
 ## [1.0.9]
 
-New feature:
+New features:
+
+- In the sketch explorer, click a library to view its home page.
+- Rename and duplicate items in the sketch explorer. Right-click / control-click
+  for a context menu.
+
+The following features are disabled by default. Change the `p5-server.browser`
+setting to `integrated` in order to use the integrated browser. This will be the
+default in the next minor release.
 
 - Add a config option to use the VSCode integrated (“Simple”) browser
 - Display console messages from the sketch in an output channel
