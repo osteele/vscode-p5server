@@ -117,7 +117,7 @@
       "properties": {
         "p5-server.browser": {
           "type": "string",
-          "default": "default",
+          "default": "integrated",
           "enum": [
             "integrated",
             "default",
