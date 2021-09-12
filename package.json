@@ -68,18 +68,18 @@
         "icon": "$(file-directory-create)"
       },
       {
-        "command": "p5-explorer.refresh",
+        "command": "p5-server.explorer.refresh",
         "title": "p5.js Explorer: Refresh",
         "enablement": "view == p5sketchExplorer",
         "icon": "$(refresh)"
       },
       {
-        "command": "p5-explorer.createFolder",
+        "command": "p5-server.explorer.createFolder",
         "title": "Create Folder",
         "enablement": "view == p5sketchExplorer"
       },
       {
-        "command": "p5-explorer.createSketch",
+        "command": "p5-server.explorer.createSketch",
         "title": "Create Sketch",
         "icon": "$(file-add)",
         "enablement": "view == p5sketchExplorer"
@@ -90,23 +90,23 @@
         "enablement": "view == p5sketchExplorer"
       },
       {
-        "command": "p5-explorer.openSelectedItem",
+        "command": "p5-server.explorer.openSelectedItem",
         "title": "Open in editor",
         "enablement": "view == p5sketchExplorer",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "p5-explorer.openLibrary",
+        "command": "p5-server.explorer.openLibrary",
         "title": "View P5.js Library Homepage",
         "enablement": "view == p5sketchExplorer"
       },
       {
-        "command": "p5-explorer.rename",
+        "command": "p5-server.explorer.rename",
         "title": "Rename",
         "enablement": "view == p5sketchExplorer"
       },
       {
-        "command": "p5-explorer.runSelectedFile",
+        "command": "p5-server.explorer.runSelectedFile",
         "title": "Run in browser",
         "enablement": "view == p5sketchExplorer",
         "icon": "$(run)"
@@ -199,44 +199,44 @@
       ],
       "view/title": [
         {
-          "command": "p5-explorer.refresh",
+          "command": "p5-server.explorer.refresh",
           "when": "view == p5sketchExplorer",
           "group": "navigation"
         },
         {
-          "command": "p5-explorer.createSketch",
+          "command": "p5-server.explorer.createSketch",
           "when": "view == p5sketchExplorer",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "p5-explorer.openSelectedItem",
+          "command": "p5-server.explorer.openSelectedItem",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "inline"
         },
         {
-          "command": "p5-explorer.runSelectedFile",
+          "command": "p5-server.explorer.runSelectedFile",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "inline"
         },
         {
-          "command": "p5-explorer.openSelectedItem",
+          "command": "p5-server.explorer.openSelectedItem",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "1_open"
         },
         {
-          "command": "p5-explorer.openLibrary",
+          "command": "p5-server.explorer.openLibrary",
           "when": "view == p5sketchExplorer && viewItem == library",
           "group": "inline"
         },
         {
-          "command": "p5-explorer.runSelectedFile",
+          "command": "p5-server.explorer.runSelectedFile",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "2_run"
         },
         {
-          "command": "p5-explorer.createFolder",
+          "command": "p5-server.explorer.createFolder",
           "when": "view == p5sketchExplorer && viewItem == directory",
           "group": "3_fileoperations"
         },
@@ -246,7 +246,7 @@
           "group": "3_fileoperations"
         },
         {
-          "command": "p5-explorer.rename",
+          "command": "p5-server.explorer.rename",
           "when": "view == p5sketchExplorer && viewItem == sketch",
           "group": "3_fileoperations"
         }
@@ -266,7 +266,7 @@
       {
         "view": "p5sketchExplorer",
         "contents": "Create a sketch to get started.\n[Create p5.js Sketch File](command:p5-server.createSketchFile)\n[Create p5.js Sketch Folder](command:p5-server.createSketchFolder)",
-        "when": "workbenchState != empty && p5-explorer.loaded"
+        "when": "workbenchState != empty && p5-server.explorer.loaded"
       },
       {
         "view": "p5sketchExplorer",
@@ -276,7 +276,7 @@
       {
         "view": "p5sketchExplorer",
         "contents": "The Sketch Explorer is scanning the workspace folder(s).",
-        "when": "workbenchState != empty && !p5-explorer.loaded"
+        "when": "workbenchState != empty && !p5-server.explorer.loaded"
       }
     ],
     "viewsContainers": {

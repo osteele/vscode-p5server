@@ -15,7 +15,7 @@ export class ScriptConsole {
     const provider = new ConsoleMessageLensProvider();
     this.lensProvider = provider;
     vscode.languages.registerCodeLensProvider('javascript', provider);
-    vscode.commands.registerCommand('p5-explorer.showScriptConsole', () => {
+    vscode.commands.registerCommand('p5-server.explorer.showScriptConsole', () => {
       this.sketchConsole.show(true);
     });
   }
@@ -217,7 +217,7 @@ class ConsoleMessageLensData implements vscode.Command {
   }
 
   public get command(): string {
-    return 'p5-explorer.showScriptConsole';
+    return 'p5-server.explorer.showScriptConsole';
   }
 
   public get title(): string {

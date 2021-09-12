@@ -37,19 +37,19 @@ export class SketchExplorer {
   }
 
   public registerCommands(context: vscode.ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('p5-explorer.refresh', () => this.provider.refresh()));
-    context.subscriptions.push(commands.registerCommand('p5-explorer.createFolder', () => this.createFolder()));
-    context.subscriptions.push(commands.registerCommand('p5-explorer.createSketch', () => this.createSketch()));
-    context.subscriptions.push(commands.registerCommand('p5-explorer.rename', () => this.rename.bind(this)));
+    context.subscriptions.push(commands.registerCommand('p5-server.explorer.refresh', () => this.provider.refresh()));
+    context.subscriptions.push(commands.registerCommand('p5-server.explorer.createFolder', () => this.createFolder()));
+    context.subscriptions.push(commands.registerCommand('p5-server.explorer.createSketch', () => this.createSketch()));
+    context.subscriptions.push(commands.registerCommand('p5-server.explorer.rename', () => this.rename.bind(this)));
     context.subscriptions.push(
-      commands.registerCommand('p5-explorer.openSelectedItem', (item: Element) => {
+      commands.registerCommand('p5-server.explorer.openSelectedItem', (item: Element) => {
         if (item instanceof Library) return;
         const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
         return commands.executeCommand('vscode.open', uri);
       })
     );
     context.subscriptions.push(
-      commands.registerCommand('p5-explorer.runSelectedFile', (item: Element) => {
+      commands.registerCommand('p5-server.explorer.runSelectedFile', (item: Element) => {
         if (item instanceof Library) return;
         const uri = item instanceof Sketch ? Uri.file(item.mainFilePath) : item.resourceUri;
         return Promise.all([
@@ -61,7 +61,7 @@ export class SketchExplorer {
       })
     );
     context.subscriptions.push(
-      commands.registerCommand('p5-explorer.openLibrary', (library: Library) => {
+      commands.registerCommand('p5-server.explorer.openLibrary', (library: Library) => {
         if (!enableIntegratedLibraryBrowser) {
           return commands.executeCommand('vscode.open', Uri.parse(library.homepage));
           // return commands.executeCommand('simpleBrowser.api.open', Uri.parse(library.homepage));
@@ -251,7 +251,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
             .map(folder => new DirectoryItem(folder.uri.fsPath, folder.name));
       }
     } finally {
-      setTimeout(() => commands.executeCommand('setContext', 'p5-explorer.loaded', true), 1000);
+      setTimeout(() => commands.executeCommand('setContext', 'p5-server.explorer.loaded', true), 1000);
     }
   }
 
@@ -306,7 +306,7 @@ class SketchItem extends vscode.TreeItem {
     this.tooltip = fileDisplay(this.file);
     this.description = sketch.description;
     this.command = {
-      command: 'p5-explorer.openSelectedItem',
+      command: 'p5-server.explorer.openSelectedItem',
       title: 'Edit P5.js Sketch',
       arguments: [sketch]
     };
@@ -328,7 +328,7 @@ class LibraryItem extends vscode.TreeItem {
     super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
     this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${library.description}.\nClick on item to view the library home page.`;
     // this.command = {
-    //   command: 'p5-explorer.openLibrary',
+    //   command: 'p5-server.explorer.openLibrary',
     //   title: 'Homepage',
     //   arguments: [library]
     // };

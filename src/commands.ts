@@ -55,7 +55,7 @@ export async function createSketch(isFolderSketch: boolean, dir?: string) {
   }
 
   window.showTextDocument(Uri.file(sketch.scriptFilePath));
-  commands.executeCommand('p5-explorer.refresh');
+  commands.executeCommand('p5-server.explorer.refresh');
 }
 
 export async function duplicateSketch(sketch: Sketch) {
