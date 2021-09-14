@@ -1,20 +1,11 @@
 {
   "compilerOptions": {
-    "rootDir": ".",
     "strict": true,
     "lib": [
       "ES2019"
     ],
-    "useUnknownInCatchVariables": false,
-    "esModuleInterop": true
+    "useUnknownInCatchVariables": false
   },
-  "root": true,
-  "include": [
-    "scripts/**/*",
-    "createChangelog.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".vscode-test"
-  ]
+  "extends": "@tsconfig/node14/tsconfig.json",
+  "root": true
 }

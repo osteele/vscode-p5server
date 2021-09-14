@@ -1,55 +1,73 @@
 # Change Log
 
-## [1.1.0 -- 2021-09-13]
+## [1.1.0 -- 2021-09-15]
 
 New:
 
 - The Run Sketch command defaults to the new integrated browser. Change the
-  `p5-server.browser` setting to `system` in order to open sketches in an
-  external browser (such as Chrome, Edge, or Safari), or change it to the name
-  of a specific browser.
+  "*P5-server: Browser*" setting to `system` in order to open sketches in the
+  default system browser. Or, change it to the name of a specific browser (such
+  as Chrome, Edge, or Safari).
 
-- Enable the `p5-server.explorer.autoRunSketchOnSide` setting in order to run
-  sketches when they are selected in the sketch explorer.
+- In the sketch explorer, clicking on a sketch runs it in the internal browser.
+  Uncheck the "*P5-server: Explorer > Explorer: Auto Run Sketch On Side*" setting
+  to disabled this.
 
-- In the `p5-server.browser setting`, renamed the default system browser from
-  `default` => `system`
+- The first time the extension is activated, it displays release notes (this
+  page) if there are signficant changes. For this release only, it also displays
+  the release notes if the extension has been just been installed.
 
-- Display release notes on first run since update
+Changed:
+
+- In the "*P5-server: Browser*" setting, the default system browser is named
+  `system` instead of `default`.
 
 ## [1.0.9 -- 2021-09-12]
 
 New:
 
-- In the sketch explorer, click a library to view its home page.
-- Rename and duplicate items in the sketch explorer. Right-click / control-click
-  for a context menu.
+- In the sketch explorer, click a library to open its home page in the default
+  system browser.
+- The sketch explorer can be used to rename and duplicate sketches. Right-click
+  / control-click for a context menu that provides these items.
 
-The following features are disabled by default. Change the `p5-server.browser`
-setting to `integrated` in order to use the integrated browser. This will be the
-default in the next minor release.
+The following features are disabled by default. Change the "*P5-server:
+Browser*" setting to `integrated` in order to use the integrated browser. This
+will be the default in the next minor release.
 
 New:
 
-- Add a config option to use the VSCode integrated (“Simple”) browser
-- Display console messages from the sketch in an output channel
+- The extension now includes an integrated browser, that runs inside of VS Code.
+  To activate this, change the new "*P5-server: Browser*" setting to
+  `integrated`. (In the next release, this will become the default value for
+  this setting.)
+- Console messages from the integrated browser are displayed in an output
+  channel. This channel opens automatically when a message is printed to the
+  console. Use the "*Console > Integrated Browser > Auto Show: Level*" setting
+  to modify this behavior.
 
 Fixed:
 
-- Running a sketch always opens the main file
-- In the explorer, sketches don't include files outside their directory
+- Clicking a sketch opens the main file. (Previously, clicking an HTML sketch
+  opened the HTML file.)
+- In the sketch explorer, disclosing a sketch's files no longer lists files
+  outside the sketch directory.
 
 ## [1.0.0 -- 2021-08-09]
 
 Changed:
 
-- Move explorer to activity bar
-- Show sketch libraries in the explorer
+- The sketch explorer has its own item on the activity bar. It defaults to this
+  location rather than the Explorer container. In order to restore the previous
+  behavior, drag it back into the Explorer container (or into any other
+  container).
+- In the sketch explorer, disclosing a sketch shows its libraries.
 
 Improved:
 
-- Upgrade p5-server: can import more libraries
-- Display paths relative to home directory
+- Upgraded p5-server: more libraries are recognized for automatic import.
+- In the sketch explorer, file paths are shown relative to the workspace
+  directory.
 
 ## [0.2.1 -- 2021-08-03]
 
@@ -77,7 +95,7 @@ New:
 - Sketch explorer:
   - Add dark icons
   - Add an icon. This is used when it is dragged to the Activity bar.
-  - Changee the run command's icon 🌐->🞂
+  - Changed the run command's icon 🌐->🞂
   - Display the run command only on sketch items
   - Enable the explorer commands only in that view
 

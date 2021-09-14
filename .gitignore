@@ -5,5 +5,3 @@ node_modules
 *.vsix
 *.log
 resources/changelog.html
-changelog-out.md
-changelog.json

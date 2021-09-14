@@ -9,6 +9,8 @@ html(lang="en")
     script(src="https://unpkg.com/@primer/css@17.9/dist/primer.js")
     style
       include changelog.css
+    style.
+      code {color:#f87070;font-family:monospace;font-size:1em;}
   body
     .new-container
       .col-md-8.mx-auto
@@ -25,4 +27,4 @@ html(lang="en")
                 each change in version.parsed[kind]
                   li.d-flex.flex-items-start.mb-2
                     .change-badge(class=`change-badge-${kind.toLowerCase()}`)= kind
-                    .change-description= change
+                    .change-description!= change
