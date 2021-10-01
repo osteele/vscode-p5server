@@ -84,12 +84,16 @@ sketch, because it's the argument to the p5.js function `loadSound()`.
 
 ## Installation
 
-Follow the instructions in the
-[Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server).
+View the [Visual Studio Code Marketplace extension page](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server), and click the Install button.
+
+Step-by-step installation and usage instructions are also listed [here](https://notes.osteele.com/tools/vscode/configuring-visual-studio-code-for-p5js-development-p5-server).
 
 ## Usage
 
-The extension adds these commands to the command palette:
+Step-by-step installation and usage instructions are listed [here](https://notes.osteele.com/tools/vscode/configuring-visual-studio-code-for-p5js-development-p5-server).
+
+The extension adds these commands to the command palette. These can be used as
+an alternative to the icons in the user interface.
 
 ```text
 'P5 Server: Start' // Start the P5 server
@@ -148,8 +152,8 @@ Bug reports, suggestions, and other contributions are cheerfully accepted.
 Please use the [Issues page of the GitHub
 repository](https://github.com/osteele/vscode-p5server/issues).
 
-[Follow me on Twitter](https://twitter.com/osteele) to keep up with this project
-and related projects.
+Follow [@osteele on Twitter](https://twitter.com/osteele) for updates. Ny
+other p5.js libraries and tools [here](https://code.osteele.com).
 
 ## Acknowledgements
 
@@ -161,10 +165,16 @@ and related projects.
   development](https://github.com/ritwickdey/vscode-live-server#features).
 * The [open](https://github.com/sindresorhus/open#readme) package is used to
   open URL's in various browsers.
-* I learned a lot from reading the source code to the [vscode-project-manager
-  extension](https://github.com/alefragnani/vscode-project-manager).
-* The What's New page uses the HTML structure and the CSS from the GitHub
-  Desktop web site.
+* I learned a lot from reading the source code to the Alessandro Fragnani's
+  [vscode-project-manager
+  extension](https://github.com/alefragnani/vscode-project-manager). (I use
+  [this
+  extension](https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager)
+  and his [Bookmarks
+  extension](https://marketplace.visualstudio.com/items?itemName=alefragnani.bookmarks)
+  in my own VSCode configuration.)
+* The What's New page uses the HTML structure and the CSS from the [GitHub
+  Desktop web site](https://desktop.github.com).
 
 ## License
 
