@@ -68,6 +68,10 @@
         "icon": "$(file-directory-create)"
       },
       {
+        "command": "p5-server.viewChangeLog",
+        "title": "P5 Server: Show Change Log"
+      },
+      {
         "command": "p5-server.explorer.refresh",
         "title": "p5.js Explorer: Refresh",
         "enablement": "view == p5sketchExplorer",

@@ -129,8 +129,8 @@ export class ServerManager {
     if (!server?.url) {
       return;
     }
-    const url = uri ? server.filePathToUrl(uri.fsPath) : server.url;
-    if (!url) {
+    const target = uri ? server.filePathToUrl(uri.fsPath) : server.url;
+    if (!target) {
       if (uri) {
         await window.showErrorMessage(`${uri.fsPath} is not in a directory that is served by the P5 server.`);
       }
@@ -147,7 +147,7 @@ export class ServerManager {
     const browserKey = browserName.replace('default', 'integrated').toLowerCase() as BrowserKey;
 
     if (browserKey === 'integrated') {
-      await commands.executeCommand('simpleBrowser.api.open', url, {
+      await commands.executeCommand('simpleBrowser.api.open', target, {
         viewColumn: vscode.ViewColumn.Beside
       });
       return;
@@ -160,11 +160,11 @@ export class ServerManager {
       openOptions = { app: { name } };
     }
 
-    let process = await openInBrowser(url, openOptions);
+    let process = await openInBrowser(target, openOptions);
     if (process.exitCode !== 0 && browserKey !== 'system') {
       const msg = `The ${browserName} browser failed to open. Retrying with the default system browser.`;
       const messageStatus = window.setStatusBarMessage(msg);
-      process = await openInBrowser(url);
+      process = await openInBrowser(target);
       await messageStatus.dispose();
     }
     if (process.exitCode !== 0) {
@@ -250,7 +250,7 @@ async function openInBrowser(target: string, options?: open.Options): Promise<Ch
       const timeoutTimer = setTimeout(() => {
         clearInterval(intervalTimer);
         resolve();
-      }, 1000);
+      }, 5000);
     });
   }
   return process;
