@@ -2,6 +2,12 @@
 
 ## [1.1.1] - 2021-10-01
 
+Fixed:
+
+- p5-server upgrade handles file names with spaces
+
+## [1.1.0] - 2021-09-15
+
 New:
 
 - The Run Sketch command defaults to the new integrated browser. Change the
