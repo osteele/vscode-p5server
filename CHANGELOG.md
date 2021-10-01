@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.1.0 -- 2021-09-15]
+## [1.1.1] - 2021-10-01
 
 New:
 
@@ -22,7 +22,7 @@ Changed:
 - In the "*P5-server: Browser*" setting, the default system browser is named
   `system` instead of `default`.
 
-## [1.0.9 -- 2021-09-12]
+## [1.0.9] - 2021-09-12
 
 New:
 
@@ -53,7 +53,7 @@ Fixed:
 - In the sketch explorer, disclosing a sketch's files no longer lists files
   outside the sketch directory.
 
-## [1.0.0 -- 2021-08-09]
+## [1.0.0] - 2021-08-09
 
 Changed:
 
@@ -69,13 +69,13 @@ Improved:
 - In the sketch explorer, file paths are shown relative to the workspace
   directory.
 
-## [0.2.1 -- 2021-08-03]
+## [0.2.1] - 2021-08-03
 
 Fixed:
 
 - Upgrade p5-server: fixes filename case inconsistency that caused error on Linux
 
-## [0.2.0 -- 2021-08-02]
+## [0.2.0] - 2021-08-02
 
 Added:
 

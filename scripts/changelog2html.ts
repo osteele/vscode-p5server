@@ -35,7 +35,6 @@ function parseChangeLog({ text }: { text: string }): ChangeLog {
         version: string | undefined,
         date: string | undefined;
       const m = title.match(/(.+?)(?:\s+-+\s+|\s*[–—]\s*)(.+)/);
-      console.info(title, m);
       if (m) {
         versionCandidate = m[1];
         date =
