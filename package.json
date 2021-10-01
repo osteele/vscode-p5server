@@ -3,7 +3,7 @@
   "displayName": "P5 Server",
   "description": "Create and run p5.js sketches, browse and run collections. Includes a sketch-aware live server, a tree view of a workspace's sketches, and automatic includes of p5.js libraries.",
   "license": "MIT",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "osteele",
   "author": {
     "name": "Oliver Steele",
