@@ -6,8 +6,6 @@ import { ServerManager } from './serverManager';
 import { SketchExplorer } from './sketchExplorer';
 import { getWorkspaceFolderPaths } from './utils';
 
-let releaseNoteManager: ReleaseNotes | null;
-
 export function activate(context: vscode.ExtensionContext) {
   // create sketch explorer
   new SketchExplorer(context);
@@ -23,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
     commands.executeCommand('setContext', 'p5-server.available', true);
   }
 
-  releaseNoteManager = new ReleaseNotes(context);
+  const releaseNoteManager = new ReleaseNotes(context);
   releaseNoteManager.showStartupMessage();
 }
 
@@ -40,7 +38,7 @@ class ReleaseNotes {
   }
 
   private get extensionName() {
-    return this.context.extension.packageJSON.name;
+    return this.context.extension.packageJSON.displayName;
   }
 
   private get currentVersion() {
@@ -92,14 +90,14 @@ class ReleaseNotes {
         break;
     }
 
-    switch (this.shouldShow()) {
+    const shouldShow = this.shouldShow();
+    this.previousVersion = this.currentVersion;
+    switch (shouldShow) {
       case 'patch':
         await this.showInformationMessage();
-        // commands.executeCommand('p5-server.viewChangeLog');
         break;
       case 'upgrade':
         await this.showChangeLog();
-        // commands.executeCommand('p5-server.viewChangeLog');
         break;
     }
   }
@@ -110,7 +108,6 @@ class ReleaseNotes {
     const html = (await workspace.fs.readFile(uri)).toString();
     const panel = window.createWebviewPanel('p5-server.whatsNew', title, vscode.ViewColumn.One);
     panel.webview.html = html;
-    this.previousVersion = this.currentVersion;
   }
 
   private async showInformationMessage() {

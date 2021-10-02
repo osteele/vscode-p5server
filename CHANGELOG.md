@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.1.2] - 2021-10-02
+
+Fixed:
+
+- Remove annoying upgrade information message, was showing up on very workspace
+  activation instead of just once
+
 ## [1.1.1] - 2021-10-01
 
 Fixed:
