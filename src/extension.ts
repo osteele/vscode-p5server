@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { createSketch, duplicateSketch } from './commands';
-import { ReleaseNotes } from './ReleaseNotes';
+import { ReleaseNotes } from './releaseNotes';
 import { ServerManager } from './serverManager';
 import { SketchExplorer } from './sketchExplorer';
 import { getWorkspaceFolderPaths } from './utils';
