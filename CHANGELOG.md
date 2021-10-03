@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.1.3] - 2021-10-03
+
+Fixed:
+
+- integrated console output was broken in 1.1.2
+
+Added:
+
+- Recognize libraries: anime, CCapture.js, p5.pattern, p5.rotate-about
+
 ## [1.1.2] - 2021-10-02
 
 Fixed:
