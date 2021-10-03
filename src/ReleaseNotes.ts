@@ -3,8 +3,11 @@ import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 
 export class ReleaseNotes {
+  private readonly _previousVersion: string | undefined;
+
   constructor(private readonly context: vscode.ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('p5-server.viewChangeLog', this.showChangeLog.bind(this)));
+    this._previousVersion = this.context.globalState.get(this.versionKey);
   }
 
   static showIfNewVersion(context: vscode.ExtensionContext) {
@@ -24,7 +27,7 @@ export class ReleaseNotes {
   }
 
   private get previousVersion() {
-    return this.context.globalState.get(this.versionKey);
+    return this._previousVersion;
   }
 
   private set previousVersion(version: string | undefined) {
