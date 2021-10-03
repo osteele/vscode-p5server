@@ -6,6 +6,28 @@
 > sketch-aware development server with live reload; a sketch explorer; and
 > support for JavaScript-only sketches with automatic library inclusion.
 
+<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
+
+<!-- code_chunk_output -->
+
+- [Features](#features)
+  - [Sketch Explorer](#sketch-explorer)
+  - [Integrated Web Server](#integrated-web-server)
+  - [Integrated Browser](#integrated-browser)
+  - [Integrated Console](#integrated-console)
+  - [Automatic Library Includes](#automatic-library-includes)
+  - [Other Features](#other-features)
+- [Installation](#installation)
+- [Step by Step](#step-by-step)
+- [Configuration](#configuration)
+- [Limitations](#limitations)
+- [Related Projects](#related-projects)
+- [Keeping in Touch](#keeping-in-touch)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
+
+<!-- /code_chunk_output -->
+
 ## Features
 
 ### Sketch Explorer
@@ -73,12 +95,12 @@ sketch, because it's the argument to the p5.js function `loadSound()`.
 
 ### Other Features
 
-* **JavaScript-Only Sketches**. A sketch can be a single JavaScript file. (No HTML is necessary.)
-* **In-Page syntax errors**. If a JavaScript file has a syntax error, it is
+- **JavaScript-Only Sketches**. A sketch can be a single JavaScript file. (No HTML is necessary.)
+- **In-Page syntax errors**. If a JavaScript file has a syntax error, it is
   displayed in the body of the page (you don't have to check the console).
-* **P5-aware directory listings**. Viewing a directory in the browser lists the
+- **P5-aware directory listings**. Viewing a directory in the browser lists the
   sketches, folders, other files in that directory.
-* **Sketch scripts generation**. Create a JavaScript-only sketch that contains a
+- **Sketch scripts generation**. Create a JavaScript-only sketch that contains a
   minimal `setup()` and `draw()` function; or create a pair of `index.html` and
   `sketch.js`.
 
@@ -86,22 +108,10 @@ sketch, because it's the argument to the p5.js function `loadSound()`.
 
 View the [Visual Studio Code Marketplace extension page](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server), and click the Install button.
 
-Step-by-step installation and usage instructions are also listed [here](https://notes.osteele.com/tools/vscode/configuring-visual-studio-code-for-p5js-development-p5-server).
+## Step by Step
 
-## Usage
-
-Step-by-step installation and usage instructions are listed [here](https://notes.osteele.com/tools/vscode/configuring-visual-studio-code-for-p5js-development-p5-server).
-
-The extension adds these commands to the command palette. These can be used as
-an alternative to the icons in the user interface.
-
-```text
-'P5 Server: Start' // Start the P5 server
-'P5 Server: Stop' // Stop the P5 server
-'P5 Server: Open In Browser' // Open the p5 server URL in a browser
-'Create p5.js Sketch File' // Create a new p5.js JavaScript sketch file
-'Create p5.js Sketch Folder' // Create a new folder with a p5.js index.html and a sketch.js file
-```
+Step-by-step installation and usage instructions are
+[here](https://notes.osteele.com/tools/vscode/configuring-visual-studio-code-for-p5js-development-p5-server).
 
 ## Configuration
 
@@ -120,14 +130,14 @@ that also affect this extension.
 
 In particular:
 
-* The extension has not been tested on Windows.
-* The sketches that are created by the “Create p5.js Sketch Folder” command
+- The extension has not been tested on Windows.
+- The sketches that are created by the “Create p5.js Sketch Folder” command
   require an internet connection to run. (They load the p5.js and other libraries
   from a content delivery network, or “CDN”.) Browsers cache these files, so
   reloading a page or running other sketches that use the same libraries
   does not require additional internet access, but you will need internet access
   the first time you use this extension or after the browser cache has expired.
-* Similarly, the server requires an internet connection the first time it
+- Similarly, the server requires an internet connection the first time it
   displays a sketch or directory listing. (It does not need a connection to
   display a second sketch or a second directory listing, unless the browser
   cache has expired.)
@@ -146,26 +156,29 @@ The code to infer libraries from JavaScript-only sketches, and to generate HTML
 files based on this, is available as a [separate
 package](https://osteele.github.io/p5-server/p5-analysis/).
 
+[https://code.osteele.com](https://code.osteele.com#p5-js) lists my other p5.js
+projects. These include tools, libraries, and examples and educational
+materials.
+
 ## Keeping in Touch
 
 Bug reports, suggestions, and other contributions are cheerfully accepted.
 Please use the [Issues page of the GitHub
 repository](https://github.com/osteele/vscode-p5server/issues).
 
-Follow [@osteele on Twitter](https://twitter.com/osteele) for updates. Ny
-other p5.js libraries and tools [here](https://code.osteele.com).
+Follow [@osteele on Twitter](https://twitter.com/osteele) for updates.
 
 ## Acknowledgements
 
-* The functionality and user interface of this extension were heavily inspired
+- The functionality and user interface of this extension were heavily inspired
   by Ritwick Dey's fantastic [Live Server
   extension](https://ritwickdey.github.io/vscode-live-server/). My own extension
   (p5 server) [does more](#features) for p5.js sketches, but it does not
   implement Live Server's [extensive list of features for general web
   development](https://github.com/ritwickdey/vscode-live-server#features).
-* The [open](https://github.com/sindresorhus/open#readme) package is used to
+- The [open](https://github.com/sindresorhus/open#readme) package is used to
   open URL's in various browsers.
-* I learned a lot from reading the source code to the Alessandro Fragnani's
+- I learned a lot from reading the source code to the Alessandro Fragnani's
   [vscode-project-manager
   extension](https://github.com/alefragnani/vscode-project-manager). (I use
   [this
@@ -173,7 +186,7 @@ other p5.js libraries and tools [here](https://code.osteele.com).
   and his [Bookmarks
   extension](https://marketplace.visualstudio.com/items?itemName=alefragnani.bookmarks)
   in my own VSCode configuration.)
-* The What's New page uses the HTML structure and the CSS from the [GitHub
+- The What's New page uses the HTML structure and the CSS from the [GitHub
   Desktop web site](https://desktop.github.com).
 
 ## License
