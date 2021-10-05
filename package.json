@@ -68,6 +68,10 @@
         "icon": "$(file-directory-create)"
       },
       {
+        "command": "p5-server.openSettings",
+        "title": "P5 Server: Open Settings"
+      },
+      {
         "command": "p5-server.showScriptOutput",
         "title": "P5 Server: Show Script Output"
       },
@@ -220,6 +224,16 @@
           "command": "p5-server.explorer.createSketch",
           "when": "view == p5sketchExplorer",
           "group": "navigation"
+        },
+        {
+          "command": "p5-server.explorer.createSketch",
+          "when": "view == p5sketchExplorer",
+          "group": "1_create"
+        },
+        {
+          "command": "p5-server.openSettings",
+          "when": "view == p5sketchExplorer",
+          "group": "2_settings"
         }
       ],
       "view/item/context": [

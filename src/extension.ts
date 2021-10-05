@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { createSketch, duplicateSketch } from './commands';
+import { registerCommands } from './commands';
 import { ReleaseNotes } from './releaseNotes';
 import { ServerManager } from './serverManager';
 import { SketchExplorer } from './sketchExplorer';
@@ -10,10 +10,7 @@ export function activate(context: vscode.ExtensionContext) {
   // create sketch explorer
   new SketchExplorer(context);
 
-  // register commands
-  context.subscriptions.push(commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)));
-  context.subscriptions.push(commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)));
-  context.subscriptions.push(commands.registerCommand('p5-server.duplicateSketch', duplicateSketch));
+  registerCommands(context);
 
   // create server manager and set context variable
   if (getWorkspaceFolderPaths().length >= 1) {

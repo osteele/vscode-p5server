@@ -1,11 +1,23 @@
 import { parse as parseHTML } from 'node-html-parser'; // eslint-disable-line @typescript-eslint/no-var-requires
 import { Sketch } from 'p5-server';
+import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 import { exclusions } from './sketchExplorer';
 import { getWorkspaceFolderPaths } from './utils';
 import path = require('path');
 
-export async function createSketch(isFolderSketch: boolean, dir?: string) {
+export function registerCommands(context: vscode.ExtensionContext) {
+  context.subscriptions.push(
+    commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)),
+    commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)),
+    commands.registerCommand('p5-server.duplicateSketch', duplicateSketch),
+    commands.registerCommand('p5-server.openSettings', () =>
+      commands.executeCommand('workbench.action.openSettings', 'p5-server')
+    )
+  );
+}
+
+async function createSketch(isFolderSketch: boolean, dir?: string) {
   const wsFolders = getWorkspaceFolderPaths();
 
   if (wsFolders.length === 0) {
@@ -58,7 +70,7 @@ export async function createSketch(isFolderSketch: boolean, dir?: string) {
   commands.executeCommand('p5-server.explorer.refresh');
 }
 
-export async function duplicateSketch(sketch: Sketch) {
+async function duplicateSketch(sketch: Sketch) {
   if (!(sketch instanceof Sketch)) throw new Error(`${sketch} is not a Sketch`);
   const name = await window.showInputBox();
   if (!name) return;
