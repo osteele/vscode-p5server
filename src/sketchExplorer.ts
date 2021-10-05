@@ -38,25 +38,16 @@ export class SketchExplorer {
 
   public registerCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('p5-server.explorer.refresh', () => this.provider.refresh()));
-    context.subscriptions.push(commands.registerCommand('p5-server.explorer.createFolder', () => this.createFolder()));
-    context.subscriptions.push(
-      commands.registerCommand('p5-server.explorer.createSketch', () => this.createSketch('script'))
-    );
-    context.subscriptions.push(
-      commands.registerCommand('p5-server.explorer.createSketch#html', () => this.createSketch('html'))
-    );
-    context.subscriptions.push(
-      commands.registerCommand('p5-server.explorer.createSketch#folder', () => this.createSketch('folder'))
-    );
-    context.subscriptions.push(commands.registerCommand('p5-server.explorer.rename', this.rename.bind(this)));
-    context.subscriptions.push(
+    commands.registerCommand('p5-server.explorer.createFolder', () => this.createFolder()),
+      commands.registerCommand('p5-server.explorer.createSketch', () => this.createSketch('script')),
+      commands.registerCommand('p5-server.explorer.createSketch#html', () => this.createSketch('html')),
+      commands.registerCommand('p5-server.explorer.createSketch#folder', () => this.createSketch('folder')),
+      commands.registerCommand('p5-server.explorer.rename', this.rename.bind(this)),
       commands.registerCommand('p5-server.explorer.open', (item: Element) => {
         if (item instanceof Library) return; // This shouldn't happen, but it makes the TS compiler happy
         const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
         return commands.executeCommand('vscode.open', uri);
-      })
-    );
-    context.subscriptions.push(
+      }),
       commands.registerCommand('p5-server.explorer.openSketch', (sketch: Sketch) => {
         const uri = Uri.file(sketch.scriptFilePath);
         return workspace.getConfiguration('p5-server.explorer').get<boolean>('autoRunSketchOnSide')
@@ -65,9 +56,7 @@ export class SketchExplorer {
               commands.executeCommand('p5-server.openBrowser', uri, { browser: 'integrated' })
             ])
           : commands.executeCommand('vscode.open', uri);
-      })
-    );
-    context.subscriptions.push(
+      }),
       commands.registerCommand('p5-server.explorer.run', (item: Element) => {
         if (item instanceof Library) return; // This shouldn't happen, but it makes the TS compiler happy
         const uri = item instanceof Sketch ? Uri.file(item.mainFilePath) : item.resourceUri;
@@ -77,47 +66,8 @@ export class SketchExplorer {
             : null,
           commands.executeCommand('p5-server.openBrowser', uri, {})
         ]);
-      })
-    );
-    context.subscriptions.push(
-      commands.registerCommand('p5-server.explorer.openLibrary', (library: Library) => {
-        if (!enableIntegratedLibraryBrowser) {
-          return commands.executeCommand('vscode.open', Uri.parse(library.homepage));
-          // return commands.executeCommand('simpleBrowser.api.open', Uri.parse(library.homepage));
-        }
-        const panel = vscode.window.createWebviewPanel('p5LibraryHomepage', library.name, vscode.ViewColumn.One, {
-          enableScripts: true
-        });
-        panel.webview.html = `
-          <!DOCTYPE html>
-          <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <meta http-equiv="X-UA-Compatible" content="ie=edge">
-              <title>${library.name}</title>
-              <style type="text/css">
-                body,html {
-                  height: 100%;
-                  min-height: 100%;
-                  padding: 0;
-                  margin: 0;
-                }
-                iframe {
-                  width: 100%;
-                  height: 100%;
-                  border: none;
-                  background: white;
-                }
-              </style>
-            </head>
-            <body>
-                <iframe src="${library.homepage}"></iframe>
-            </body>
-          </html>
-        `;
-      })
-    );
+      }),
+      commands.registerCommand('p5-server.explorer.openLibrary', this.openLibrary.bind(this));
   }
 
   // commands
@@ -137,7 +87,11 @@ export class SketchExplorer {
 
   private async createSketch(type: 'script' | 'html' | 'folder'): Promise<void> {
     const dir = await this.getSelectionDirectory();
-    return commands.executeCommand('_p5-server.createSketch', { dir, type });
+    await commands.executeCommand('_p5-server.createSketch', { dir, type });
+    if (dir && (await Sketch.analyzeDirectory(dir)).sketches.length === 1) {
+      // TODO: create a placeholder file here
+      console.warn('create an empty file');
+    }
   }
 
   private async getSelectionDirectory(): Promise<string | null> {
@@ -149,10 +103,48 @@ export class SketchExplorer {
       : selection instanceof Library
       ? null
       : selection instanceof DirectoryItem
-      ? path.dirname(selection.file)
-      : selection instanceof FileItem
       ? selection.file
+      : selection instanceof FileItem
+      ? path.dirname(selection.file)
       : null;
+  }
+
+  private openLibrary(library: Library) {
+    if (!enableIntegratedLibraryBrowser) {
+      return commands.executeCommand('vscode.open', Uri.parse(library.homepage));
+      // return commands.executeCommand('simpleBrowser.api.open', Uri.parse(library.homepage));
+    }
+    const panel = vscode.window.createWebviewPanel('p5LibraryHomepage', library.name, vscode.ViewColumn.One, {
+      enableScripts: true
+    });
+    panel.webview.html = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta http-equiv="X-UA-Compatible" content="ie=edge">
+          <title>${library.name}</title>
+          <style type="text/css">
+            body,html {
+              height: 100%;
+              min-height: 100%;
+              padding: 0;
+              margin: 0;
+            }
+            iframe {
+              width: 100%;
+              height: 100%;
+              border: none;
+              background: white;
+            }
+          </style>
+        </head>
+        <body>
+            <iframe src="${library.homepage}"></iframe>
+        </body>
+      </html>
+    `;
   }
 
   private async rename(item: FilePathItem | Sketch): Promise<void> {
@@ -345,7 +337,7 @@ class SketchItem extends vscode.TreeItem {
 class LibraryItem extends vscode.TreeItem {
   constructor(readonly library: Library) {
     super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
-    this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${library.description}.\nClick on item to view the library home page.`;
+    this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${library.description}.`;
   }
 
   contextValue = 'library';

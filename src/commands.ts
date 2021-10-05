@@ -21,19 +21,19 @@ export function registerCommands(context: vscode.ExtensionContext) {
   );
 }
 
-async function createSketch({ dir, type }: { type: 'script' | 'html' | 'folder'; dir?: string }) {
+async function createSketch({ dir, type }: { dir?: string; type: 'script' | 'html' | 'folder' }) {
   const wsFolders = getWorkspaceFolderPaths();
 
-  if (wsFolders.length === 0) {
+  if (!dir && wsFolders.length === 0) {
     window.showErrorMessage('You must have at least one folder open to create a sketch.');
     return;
   }
 
   const wsPath =
     dir ??
-    (wsFolders.length > 1
-      ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
-      : wsFolders[0]);
+    (wsFolders.length === 1
+      ? wsFolders[0]
+      : await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' }));
   if (!wsPath) return; // the user cancelled
 
   let sketchName = await window.showInputBox({
