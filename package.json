@@ -97,6 +97,18 @@
         "enablement": "view == p5sketchExplorer"
       },
       {
+        "command": "p5-server.explorer.createSketch#html",
+        "title": "Create Sketch (HTML)",
+        "icon": "$(file-add)",
+        "enablement": "view == p5sketchExplorer"
+      },
+      {
+        "command": "p5-server.explorer.createSketch#folder",
+        "title": "Create Sketch (Folder)",
+        "icon": "$(folder-add)",
+        "enablement": "view == p5sketchExplorer"
+      },
+      {
         "command": "p5-server.duplicateSketch",
         "title": "Duplicate",
         "enablement": "view == p5sketchExplorer"
@@ -231,6 +243,16 @@
           "group": "1_create"
         },
         {
+          "command": "p5-server.explorer.createSketch#html",
+          "when": "view == p5sketchExplorer",
+          "group": "1_create"
+        },
+        {
+          "command": "p5-server.explorer.createSketch#folder",
+          "when": "view == p5sketchExplorer",
+          "group": "1_create"
+        },
+        {
           "command": "p5-server.openSettings",
           "when": "view == p5sketchExplorer",
           "group": "2_settings"
@@ -302,7 +324,7 @@
       },
       {
         "view": "p5sketchExplorer",
-        "contents": "The Sketch Explorer is scanning the workspace folder(s).",
+        "contents": "Sketch Explorer is scanning the workspace folder(s).",
         "when": "workbenchState != empty && !p5-server.explorer.loaded"
       }
     ],

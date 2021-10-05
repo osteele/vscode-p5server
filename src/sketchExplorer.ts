@@ -39,7 +39,15 @@ export class SketchExplorer {
   public registerCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('p5-server.explorer.refresh', () => this.provider.refresh()));
     context.subscriptions.push(commands.registerCommand('p5-server.explorer.createFolder', () => this.createFolder()));
-    context.subscriptions.push(commands.registerCommand('p5-server.explorer.createSketch', () => this.createSketch()));
+    context.subscriptions.push(
+      commands.registerCommand('p5-server.explorer.createSketch', () => this.createSketch('script'))
+    );
+    context.subscriptions.push(
+      commands.registerCommand('p5-server.explorer.createSketch#html', () => this.createSketch('html'))
+    );
+    context.subscriptions.push(
+      commands.registerCommand('p5-server.explorer.createSketch#folder', () => this.createSketch('folder'))
+    );
     context.subscriptions.push(commands.registerCommand('p5-server.explorer.rename', this.rename.bind(this)));
     context.subscriptions.push(
       commands.registerCommand('p5-server.explorer.open', (item: Element) => {
@@ -127,9 +135,9 @@ export class SketchExplorer {
     await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
   }
 
-  private async createSketch(): Promise<void> {
+  private async createSketch(type: 'script' | 'html' | 'folder'): Promise<void> {
     const dir = await this.getSelectionDirectory();
-    return commands.executeCommand('p5-server.createSketchFile', dir);
+    return commands.executeCommand('_p5-server.createSketch', { dir, type });
   }
 
   private async getSelectionDirectory(): Promise<string | null> {

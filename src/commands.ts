@@ -8,8 +8,12 @@ import path = require('path');
 
 export function registerCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
-    commands.registerCommand('p5-server.createSketchFile', createSketch.bind(null, false)),
-    commands.registerCommand('p5-server.createSketchFolder', createSketch.bind(null, true)),
+    commands.registerCommand(
+      '_p5-server.createSketch',
+      (options: { dir?: string; type: 'script' | 'html' | 'folder' }) => createSketch(options)
+    ),
+    commands.registerCommand('p5-server.createSketchFile', () => createSketch({ type: 'script' })),
+    commands.registerCommand('p5-server.createSketchFolder', () => createSketch({ type: 'folder' })),
     commands.registerCommand('p5-server.duplicateSketch', duplicateSketch),
     commands.registerCommand('p5-server.openSettings', () =>
       commands.executeCommand('workbench.action.openSettings', 'p5-server')
@@ -17,7 +21,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
   );
 }
 
-async function createSketch(isFolderSketch: boolean, dir?: string) {
+async function createSketch({ dir, type }: { type: 'script' | 'html' | 'folder'; dir?: string }) {
   const wsFolders = getWorkspaceFolderPaths();
 
   if (wsFolders.length === 0) {
@@ -33,30 +37,41 @@ async function createSketch(isFolderSketch: boolean, dir?: string) {
   if (!wsPath) return; // the user cancelled
 
   let sketchName = await window.showInputBox({
-    value: '',
-    prompt: `Enter the name of the p5.js sketch`,
-    ignoreFocusOut: true
+    prompt: `Enter the name of the p5.js sketch`
   });
-  if (!sketchName) {
-    return;
-  }
-  sketchName = sketchName.trim();
-  if (sketchName.length === 0) {
-    return;
-  }
-  if (!isFolderSketch && !sketchName.endsWith('.js')) {
-    sketchName += '.js';
-  }
+  sketchName = sketchName?.trim();
+  if (!sketchName) return;
 
-  const filePath = path.join(wsPath, sketchName);
-  const dirPath = path.dirname(filePath);
-  const basePath = path.basename(sketchName);
-  const sketch = isFolderSketch
-    ? Sketch.create(path.join(filePath, 'index.html'), {
+  let sketch: Sketch;
+  let filePath = path.join(wsPath, sketchName);
+  switch (type) {
+    case 'folder':
+      await workspace.fs.createDirectory(Uri.file(filePath));
+      sketch = Sketch.create(path.join(filePath, 'index.html'), {
         scriptFile: 'sketch.js',
         title: sketchName
-      })
-    : Sketch.create(path.join(dirPath, basePath));
+      });
+      break;
+    case 'script':
+      if (!/\.js/i.test(filePath)) filePath += '.js';
+      sketch = Sketch.create(filePath);
+      break;
+    case 'html': {
+      if (!/\.html?/i.test(filePath)) filePath += '.html';
+
+      // find a unique name for the script file
+      const dir = path.dirname(filePath);
+      const baseName = sketchName.replace(/(\.html?)?$/i, '');
+      let scriptFile = 'sketch.js';
+      if (await fileExists(path.join(dir, scriptFile))) scriptFile = baseName + '.js';
+      for (let i = 1; await fileExists(path.join(dir, scriptFile)); i++) {
+        scriptFile = `${baseName}-${i}.js`;
+      }
+
+      sketch = Sketch.create(filePath, { scriptFile });
+      break;
+    }
+  }
 
   try {
     await sketch.generate();
@@ -68,6 +83,16 @@ async function createSketch(isFolderSketch: boolean, dir?: string) {
 
   window.showTextDocument(Uri.file(sketch.scriptFilePath));
   commands.executeCommand('p5-server.explorer.refresh');
+
+  async function fileExists(filepath: string): Promise<boolean> {
+    try {
+      await workspace.fs.stat(Uri.file(filepath));
+      return true;
+    } catch (e) {
+      if (e.code === 'FileNotFound') return false;
+      throw e;
+    }
+  }
 }
 
 async function duplicateSketch(sketch: Sketch) {

@@ -4,8 +4,8 @@
 
 Added:
 
-- Add Open Settings command; add
-- Add Sketch Explorer menu w/ Create Sketch
+- New Sketch Explorer menu w/ Create Sketch, Create Sketch (Folder), Create
+  Sketch (HTML)
 
 ## [1.1.3] - 2021-10-03
 
