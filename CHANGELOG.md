@@ -10,6 +10,7 @@ Added:
 Fixed:
 
 - In Sketch Explorer, create sketch is relative to selected file or folder
+- Auto import works for p5.xr, p5.3D, and libraries hosted only on GitHub
 
 ## [1.1.3] - 2021-10-03
 

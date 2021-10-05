@@ -356,7 +356,7 @@
   },
   "dependencies": {
     "open": "^8.2.1",
-    "p5-server": "^0.7.2"
+    "p5-server": "^0.8.1"
   },
   "devDependencies": {
     "@types/changelog-parser": "^2.7.1",
