@@ -131,7 +131,19 @@
       },
       {
         "command": "p5-server.explorer.run",
-        "title": "Run in browser",
+        "title": "Run sketch",
+        "enablement": "view == p5sketchExplorer",
+        "icon": "$(run)"
+      },
+      {
+        "command": "p5-server.explorer.run#integrated",
+        "title": "Run in integrated browser",
+        "enablement": "view == p5sketchExplorer",
+        "icon": "$(run)"
+      },
+      {
+        "command": "p5-server.explorer.run#external",
+        "title": "Run in external browser",
         "enablement": "view == p5sketchExplorer",
         "icon": "$(run)"
       }
@@ -280,7 +292,12 @@
           "group": "inline"
         },
         {
-          "command": "p5-server.explorer.run",
+          "command": "p5-server.explorer.run#integrated",
+          "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
+          "group": "2_run"
+        },
+        {
+          "command": "p5-server.explorer.run#external",
           "when": "view == p5sketchExplorer && viewItem =~ /file|sketch/",
           "group": "2_run"
         },

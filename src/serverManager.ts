@@ -23,15 +23,13 @@ export class ServerManager {
   }
 
   private registerCommands(context: vscode.ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('p5-server.start', this.startServer.bind(this)));
-    context.subscriptions.push(commands.registerCommand('p5-server.stop', this.stopServer.bind(this)));
     context.subscriptions.push(
+      commands.registerCommand('p5-server.start', this.startServer.bind(this)),
+      commands.registerCommand('p5-server.stop', this.stopServer.bind(this)),
       commands.registerCommand('p5-server.openInBrowser', () => {
         const editorPath = window.activeTextEditor?.document.fileName;
         return commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
-      })
-    );
-    context.subscriptions.push(
+      }),
       commands.registerCommand('p5-server.openBrowser', async (uri?: Uri, options?: { browser: string }) => {
         if (this.state === 'stopped') {
           await this.startServer(uri, options);
@@ -41,7 +39,7 @@ export class ServerManager {
       })
     );
 
-    context.subscriptions.push(workspace.onDidChangeConfiguration(this.updateFromConfiguration.bind(this)));
+    workspace.onDidChangeConfiguration(this.updateFromConfiguration.bind(this));
     this.updateFromConfiguration();
   }
 
@@ -124,6 +122,7 @@ export class ServerManager {
     setTimeout(() => sbm.dispose(), 10000);
   }
 
+  /** Open `uri` if supplied, or the server root if not, in the specified browser */
   async openBrowser(uri?: Uri, options?: { browser: string }) {
     const server = this.server;
     if (!server?.url) {
@@ -142,9 +141,15 @@ export class ServerManager {
     const openApps = { safari: 'safari', ...open.apps };
 
     type BrowserKey = AppName | 'system' | 'integrated';
+    const configBrowser = workspace
+      .getConfiguration('p5-server')
+      .get('browser', 'integrated')
+      .replace('default', 'system');
     const browserName =
-      options?.browser ?? workspace.getConfiguration('p5-server').get<string>('browser', 'integrated');
-    const browserKey = browserName.replace('default', 'integrated').toLowerCase() as BrowserKey;
+      options?.browser === 'external'
+        ? configBrowser.replace('integrated', 'system')
+        : options?.browser || configBrowser;
+    const browserKey = browserName.toLowerCase() as BrowserKey;
 
     if (browserKey === 'integrated') {
       await commands.executeCommand('simpleBrowser.api.open', target, {
@@ -196,7 +201,7 @@ class StatusBarManager {
     switch (state) {
       case 'running':
         {
-          const browserName = workspace.getConfiguration('p5-server').get<string>('browser', 'integrated');
+          const browserName = workspace.getConfiguration('p5-server').get('browser', 'integrated');
           statusBarServerItem.text = '$(extensions-star-full)P5 Server';
           statusBarServerItem.tooltip = 'Stop the P5 server';
           statusBarServerItem.command = 'p5-server.stop';
