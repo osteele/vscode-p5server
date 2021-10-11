@@ -92,19 +92,19 @@
       },
       {
         "command": "p5-server.explorer.createSketch",
-        "title": "Create Sketch",
+        "title": "Create Sketch (JavaScript)",
         "icon": "$(file-add)",
         "enablement": "view == p5sketchExplorer"
       },
       {
         "command": "p5-server.explorer.createSketch#html",
-        "title": "Create Sketch (HTML)",
+        "title": "Create Sketch (HTML + JavaScript)",
         "icon": "$(file-add)",
         "enablement": "view == p5sketchExplorer"
       },
       {
         "command": "p5-server.explorer.createSketch#folder",
-        "title": "Create Sketch (Folder)",
+        "title": "Create Sketch (Single-Sketch Folder)",
         "icon": "$(folder-add)",
         "enablement": "view == p5sketchExplorer"
       },

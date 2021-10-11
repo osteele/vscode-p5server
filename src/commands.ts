@@ -1,9 +1,9 @@
 import { parse as parseHTML } from 'node-html-parser'; // eslint-disable-line @typescript-eslint/no-var-requires
-import { Sketch } from 'p5-server';
+import { Library, Sketch } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 import { exclusions } from './sketchExplorer';
-import { getWorkspaceFolderPaths } from './utils';
+import { fileExists, fsExists, getWorkspaceFolderPaths } from './utils';
 import path = require('path');
 
 export function registerCommands(context: vscode.ExtensionContext) {
@@ -64,6 +64,7 @@ async function createSketch({ dir, type }: { dir?: string; type: 'script' | 'htm
       const baseName = sketchName.replace(/(\.html?)?$/i, '');
       let scriptFile = 'sketch.js';
       if (await fileExists(path.join(dir, scriptFile))) scriptFile = baseName + '.js';
+      // find a unique filename but appending successive numbers
       for (let i = 1; await fileExists(path.join(dir, scriptFile)); i++) {
         scriptFile = `${baseName}-${i}.js`;
       }
@@ -83,22 +84,13 @@ async function createSketch({ dir, type }: { dir?: string; type: 'script' | 'htm
 
   window.showTextDocument(Uri.file(sketch.scriptFilePath));
   commands.executeCommand('p5-server.explorer.refresh');
-
-  async function fileExists(filepath: string): Promise<boolean> {
-    try {
-      await workspace.fs.stat(Uri.file(filepath));
-      return true;
-    } catch (e) {
-      if (e.code === 'FileNotFound') return false;
-      throw e;
-    }
-  }
 }
 
 async function duplicateSketch(sketch: Sketch) {
   if (!(sketch instanceof Sketch)) throw new Error(`${sketch} is not a Sketch`);
   const name = await window.showInputBox();
   if (!name) return;
+
   // if the sketch is the only sketch in the directory, copy the directory
   const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
   if (sketches.length === 1 && sketches[0].mainFilePath === sketch.mainFilePath) {
@@ -116,6 +108,7 @@ async function duplicateSketch(sketch: Sketch) {
       window.showErrorMessage(`Can't create a duplicate named ${name}. ${target.fsPath} already exists`);
       return;
     }
+
     await Promise.all(replacements.map(({ src, target }) => workspace.fs.copy(src, target)));
     // rename the script file within the HTML tag
     // TODO: do this as part of the initial copy
@@ -133,9 +126,64 @@ async function duplicateSketch(sketch: Sketch) {
   }
 }
 
-async function fsExists(uri: Uri): Promise<boolean> {
-  return workspace.fs.stat(uri).then(
-    () => true,
-    () => false
-  );
+export function openLibraryPane(library: Library) {
+  const enableIntegratedLibraryBrowser = false;
+  if (!enableIntegratedLibraryBrowser) {
+    return commands.executeCommand('vscode.open', Uri.parse(library.homepage));
+    // return commands.executeCommand('simpleBrowser.api.open', Uri.parse(library.homepage));
+  }
+  const panel = vscode.window.createWebviewPanel('p5LibraryHomepage', library.name, vscode.ViewColumn.One, {
+    enableScripts: true
+  });
+  panel.webview.html = `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>${library.name}</title>
+        <style type="text/css">
+          body,html {
+            height: 100%;
+            min-height: 100%;
+            padding: 0;
+            margin: 0;
+          }
+          iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+          }
+        </style>
+      </head>
+      <body>
+          <iframe src="${library.homepage}"></iframe>
+      </body>
+    </html>
+  `;
+}
+
+export async function renameSketch(item: Sketch | Uri): Promise<void> {
+  const name = await window.showInputBox({ value: item instanceof Sketch ? item.name : path.basename(item.fsPath) });
+  if (!name) return;
+  // TODO: rename single-sketch folders
+  if (item instanceof Sketch) {
+    switch (item.sketchType) {
+      case 'html':
+        return workspace.fs.rename(
+          Uri.file(item.mainFilePath),
+          Uri.file(path.join(item.dir, /\.html?$/i.test(name) ? name : name + '.html'))
+        );
+      case 'javascript':
+        return workspace.fs.rename(
+          Uri.file(item.scriptFilePath),
+          Uri.file(path.join(item.dir, /\.js$/i.test(name) ? name : name + '.js'))
+        );
+    }
+  } else {
+    const target = Uri.file(path.join(path.dirname(item.fsPath), name));
+    return workspace.fs.rename(item, target);
+  }
 }

@@ -3,9 +3,9 @@ import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
+import * as sketchCommands from './commands';
 import { getWorkspaceFolderPaths } from './utils';
 
-const enableIntegratedLibraryBrowser = false;
 const resourceDir = path.join(__filename, '..', '..', 'resources');
 export const exclusions = ['.*', '*.lock', '*.log', 'node_modules', 'package.json'];
 
@@ -39,13 +39,20 @@ export class SketchExplorer {
   public registerCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       commands.registerCommand('p5-server.explorer.refresh', () => this.provider.refresh()),
-      commands.registerCommand('p5-server.explorer.createFolder', async () => explorerCommands.createFolder()),
-      commands.registerCommand('p5-server.explorer.createSketch', async () => this.createSketch('script')),
-      commands.registerCommand('p5-server.explorer.createSketch#html', async () => this.createSketch('html')),
-      commands.registerCommand('p5-server.explorer.createSketch#folder', async () => this.createSketch('folder')),
-      commands.registerCommand('p5-server.explorer.rename', explorerCommands.rename),
-      commands.registerCommand('p5-server.explorer.open', (item: Element) => {
-        if (item instanceof Library) return; // This shouldn't happen, but it makes the TS compiler happy
+      commands.registerCommand('p5-server.explorer.createFolder', async () => this.createFolderInSelectedLocation()),
+      commands.registerCommand('p5-server.explorer.createSketch', async () =>
+        this.createSketchInSelectedFolder('script')
+      ),
+      commands.registerCommand('p5-server.explorer.createSketch#html', async () =>
+        this.createSketchInSelectedFolder('html')
+      ),
+      commands.registerCommand('p5-server.explorer.createSketch#folder', async () =>
+        this.createSketchInSelectedFolder('folder')
+      ),
+      commands.registerCommand('p5-server.explorer.rename', (item: Sketch | FilePathItem) =>
+        sketchCommands.renameSketch(item instanceof Sketch ? item : item.resourceUri!)
+      ),
+      commands.registerCommand('p5-server.explorer.open', (item: Sketch | FileItem) => {
         const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
         return commands.executeCommand('vscode.open', uri);
       }),
@@ -58,19 +65,41 @@ export class SketchExplorer {
             ])
           : commands.executeCommand('vscode.open', uri);
       }),
-      commands.registerCommand('p5-server.explorer.run', (item: Element) => explorerCommands.runSketch(item)),
-      commands.registerCommand('p5-server.explorer.run#integrated', (item: Element) =>
-        explorerCommands.runSketch(item, 'integrated')
+
+      // Run sketch commands. The view/item/context[].when clause narrow the argument types to sketch | file
+      commands.registerCommand('p5-server.explorer.run', (item: Sketch | FilePathItem) => this.runSelectedSketch(item)),
+      commands.registerCommand('p5-server.explorer.run#integrated', (item: Sketch | FilePathItem) =>
+        this.runSelectedSketch(item, 'integrated')
       ),
-      commands.registerCommand('p5-server.explorer.run#external', (item: Element) =>
-        explorerCommands.runSketch(item, 'external')
+      commands.registerCommand('p5-server.explorer.run#external', (item: Sketch | FilePathItem) =>
+        this.runSelectedSketch(item, 'external')
       ),
-      commands.registerCommand('p5-server.explorer.openLibrary', explorerCommands.openLibrary)
+
+      commands.registerCommand('p5-server.explorer.openLibrary', sketchCommands.openLibraryPane)
     );
   }
 
-  async createSketch(type: 'script' | 'html' | 'folder') {
-    return explorerCommands.createSketch({ type, dir: (await this.getSelectionDirectory()) || undefined });
+  async createFolderInSelectedLocation(): Promise<void> {
+    const wsFolders = getWorkspaceFolderPaths();
+    const dir =
+      wsFolders.length > 1
+        ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
+        : wsFolders[0];
+    if (!dir) return; // the user cancelled
+
+    const name = await window.showInputBox();
+    if (!name) return;
+
+    await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
+  }
+
+  async createSketchInSelectedFolder(type: 'script' | 'html' | 'folder') {
+    const dir = await this.getSelectionDirectory();
+    await commands.executeCommand('_p5-server.createSketch', { dir, type });
+    if (dir && (await Sketch.analyzeDirectory(dir)).sketches.length === 1) {
+      // TODO: create a placeholder file here
+      console.warn('create an empty file');
+    }
   }
 
   async getSelectionDirectory(): Promise<string | null> {
@@ -87,104 +116,12 @@ export class SketchExplorer {
       ? path.dirname(selection.file)
       : null;
   }
-}
 
-const explorerCommands = {
-  async createFolder({ dir }: { dir?: string } = {}): Promise<void> {
-    const wsFolders = getWorkspaceFolderPaths();
-    dir =
-      dir ||
-      (wsFolders.length > 1
-        ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
-        : wsFolders[0]);
-    if (!dir) return; // the user cancelled
-    const name = await window.showInputBox();
-    if (!name) return;
-    await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
-  },
-
-  async createSketch({ dir, type }: { dir?: string; type: 'script' | 'html' | 'folder' }): Promise<void> {
-    await commands.executeCommand('_p5-server.createSketch', { dir, type });
-    if (dir && (await Sketch.analyzeDirectory(dir)).sketches.length === 1) {
-      // TODO: create a placeholder file here
-      console.warn('create an empty file');
-    }
-  },
-
-  openLibrary(library: Library) {
-    if (!enableIntegratedLibraryBrowser) {
-      return commands.executeCommand('vscode.open', Uri.parse(library.homepage));
-      // return commands.executeCommand('simpleBrowser.api.open', Uri.parse(library.homepage));
-    }
-    const panel = vscode.window.createWebviewPanel('p5LibraryHomepage', library.name, vscode.ViewColumn.One, {
-      enableScripts: true
-    });
-    panel.webview.html = `
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <meta http-equiv="X-UA-Compatible" content="ie=edge">
-          <title>${library.name}</title>
-          <style type="text/css">
-            body,html {
-              height: 100%;
-              min-height: 100%;
-              padding: 0;
-              margin: 0;
-            }
-            iframe {
-              width: 100%;
-              height: 100%;
-              border: none;
-              background: white;
-            }
-          </style>
-        </head>
-        <body>
-            <iframe src="${library.homepage}"></iframe>
-        </body>
-      </html>
-    `;
-  },
-
-  async rename(item: FilePathItem | Sketch): Promise<void> {
-    const name = await window.showInputBox();
-    if (!name) return;
-    // TODO: rename single-sketch folders
-    if (item instanceof Sketch) {
-      switch (item.sketchType) {
-        case 'html':
-          return workspace.fs.rename(
-            Uri.file(item.mainFilePath),
-            Uri.file(path.join(item.dir, /\.html?$/i.test(name) ? name : name + '.html'))
-          );
-        case 'javascript':
-          return workspace.fs.rename(
-            Uri.file(item.scriptFilePath),
-            Uri.file(path.join(item.dir, /\.js$/i.test(name) ? name : name + '.js'))
-          );
-      }
-    } else {
-      const file = item.file;
-      const uri = Uri.file(path.join(path.dirname(file), name));
-      return workspace.fs.rename(item.resourceUri!, uri);
-    }
-  },
-
-  runSketch(item: Element, where: 'integrated' | 'external' | null = null) {
-    if (item instanceof Library) return; // This shouldn't happen, but it makes the TS compiler happy
+  runSelectedSketch(item: Sketch | FilePathItem, where: 'integrated' | 'external' | undefined = undefined) {
     const uri = item instanceof Sketch ? Uri.file(item.mainFilePath) : item.resourceUri;
     commands.executeCommand('p5-server.openBrowser', uri, { browser: where });
-    // return Promise.all([
-    //   workspace.getConfiguration('p5-server').get<boolean>('run.openEditor')
-    //     ? commands.executeCommand('vscode.open', uri, { preview: true, viewColumn: 1 })
-    //     : null,
-    //   commands.executeCommand('p5-server.openBrowser', uri, {})
-    // ]);
   }
-};
+}
 
 export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
