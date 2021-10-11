@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { registerCommands } from './commands';
+import { registerCommands } from './sketchCommands';
 import { ReleaseNotes } from './releaseNotes';
 import { ServerManager } from './serverManager';
 import { SketchExplorer } from './sketchExplorer';

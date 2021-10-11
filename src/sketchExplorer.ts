@@ -3,7 +3,7 @@ import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
-import * as sketchCommands from './commands';
+import * as sketchCommands from './sketchCommands';
 import { getWorkspaceFolderPaths } from './utils';
 
 const resourceDir = path.join(__filename, '..', '..', 'resources');
