@@ -12,6 +12,9 @@ export function registerCommands(context: vscode.ExtensionContext) {
       '_p5-server.createSketch',
       (options: { dir?: string; type: 'script' | 'html' | 'folder' }) => createSketch(options)
     ),
+    commands.registerCommand('p5-server.convertSketch#html', (sketch: Sketch) => convertSketch(sketch, 'html')),
+    commands.registerCommand('p5-server.convertSketch#script', (sketch: Sketch) => convertSketch(sketch, 'script')),
+    commands.registerCommand('p5-server.deleteSketch', deleteSketch),
     commands.registerCommand('p5-server.createSketchFile', () => createSketch({ type: 'script' })),
     commands.registerCommand('p5-server.createSketchFolder', () => createSketch({ type: 'folder' })),
     commands.registerCommand('p5-server.duplicateSketch', duplicateSketch),
@@ -19,6 +22,25 @@ export function registerCommands(context: vscode.ExtensionContext) {
       commands.executeCommand('workbench.action.openSettings', 'p5-server')
     )
   );
+}
+
+// async function convertSketch(sketch: Sketch, type: 'html'|'script') {
+async function convertSketch(sketch: Sketch, type: 'html' | 'script') {
+  sketch.convert({ type });
+}
+
+async function deleteSketch(sketch: Sketch) {
+  // TODO: check whether any of these are used by other sketches
+  const files = sketch.files.map(file => path.join(sketch.dir, file));
+  const result = await window.showInformationMessage(
+    files.length === 1
+      ? `Are you sure you want to delete '${files.join(' ')}'?`
+      : `Are you sure you want to delete the following files: ${files.map(s => `'${s}'`).join(', ')}?`,
+    'Delete',
+    'Cancel'
+  );
+  if (result !== 'Delete') return;
+  await Promise.all(files.map(Uri.file).map(uri => workspace.fs.delete(uri)));
 }
 
 async function createSketch({ dir, type }: { dir?: string; type: 'script' | 'html' | 'folder' }) {

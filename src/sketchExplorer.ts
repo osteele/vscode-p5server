@@ -96,10 +96,6 @@ export class SketchExplorer {
   async createSketchInSelectedFolder(type: 'script' | 'html' | 'folder') {
     const dir = await this.getSelectionDirectory();
     await commands.executeCommand('_p5-server.createSketch', { dir, type });
-    if (dir && (await Sketch.analyzeDirectory(dir)).sketches.length === 1) {
-      // TODO: create a placeholder file here
-      console.warn('create an empty file');
-    }
   }
 
   async getSelectionDirectory(): Promise<string | null> {
@@ -272,6 +268,7 @@ class SketchItem extends vscode.TreeItem {
       title: 'Edit P5.js Sketch',
       arguments: [sketch]
     };
+    this.contextValue = `sketch:${sketch.structureType}`;
   }
 
   get file() {
@@ -282,7 +279,6 @@ class SketchItem extends vscode.TreeItem {
     dark: path.join(resourceDir, 'dark', 'sketch.svg'),
     light: path.join(resourceDir, 'light', 'sketch.svg')
   };
-  contextValue = 'sketch';
 }
 
 class LibraryItem extends vscode.TreeItem {
@@ -307,7 +303,7 @@ async function sketchIsEntireDirectory(sketch: Sketch) {
   const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
   return (
     sketches.length === 1 &&
-    sketches[0].sketchType === sketch.sketchType &&
+    sketches[0].structureType === sketch.structureType &&
     sketches[0].mainFilePath === sketch.mainFilePath
   );
 }
