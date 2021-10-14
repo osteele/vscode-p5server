@@ -80,7 +80,7 @@ export class ServerManager {
           : wsFolders[0] || '.';
       if (!root) return; // the user cancelled
 
-      this.server?.stop();
+      this.server?.close();
       this.server = null;
 
       let sbm = window.setStatusBarMessage(`Starting the P5 server at ${root}`);
@@ -113,7 +113,7 @@ export class ServerManager {
 
     let sbm = window.setStatusBarMessage('Shutting down the P5 server…');
 
-    await this.server.stop();
+    await this.server.close();
     this.server = null;
     this.state = 'stopped';
 
