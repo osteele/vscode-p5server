@@ -76,7 +76,7 @@
         "title": "P5 Server: Show Script Output"
       },
       {
-        "command": "p5-server.viewChangeLog",
+        "command": "p5-server.showReleaseNotes",
         "title": "P5 Server: Show Change Log"
       },
       {

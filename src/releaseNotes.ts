@@ -3,10 +3,10 @@ import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 
 export class ReleaseNotes {
-  private readonly _previousVersion: string | undefined;
+  private _previousVersion: string | undefined;
 
   constructor(private readonly context: vscode.ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('p5-server.viewChangeLog', this.showChangeLog.bind(this)));
+    context.subscriptions.push(commands.registerCommand('p5-server.showReleaseNotes', this.showPanel.bind(this)));
     this._previousVersion = this.context.globalState.get(this.versionKey);
   }
 
@@ -34,52 +34,51 @@ export class ReleaseNotes {
     this.context.globalState.update(this.versionKey, version);
   }
 
-  private shouldShow() {
-    if (vscode.env.remoteName?.toLocaleLowerCase() === 'codespaces') return false;
-    if (!this.previousVersion) return false;
-    if (this.previousVersion === this.currentVersion) return false;
-    if (this.previousVersion.replace(/(\d+\.\d+).*/, '$1') === this.currentVersion.replace(/(\d+\.\d+).*/, '$1'))
-      return 'patch';
-    return 'upgrade';
+  private modifySavedVersionForTesting() {
+    // uncomment one of these for testing:
+    // {
+    // console.info('VersionChange.noPreviousVersion: -> Fresh install: no message');
+    // this._previousVersion = undefined;
+    // }
+    // {
+    // console.info('VersionChange.minor: -> Patch release: show info message');
+    // this._previousVersion = this.currentVersion + '1';
+    // }
+    // {
+    // console.info('VersionChange.major: -> Minor or major release: show release notes');
+    // this._previousVersion = '1.0.0';
+    // }
+    // {
+    // console.info('VersionChange.noChange: -> Same version as before: no message');
+    // this._previousVersion = this.currentVersion;
+    // }
+  }
+
+  private getVersionChangeKind() {
+    const { previousVersion, currentVersion } = this;
+    if (!previousVersion) return VersionChange.noPreviousVersion;
+    if (previousVersion === currentVersion) return VersionChange.noChange;
+    for (const [matcher, component] of versionDiscrimators) {
+      if (previousVersion.match(matcher)?.[0] !== currentVersion.match(matcher)?.[0]) {
+        return component;
+      }
+    }
+    return VersionChange.build;
   }
 
   public async showStartupMessage() {
-    const context = this.context;
-    switch (
-      // Change this from 0 to test the release notes on startup
-      0 as number // <- change this back to 0 before committing
-    ) {
-      case 1:
-        // Fresh install: no message
-        context.globalState.update(`${context.extension.id}.version`, undefined);
-        break;
-      case 2:
-        // Patch release: show info message
-        context.globalState.update(`${context.extension.id}.version`, context.extension.packageJSON.version + '1');
-        break;
-      case 3:
-        // Minor or major release: show release notes
-        context.globalState.update(`${context.extension.id}.version`, '1.0.0');
-        break;
-      case 4:
-        // Same version as before: no message
-        context.globalState.update(`${context.extension.id}.version`, context.extension.packageJSON.version);
-        break;
-    }
-
-    const shouldShow = this.shouldShow();
-    this.previousVersion = this.currentVersion;
-    switch (shouldShow) {
-      case 'patch':
+    if (vscode.env.remoteName?.toLocaleLowerCase() === 'codespaces') return false;
+    this.modifySavedVersionForTesting();
+    switch (this.getVersionChangeKind()) {
+      case VersionChange.major:
+      case VersionChange.minor:
+      case VersionChange.patch:
         await this.showInformationMessage();
-        break;
-      case 'upgrade':
-        await this.showChangeLog();
         break;
     }
   }
 
-  private async showChangeLog() {
+  private async showPanel() {
     const title = `What's New in ${this.extensionName}`;
     const uri = Uri.file(path.join(this.context.extensionPath, 'resources/changelog.html'));
     const html = (await workspace.fs.readFile(uri)).toString();
@@ -89,12 +88,30 @@ export class ReleaseNotes {
 
   private async showInformationMessage() {
     const item = await window.showInformationMessage(
-      `${this.extensionName} has been updated from version ${this.previousVersion} → ${this.currentVersion}.`,
+      `${this.extensionName} has been updated to ${this.currentVersion}.`,
       {},
-      { title: 'Show Change Log', command: 'p5-server.viewChangeLog' }
+      { title: 'Show Release Notes', command: 'p5-server.showReleaseNotes' }
     );
     if (item) {
       await commands.executeCommand(item.command);
     }
   }
 }
+
+const enum VersionChange {
+  noChange,
+  noPreviousVersion,
+  major,
+  minor,
+  patch,
+  preRelease,
+  build
+}
+
+const versionDiscrimators: [RegExp, VersionChange][] = [
+  [/^\d+/, VersionChange.major],
+  [/^\d+\.\d+/, VersionChange.minor],
+  [/^\d+\.\d+.\d+/, VersionChange.patch],
+  [/^\d+\.\d+.\d+[^+]+/, VersionChange.preRelease],
+  [/^\d+\.\d+.\d+-.+\+/, VersionChange.build]
+];
