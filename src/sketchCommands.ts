@@ -188,21 +188,17 @@ export function openLibraryPane(library: Library) {
 }
 
 export async function renameSketch(item: Sketch | Uri): Promise<void> {
-  const name = await window.showInputBox({ value: item instanceof Sketch ? item.name : path.basename(item.fsPath) });
+  let name = await window.showInputBox({ value: item instanceof Sketch ? item.name : path.basename(item.fsPath) });
   if (!name) return;
   // TODO: rename single-sketch folders
   if (item instanceof Sketch) {
-    switch (item.sketchType) {
+    switch (item.structureType) {
       case 'html':
-        return workspace.fs.rename(
-          Uri.file(item.mainFilePath),
-          Uri.file(path.join(item.dir, /\.html?$/i.test(name) ? name : name + '.html'))
-        );
-      case 'javascript':
-        return workspace.fs.rename(
-          Uri.file(item.scriptFilePath),
-          Uri.file(path.join(item.dir, /\.js$/i.test(name) ? name : name + '.js'))
-        );
+        if (!/\.html?$/i.test(name)) name += '.html';
+        return workspace.fs.rename(Uri.file(item.mainFilePath), Uri.file(path.join(item.dir, name)));
+      case 'script':
+        if (!/\.js$/i.test(name)) name += '.js';
+        return workspace.fs.rename(Uri.file(item.scriptFilePath), Uri.file(path.join(item.dir, name)));
     }
   } else {
     const target = Uri.file(path.join(path.dirname(item.fsPath), name));
