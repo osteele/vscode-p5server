@@ -6,10 +6,6 @@
 > sketch-aware development server with live reload; a sketch explorer; and
 > support for JavaScript-only sketches with automatic library inclusion.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
 - [Features](#features)
   - [Sketch Explorer](#sketch-explorer)
   - [Integrated Web Server](#integrated-web-server)
@@ -25,8 +21,6 @@
 - [Keeping in Touch](#keeping-in-touch)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
-
-<!-- /code_chunk_output -->
 
 ## Features
 

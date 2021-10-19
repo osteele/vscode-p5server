@@ -1,10 +1,11 @@
-import { ChildProcess } from 'child_process';
 import { Server } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
-import { ScriptConsole } from './scriptConsole';
-import { getWorkspaceFolderPaths } from './utils';
+import { ScriptConsole } from './console';
+import { getWorkspaceFolderPaths } from './helpers';
 import open = require('open');
+import { StatusBarManager } from './statusBar';
+import { openInBrowser } from './openInBrowser';
 
 type ServerState = 'stopped' | 'starting' | 'running' | 'stopping';
 
@@ -180,83 +181,4 @@ export class ServerManager {
       await window.showErrorMessage(msg);
     }
   }
-}
-
-class StatusBarManager {
-  private readonly statusBarOpenItem: vscode.StatusBarItem;
-  private readonly statusBarServerItem: vscode.StatusBarItem;
-
-  constructor() {
-    const statusBarOpenItem = window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    this.statusBarOpenItem = statusBarOpenItem;
-    statusBarOpenItem.text = `$(ports-open-browser-icon)P5 Browser`;
-    statusBarOpenItem.command = 'p5-server.openBrowser';
-
-    this.statusBarServerItem = window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  }
-
-  update(server: Server | null, state: string) {
-    const { statusBarServerItem, statusBarOpenItem } = this;
-
-    switch (state) {
-      case 'running':
-        {
-          const browserName = workspace.getConfiguration('p5-server').get('browser', 'integrated');
-          statusBarServerItem.text = '$(extensions-star-full)P5 Server';
-          statusBarServerItem.tooltip = 'Stop the P5 server';
-          statusBarServerItem.command = 'p5-server.stop';
-          statusBarOpenItem.tooltip = `Open ${server!.url} in the ${browserName} browser`;
-        }
-        break;
-      case 'stopped':
-        statusBarServerItem.text = '$(extensions-star-empty)P5 Server';
-        statusBarServerItem.tooltip = 'Click to start the P5 server';
-        statusBarServerItem.command = 'p5-server.start';
-        break;
-      case 'starting':
-        statusBarServerItem.text = '$(extensions-star-full~spin)P5 Server';
-        statusBarServerItem.tooltip = 'The P5 server is starting…';
-        break;
-      case 'stopping':
-        statusBarServerItem.text = '$(extensions-star-empty~spin)P5 Server';
-        statusBarServerItem.tooltip = 'The P5 server is stopping';
-        break;
-    }
-    const config = workspace.getConfiguration('p5-server');
-    if (config.get<boolean>('statusBar.browserItem.enabled', true) && state === 'running') {
-      statusBarOpenItem.show();
-    } else {
-      statusBarOpenItem.hide();
-    }
-    if (config.get<boolean>('statusBar.serverItem.enabled', true)) {
-      statusBarServerItem.show();
-    } else {
-      statusBarServerItem.hide();
-    }
-  }
-}
-
-/**
- * A wrapper for the open.open function that waits until the process status code
- * has been set before returning.
- *
- * @internal */
-async function openInBrowser(target: string, options?: open.Options): Promise<ChildProcess> {
-  const process = await open(target, options);
-  if (process.exitCode === null) {
-    await new Promise<void>(resolve => {
-      const intervalTimer = setInterval(() => {
-        if (process.exitCode !== null) {
-          clearInterval(intervalTimer);
-          clearTimeout(timeoutTimer);
-          resolve();
-        }
-      }, 50);
-      const timeoutTimer = setTimeout(() => {
-        clearInterval(intervalTimer);
-        resolve();
-      }, 5000);
-    });
-  }
-  return process;
 }
