@@ -8,7 +8,7 @@ import { Element, FilePathItem, FileItem, DirectoryItem } from './elements';
 import { sketchIsEntireDirectory } from './helpers';
 import { SketchTreeProvider } from './treeProvider';
 
-export const resourceDir = path.join(__filename, '..', '..', 'resources');
+export const RESOURCE_DIR_PATH = path.join(__dirname, '../../resources');
 
 export class SketchExplorer {
   private readonly provider: SketchTreeProvider;

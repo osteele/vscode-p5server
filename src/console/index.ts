@@ -3,7 +3,7 @@ import { BrowserConsoleEventMethods, BrowserDocumentEvent } from 'p5-server/dist
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
 import util = require('util');
-import { formatArgs } from './helpers';
+import { formatConsoleEventArgs } from './helpers';
 import { ConsoleMessageLensProvider } from './consoleMessageLensProvider';
 
 export class ScriptConsole {
@@ -31,7 +31,7 @@ export class ScriptConsole {
       } else {
         this.setFile(file, url);
         this.maybeShowConsole(method);
-        this.appendLine(util.format(`[${method.toUpperCase()}] ${formatArgs(event)}`));
+        this.appendLine(util.format(`[${method.toUpperCase()}] ${formatConsoleEventArgs(event)}`));
         if (file && event.line && args.length > 0) {
           this.lensProvider.addMessage(event);
         }

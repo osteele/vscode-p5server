@@ -2,7 +2,7 @@ import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { resourceDir } from './index';
+import { RESOURCE_DIR_PATH } from './index';
 import { fileDisplay } from './helpers';
 
 export type Element = Library | Sketch | FilePathItem;
@@ -53,8 +53,8 @@ export class SketchItem extends vscode.TreeItem {
   }
 
   iconPath = {
-    dark: path.join(resourceDir, 'dark', 'sketch.svg'),
-    light: path.join(resourceDir, 'light', 'sketch.svg')
+    dark: path.join(RESOURCE_DIR_PATH, 'dark', 'sketch.svg'),
+    light: path.join(RESOURCE_DIR_PATH, 'light', 'sketch.svg')
   };
 }
 

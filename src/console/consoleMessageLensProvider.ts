@@ -1,7 +1,7 @@
 import { BrowserConsoleEvent, BrowserErrorEvent } from 'p5-server';
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
-import { formatArgs } from './helpers';
+import { formatConsoleEventArgs } from './helpers';
 
 export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   private messages = new Map<string, { data: ConsoleMessageLensData; lens: vscode.CodeLens }>();
@@ -90,7 +90,7 @@ export class ConsoleMessageLensData implements vscode.Command {
       throw new Error('unandledRejection');
     } else {
       const { method } = top;
-      let title = `console.${method}: ${formatArgs(top)}`;
+      let title = `console.${method}: ${formatConsoleEventArgs(top)}`;
       if (this.count > 1) {
         title += ` (+${this.count - 1} more)`;
       }
@@ -112,7 +112,7 @@ export class ConsoleMessageLensData implements vscode.Command {
           case 'unhandledRejection':
             return `${event.message}`;
           default:
-            return formatArgs(event);
+            return formatConsoleEventArgs(event);
         }
       }),
       this.count > this.messages.length ? `+${this.count - this.messages.length} more` : ''
