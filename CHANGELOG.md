@@ -1,6 +1,18 @@
 # Change Log
 
-## [1.1.4] - 2021-10-05
+## [1.1.6] - 2021-10-27
+
+Added:
+
+- Menu items to open sketch in internal, external browser
+
+Changed:
+
+- A directory is classified as a single-directory sketch only if the HTML file
+  is named index.html
+- performance improvements in sketch detection, library inference
+
+## [1.1.5] - 2021-10-05
 
 Added:
 
