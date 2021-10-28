@@ -25,7 +25,7 @@ const saveIntermediateFiles = process.env.NODE_ENV === 'development';
 function parseChangeLog({ text }: { text: string }): ChangeLog {
   const html = marked(text, { headerIds: false, smartypants: true });
   const htmlRoot = parse(html);
-  const title = htmlRoot.querySelector('h1')?.text;
+  const title = htmlRoot.querySelector('h1')?.text || 'Release Notes';
   const sections = findSections('h2', htmlRoot);
   return {
     title,

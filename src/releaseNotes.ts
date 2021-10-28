@@ -3,15 +3,18 @@ import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 
 export class ReleaseNotes {
-  private _previousVersion: string | undefined;
+  private readonly _previousVersion: string | undefined;
+  private readonly versionChangeKind: VersionChange;
 
   constructor(private readonly context: vscode.ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('p5-server.showReleaseNotes', this.showPanel.bind(this)));
     this._previousVersion = this.context.globalState.get(this.versionKey);
+    this.versionChangeKind = this.getVersionChangeKind();
+    this.previousVersion = this.currentVersion;
   }
 
   static showIfNewVersion(context: vscode.ExtensionContext) {
-    new ReleaseNotes(context).showStartupMessage();
+    new ReleaseNotes(context).showStartupMessageIfNewVersion();
   }
 
   private get extensionName() {
@@ -66,10 +69,10 @@ export class ReleaseNotes {
     return VersionChange.build;
   }
 
-  public async showStartupMessage() {
+  public async showStartupMessageIfNewVersion() {
     if (vscode.env.remoteName?.toLocaleLowerCase() === 'codespaces') return false;
     this.modifySavedVersionForTesting();
-    switch (this.getVersionChangeKind()) {
+    switch (this.versionChangeKind) {
       case VersionChange.major:
       case VersionChange.minor:
       case VersionChange.patch:

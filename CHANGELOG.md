@@ -1,5 +1,9 @@
 # Change Log
 
+## [1.1.7] - 2021-10-28
+
+Update release notes.
+
 ## [1.1.6] - 2021-10-27
 
 Added:

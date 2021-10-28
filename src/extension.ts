@@ -19,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   const releaseNoteManager = new ReleaseNotes(context);
-  releaseNoteManager.showStartupMessage();
+  releaseNoteManager.showStartupMessageIfNewVersion();
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
