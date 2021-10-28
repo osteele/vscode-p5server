@@ -1,8 +1,21 @@
 # Change Log
 
+## [1.1.8] - 2021-10-28
+
+Added:
+
+- Add antiboredom/p5.patgrad to list of libraries
+
+Fixed:
+
+- Restore syntax-error reporting functionality
+- Performance improvements
+
 ## [1.1.7] - 2021-10-28
 
-Update release notes.
+Added:
+
+- Update release notes.
 
 ## [1.1.6] - 2021-10-27
 
