@@ -1,6 +1,7 @@
 import path = require('path');
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
+import { compareVersions, VersionChange } from './helpers/compareVersions';
 
 export class ReleaseNotes {
   private readonly _previousVersion: string | undefined;
@@ -58,15 +59,8 @@ export class ReleaseNotes {
   }
 
   private getVersionChangeKind() {
-    const { previousVersion, currentVersion } = this;
-    if (!previousVersion) return VersionChange.noPreviousVersion;
-    if (previousVersion === currentVersion) return VersionChange.noChange;
-    for (const [matcher, component] of versionDiscrimators) {
-      if (previousVersion.match(matcher)?.[0] !== currentVersion.match(matcher)?.[0]) {
-        return component;
-      }
-    }
-    return VersionChange.build;
+    const { currentVersion, previousVersion } = this;
+    return compareVersions(currentVersion, previousVersion);
   }
 
   public async showStartupMessageIfNewVersion() {
@@ -91,7 +85,7 @@ export class ReleaseNotes {
 
   private async showInformationMessage() {
     const item = await window.showInformationMessage(
-      `${this.extensionName} has been updated to ${this.currentVersion}.`,
+      `${this.extensionName} has been updated to version ${this.currentVersion}.`,
       {},
       { title: 'Show Release Notes', command: 'p5-server.showReleaseNotes' }
     );
@@ -100,21 +94,3 @@ export class ReleaseNotes {
     }
   }
 }
-
-const enum VersionChange {
-  noChange,
-  noPreviousVersion,
-  major,
-  minor,
-  patch,
-  preRelease,
-  build
-}
-
-const versionDiscrimators: [RegExp, VersionChange][] = [
-  [/^\d+/, VersionChange.major],
-  [/^\d+\.\d+/, VersionChange.minor],
-  [/^\d+\.\d+.\d+/, VersionChange.patch],
-  [/^\d+\.\d+.\d+[^+]+/, VersionChange.preRelease],
-  [/^\d+\.\d+.\d+-.+\+/, VersionChange.build]
-];
