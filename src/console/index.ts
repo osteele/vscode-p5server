@@ -72,7 +72,10 @@ export class ScriptConsole {
           this.sketchConsole.appendLine('-'.repeat(halfLen) + label + '-'.repeat(halfLen));
         }
         this.messageCount = 0;
-        this.maybeShowConsole('always');
+        if (workspace.getConfiguration('p5-server').get('console.clearOnReload', true)) {
+          this.clear();
+        }
+        // this.maybeShowConsole('always');
       }
     });
   }

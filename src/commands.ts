@@ -110,7 +110,9 @@ async function createSketch({ dir, type }: { dir?: string; type: 'script' | 'htm
 
 async function duplicateSketch(sketch: Sketch) {
   if (!(sketch instanceof Sketch)) throw new Error(`${sketch} is not a Sketch`);
-  const name = await window.showInputBox();
+
+  const defaultName = `${sketch.name}-2`;
+  const name = await window.showInputBox({ value: defaultName });
   if (!name) return;
 
   // if the sketch is the only sketch in the directory, copy the directory
@@ -188,7 +190,8 @@ export function openLibraryPane(library: Library) {
 }
 
 export async function renameSketch(item: Sketch | Uri): Promise<void> {
-  let name = await window.showInputBox({ value: item instanceof Sketch ? item.name : path.basename(item.fsPath) });
+  const defaultName = item instanceof Sketch ? item.name : path.basename(item.fsPath);
+  let name = await window.showInputBox({ value: defaultName });
   if (!name) return;
   // TODO: rename single-sketch folders
   if (item instanceof Sketch) {

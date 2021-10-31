@@ -1,5 +1,12 @@
 # Change Log
 
+## Unreleased
+
+Changed:
+
+- Reloading a sketch clears the console. A new configuration "P5-server >
+  Console: Clear on Reload" restores the old behavior.
+
 ## [1.1.8] - 2021-10-28
 
 Added:

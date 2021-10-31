@@ -187,6 +187,11 @@
             "Open sketches in Safari. If Safari is not installed, use the system default browser."
           ]
         },
+        "p5-server.console.clearOnReload": {
+          "type": "boolean",
+          "default": true,
+          "description": "Clear the console when reloading sketches."
+        },
         "p5-server.console.integratedBrowser.autoShow.level": {
           "type": "string",
           "default": "always",
