@@ -10,7 +10,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private watchers: vscode.FileSystemWatcher[] = [];
-  private elementMap: Map<string, Element> = new Map();
+  private fileElementMap: Map<string, Element> = new Map();
 
   public refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -20,7 +20,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
     // TODO: If it's not in the map, analyze its directory.
     // If it's the main file for a sketch in that directory, return the sketch.
     // Otherwise create a FileItem and return that.
-    return this.elementMap.get(file);
+    return this.fileElementMap.get(file);
   }
 
   public getTreeItem(element: Element): vscode.TreeItem {
@@ -28,17 +28,18 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
       const sketch = element;
       const item = new SketchItem(
         sketch,
+        null,
         sketch.files.length + sketch.libraries.length > 1
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None
       );
-      this.elementMap.set(sketch.mainFilePath, element);
+      this.fileElementMap.set(sketch.mainFilePath, element);
       return item;
     } else if (element instanceof Library) {
-      return new LibraryItem(element);
+      return new LibraryItem(element, null);
     } else {
       if (element instanceof FileItem) {
-        this.elementMap.set(element.file, element);
+        this.fileElementMap.set(element.file, element);
       }
       return element;
     }
@@ -55,20 +56,16 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
         ...sketch.files
           .filter(file => !file.startsWith('..' + path.sep))
           .sort((a, b) => b.localeCompare(a))
-          .map(file => new FileItem(path.join(sketch.dir, file))),
-        ...sketch.libraries
+          .map(file => new FileItem(path.join(sketch.dir, file), element)),
+        ...sketch.libraries.map(lib => new LibraryItem(lib, element))
       ];
     } else if (element instanceof DirectoryItem) {
-      return this.getDirectoryChildren(element.resourceUri!.fsPath);
+      return this.getDirectoryChildren(element.resourceUri!.fsPath, element);
     }
   }
 
-  public getParent(_element: Element): vscode.ProviderResult<Element> {
-    // TODO:
-    // If it's a directory, return the parent.
-    // If it's a file, analyze the directory that it's in. If it's an unaffiliated file, return that directory.
-    // Otherwise return the sketch that contains it.
-    return null;
+  public getParent(element: Element): vscode.ProviderResult<Element> {
+    return element instanceof Sketch ? this.getElementForFile(element.dir) : element.parent;
   }
 
   private async getRootChildren(): Promise<Element[]> {
@@ -83,33 +80,35 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
       w.onDidDelete(() => this.refresh());
       return w;
     });
-    this.elementMap.clear();
+    this.fileElementMap.clear();
     try {
       switch (wsFolders.length) {
         case 0:
           return [];
         case 1:
-          return this.getDirectoryChildren(wsFolders[0].uri.fsPath);
+          return this.getDirectoryChildren(wsFolders[0].uri.fsPath, null);
         default:
           return wsFolders
             .filter(folder => folder.uri.scheme === 'file')
-            .map(folder => new DirectoryItem(folder.uri.fsPath, folder.name));
+            .map(folder => new DirectoryItem(folder.uri.fsPath, null, folder.name));
       }
     } finally {
       setTimeout(() => commands.executeCommand('setContext', 'p5-server.explorer.loaded', true), 1000);
     }
   }
 
-  private async getDirectoryChildren(dir: string): Promise<Element[]> {
+  private async getDirectoryChildren(dir: string, parent: DirectoryItem | null): Promise<Element[]> {
     const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
     const files = unassociatedFiles.map(name => path.join(dir, name));
     return [
       // sketches
       ...sketches.sort((a, b) => a.name.localeCompare(b.name)),
       // directories
-      ...files.filter(filepath => fs.statSync(filepath).isDirectory()).map(dirpath => new DirectoryItem(dirpath)),
+      ...files
+        .filter(filepath => fs.statSync(filepath).isDirectory())
+        .map(dirpath => new DirectoryItem(dirpath, parent)),
       // files
-      ...files.filter(filepath => !fs.statSync(filepath).isDirectory()).map(filepath => new FileItem(filepath))
+      ...files.filter(filepath => !fs.statSync(filepath).isDirectory()).map(filepath => new FileItem(filepath, parent))
     ];
   }
 }

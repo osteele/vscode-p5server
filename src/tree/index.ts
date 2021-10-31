@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 import * as sketchCommands from '../commands';
 import { getWorkspaceFolderPaths } from '../helpers';
-import { Element, FilePathItem, FileItem, DirectoryItem } from './elements';
+import { Element, FilePathItem, FileItem, DirectoryItem, LibraryItem } from './elements';
 import { sketchIsEntireDirectory } from './helpers';
 import { SketchTreeProvider } from './treeProvider';
 
@@ -75,8 +75,9 @@ export class SketchExplorer {
       commands.registerCommand('p5-server.explorer.run#external', (item: Sketch | FilePathItem) =>
         this.runSelectedSketch(item, 'external')
       ),
-
-      commands.registerCommand('p5-server.explorer.openLibrary', sketchCommands.openLibraryPane)
+      commands.registerCommand('p5-server.explorer.openLibrary', (item: LibraryItem) =>
+        sketchCommands.openLibraryPane(item.library)
+      )
     );
   }
 

@@ -5,11 +5,11 @@ import { Uri } from 'vscode';
 import { RESOURCE_DIR_PATH } from './index';
 import { fileDisplay } from './helpers';
 
-export type Element = Library | Sketch | FilePathItem;
+export type Element = LibraryItem | Sketch | FilePathItem;
 export type FilePathItem = FileItem | DirectoryItem;
 
 export class DirectoryItem extends vscode.TreeItem {
-  constructor(public readonly file: string, name?: string) {
+  constructor(public readonly file: string, public readonly parent: DirectoryItem | null, name?: string) {
     super(name || path.basename(file), vscode.TreeItemCollapsibleState.Collapsed);
     this.resourceUri = Uri.file(file);
     this.tooltip = fileDisplay(file);
@@ -20,7 +20,7 @@ export class DirectoryItem extends vscode.TreeItem {
 }
 
 export class FileItem extends vscode.TreeItem {
-  constructor(public readonly file: string) {
+  constructor(public readonly file: string, public readonly parent: DirectoryItem | Sketch | null) {
     super(path.basename(file), vscode.TreeItemCollapsibleState.None);
     this.resourceUri = Uri.file(file);
     this.tooltip = fileDisplay(file);
@@ -36,7 +36,11 @@ export class FileItem extends vscode.TreeItem {
 }
 
 export class SketchItem extends vscode.TreeItem {
-  constructor(public readonly sketch: Sketch, collapsibleState: vscode.TreeItemCollapsibleState) {
+  constructor(
+    public readonly sketch: Sketch,
+    public readonly parent: DirectoryItem | null,
+    collapsibleState: vscode.TreeItemCollapsibleState
+  ) {
     super(sketch.name.replace(/\/$/, ''), collapsibleState);
     this.tooltip = fileDisplay(this.file);
     this.description = sketch.description;
@@ -59,9 +63,10 @@ export class SketchItem extends vscode.TreeItem {
 }
 
 export class LibraryItem extends vscode.TreeItem {
-  constructor(readonly library: Library) {
+  constructor(readonly library: Library, public readonly parent: Sketch | null) {
     super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
-    this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${library.description}.`;
+    const description = library.description.replace(/\.?$/, '.');
+    this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${description}`;
   }
 
   contextValue = 'library';
