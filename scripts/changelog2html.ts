@@ -1,7 +1,6 @@
 #!/usr/bin/env ts-node
-/// <reference types="./types/changelog-parser" />
 
-import parseChangelog from 'changelog-parser';
+import { parseChangeLog } from '@osteele/changelog-parser';
 import * as fs from 'fs';
 import path from 'path';
 import * as pug from 'pug';
@@ -23,7 +22,7 @@ async function main() {
     fs.writeFileSync('./out/changelog-out.md', text);
   }
 
-  const changelog = await parseChangelog({ text });
+  const changelog = parseChangeLog({ text });
   changelog.versions.forEach(version => {
     version.parsed = Object.fromEntries(
       Object.entries(version.parsed)

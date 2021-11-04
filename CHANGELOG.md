@@ -11,7 +11,8 @@ Changed:
 
 Added:
 
-- Add antiboredom/p5.patgrad to list of libraries
+- Add [antiboredom/p5.patgrad](https://github.com/antiboredom/p5.patgrad) to the
+  library list
 
 Fixed:
 
