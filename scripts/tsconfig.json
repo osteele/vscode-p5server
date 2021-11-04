@@ -1,11 +1,5 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "lib": [
-      "ES2019"
-    ],
-    "useUnknownInCatchVariables": false
-  },
+  "compilerOptions": {},
   "extends": "@tsconfig/node14/tsconfig.json",
   "root": true
 }
