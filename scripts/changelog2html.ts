@@ -7,7 +7,6 @@ import * as pug from 'pug';
 
 const templatePath = `${__dirname}/changelog.pug`;
 
-const order = ['New', 'Changed', 'Improved', 'Fixed', 'Removed', 'Security'];
 const writeIntermediateFiles = process.env.NODE_ENV === 'development';
 
 async function main() {
@@ -23,13 +22,7 @@ async function main() {
   }
 
   const changelog = parseChangeLog({ text });
-  changelog.versions.forEach(version => {
-    version.parsed = Object.fromEntries(
-      Object.entries(version.parsed)
-        .filter(([key]) => key !== '_')
-        .sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
-    );
-  });
+
   if (writeIntermediateFiles) {
     fs.writeFileSync(
       './out/changelog.json',

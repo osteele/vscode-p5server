@@ -17,14 +17,14 @@ html(lang="en")
         .p-3.mb-4.border-bottom.border-translucent-white
           h1.f1-light.text-white= title
       .release-notes
-        each version in versions.filter(version => version.title && !/^unreleased$/i.test(version.title))
+        each version in versions
           section.release-note.position-relative.container-new.py-6.px-3.text-left
             header.timeline-decorator.d-flex.flex-items-center.mb-3
               .version-badge.d-inline-block.bg-purple.p-1.rounded-1.mr-2.text-bold= version.version
               h2.f3-light.css-truncate.css-truncate-target= version.date || version.version
             ul.list-style-none.change-log
-              each kind of Object.keys(version.parsed)
-                each change in version.parsed[kind]
+              each categoryName of Object.keys(version.categories)
+                each change in version.categories[categoryName]
                   li.d-flex.flex-items-start.mb-2
-                    .change-badge(class=`change-badge-${kind.toLowerCase()}`)= kind
+                    .change-badge(class=`change-badge-${categoryName.toLowerCase()}`)= categoryName
                     .change-description!= change
