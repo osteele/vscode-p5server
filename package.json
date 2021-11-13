@@ -408,7 +408,7 @@
   },
   "dependencies": {
     "open": "^8.4.0",
-    "p5-server": "0.8.5"
+    "p5-server": "0.8.7"
   },
   "devDependencies": {
     "@osteele/changelog-parser": "0.1.0",
@@ -417,9 +417,9 @@
     "@types/node": "14.x",
     "@types/pug": "^2.0.5",
     "@types/vscode": "^1.58.0",
-    "@typescript-eslint/eslint-plugin": "^5.3.0",
-    "@typescript-eslint/parser": "^5.3.0",
-    "eslint": "^8.1.0",
+    "@typescript-eslint/eslint-plugin": "^5.3.1",
+    "@typescript-eslint/parser": "^5.3.1",
+    "eslint": "^8.2.0",
     "glob": "^7.2.0",
     "husky": "^7.0.4",
     "mocha": "^9.1.3",
@@ -429,6 +429,7 @@
     "ts-node": "^10.4.0",
     "ts-node-dev": "^1.1.8",
     "typescript": "^4.4.4",
+    "vsce": "^2.3.0",
     "vscode-test": "^1.6.1"
   }
 }
