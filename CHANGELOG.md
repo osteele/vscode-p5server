@@ -9,7 +9,8 @@ Changed:
 
 Improved:
 
-- Performance improvements
+- [Performance] Sketch analysis is cached
+- [Performance] File edits only refresh the file and its sketch
 
 ## [1.1.8] - 2021-10-28
 

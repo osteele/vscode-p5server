@@ -7,20 +7,28 @@ import { exclusions } from '../configuration';
 import { Element, SketchItem, LibraryItem, FileItem, DirectoryItem } from './elements';
 
 export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
-  private readonly _onDidChangeTreeData = new vscode.EventEmitter<void>();
+  private readonly _onDidChangeTreeData = new vscode.EventEmitter<Element | undefined | null>();
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private watchers: vscode.FileSystemWatcher[] = [];
-  private fileElementMap: Map<string, Element> = new Map();
+  private _fileElementMap: Map<string, Element> = new Map();
 
-  public refresh(): void {
-    this._onDidChangeTreeData.fire();
+  public refresh(element?: Element | undefined | null): void {
+    this._onDidChangeTreeData.fire(element);
+  }
+
+  private register(element: Element, key?: string): Element {
+    key ??= element instanceof FileItem || element instanceof DirectoryItem ? element.file : undefined;
+    if (key) {
+      this._fileElementMap.set(key, element);
+    }
+    return element;
   }
 
   public getElementForFile(file: string): Element | undefined {
     // TODO: If it's not in the map, analyze its directory.
     // If it's the main file for a sketch in that directory, return the sketch.
     // Otherwise create a FileItem and return that.
-    return this.fileElementMap.get(file);
+    return this._fileElementMap.get(file);
   }
 
   public getTreeItem(element: Element): vscode.TreeItem {
@@ -33,14 +41,11 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None
       );
-      this.fileElementMap.set(sketch.mainFilePath, element);
+      this.register(element, sketch.mainFilePath);
       return item;
     } else if (element instanceof Library) {
       return new LibraryItem(element, null);
     } else {
-      if (element instanceof FileItem) {
-        this.fileElementMap.set(element.file, element);
-      }
       return element;
     }
   }
@@ -52,13 +57,15 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
       return [];
     } else if (element instanceof Sketch) {
       const sketch = element;
-      return [
+      const children = [
         ...sketch.files
           .filter(file => !file.startsWith('..' + path.sep))
           .sort((a, b) => b.localeCompare(a))
           .map(file => new FileItem(path.join(sketch.dir, file), element)),
         ...sketch.libraries.map(lib => new LibraryItem(lib, element))
       ];
+      children.forEach(child => this.register(child));
+      return children;
     } else if (element instanceof DirectoryItem) {
       return this.getDirectoryChildren(element.resourceUri!.fsPath, element);
     }
@@ -76,11 +83,15 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
     this.watchers = wsFolders.map(folder => {
       const w = workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, '**/*.{htm,html,js}'));
       w.onDidCreate(() => this.refresh());
-      w.onDidChange(() => this.refresh());
+      w.onDidChange(uri => {
+        const element = this.getElementForFile(uri.path);
+        const parent = element instanceof Sketch ? this.getElementForFile(path.dirname(uri.path)) : element?.parent;
+        this.refresh(parent || element);
+      });
       w.onDidDelete(() => this.refresh());
       return w;
     });
-    this.fileElementMap.clear();
+    this._fileElementMap.clear();
     try {
       switch (wsFolders.length) {
         case 0:
@@ -99,16 +110,18 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
 
   private async getDirectoryChildren(dir: string, parent: DirectoryItem | null): Promise<Element[]> {
     const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
-    const files = unassociatedFiles.map(name => path.join(dir, name));
-    return [
+    const files = unassociatedFiles.map(fileName => path.join(dir, fileName));
+    const children = [
       // sketches
       ...sketches.sort((a, b) => a.name.localeCompare(b.name)),
       // directories
       ...files
-        .filter(filepath => fs.statSync(filepath).isDirectory())
-        .map(dirpath => new DirectoryItem(dirpath, parent)),
+        .filter(filePath => fs.statSync(filePath).isDirectory())
+        .map(dirPath => new DirectoryItem(dirPath, parent)),
       // files
-      ...files.filter(filepath => !fs.statSync(filepath).isDirectory()).map(filepath => new FileItem(filepath, parent))
+      ...files.filter(filePath => !fs.statSync(filePath).isDirectory()).map(filePath => new FileItem(filePath, parent))
     ];
+    children.forEach(child => this.register(child));
+    return children;
   }
 }
