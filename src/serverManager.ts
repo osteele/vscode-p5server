@@ -1,11 +1,11 @@
 import { Server } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
-import { ScriptConsole } from './console';
-import { getWorkspaceFolderPaths } from './helpers';
-import open = require('open');
-import { StatusBarManager } from './statusBar';
+import ScriptConsole from './console/scriptConsole';
+import { getWorkspaceFolderPaths } from './helpers/fileHelpers';
 import { openInBrowser } from './openInBrowser';
+import { StatusBarManager } from './statusBar';
+import open = require('open');
 
 type ServerState = 'stopped' | 'starting' | 'running' | 'stopping';
 

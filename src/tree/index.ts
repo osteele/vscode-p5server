@@ -3,9 +3,9 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 import * as sketchCommands from '../commands';
-import { getWorkspaceFolderPaths } from '../helpers';
-import { Element, FilePathItem, FileItem, DirectoryItem, LibraryItem } from './elements';
-import { sketchIsEntireDirectory } from './helpers';
+import { getWorkspaceFolderPaths } from '../helpers/fileHelpers';
+import { sketchIsEntireDirectory } from '../helpers/sketchHelpers';
+import { DirectoryItem, Element, FileItem, FilePathItem, LibraryItem } from './elements';
 import { SketchTreeProvider } from './treeProvider';
 
 export const RESOURCE_DIR_PATH = path.join(__dirname, '../../resources');
@@ -92,6 +92,19 @@ export class SketchExplorer {
     const name = await window.showInputBox();
     if (!name) return;
 
+    await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
+  }
+
+  async createFolder({ dir }: { dir?: string } = {}): Promise<void> {
+    const wsFolders = getWorkspaceFolderPaths();
+    dir =
+      dir ||
+      (wsFolders.length > 1
+        ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
+        : wsFolders[0]);
+    if (!dir) return; // the user cancelled
+    const name = await window.showInputBox();
+    if (!name) return;
     await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
   }
 

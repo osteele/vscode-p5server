@@ -2,11 +2,11 @@ import { BrowserConnectionEvent, BrowserConsoleEvent, BrowserErrorEvent, Server 
 import { BrowserConsoleEventMethods, BrowserDocumentEvent } from 'p5-server/dist/server/eventTypes';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
-import util = require('util');
-import { formatConsoleEventArgs } from './helpers';
 import { ConsoleMessageLensProvider } from './consoleMessageLensProvider';
+import { formatConsoleEventArgs } from './consoleHelpers';
+import util = require('util');
 
-export class ScriptConsole {
+export default class ScriptConsole {
   private _sketchConsole: vscode.OutputChannel | null = null;
   private file?: string;
   private messageCount = 0;

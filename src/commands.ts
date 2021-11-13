@@ -2,7 +2,7 @@ import { parse as parseHTML } from 'node-html-parser'; // eslint-disable-line @t
 import { Library, Sketch } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
-import { fileExists, fsExists, getWorkspaceFolderPaths } from './helpers';
+import { fileExists, fsExists, getWorkspaceFolderPaths } from './helpers/fileHelpers';
 import { exclusions } from './configuration';
 import path = require('path');
 

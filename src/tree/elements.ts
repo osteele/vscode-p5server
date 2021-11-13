@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { RESOURCE_DIR_PATH } from './index';
-import { fileDisplay } from './helpers';
+import { fileDisplay } from './treeHelpers';
 
 export type Element = LibraryItem | Sketch | FilePathItem;
 export type FilePathItem = FileItem | DirectoryItem;

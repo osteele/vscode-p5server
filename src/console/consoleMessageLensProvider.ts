@@ -1,7 +1,7 @@
 import { BrowserConsoleEvent, BrowserErrorEvent } from 'p5-server';
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
-import { formatConsoleEventArgs } from './helpers';
+import { formatConsoleEventArgs } from './consoleHelpers';
 
 export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   private messages = new Map<string, { data: ConsoleMessageLensData; lens: vscode.CodeLens }>();

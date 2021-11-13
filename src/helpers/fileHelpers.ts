@@ -1,18 +1,4 @@
-import { Uri, window, workspace } from 'vscode';
-import path = require('path');
-
-export async function createFolder({ dir }: { dir?: string } = {}): Promise<void> {
-  const wsFolders = getWorkspaceFolderPaths();
-  dir =
-    dir ||
-    (wsFolders.length > 1
-      ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
-      : wsFolders[0]);
-  if (!dir) return; // the user cancelled
-  const name = await window.showInputBox();
-  if (!name) return;
-  await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
-}
+import { Uri, workspace } from 'vscode';
 
 export async function fileExists(filepath: string): Promise<boolean> {
   try {
