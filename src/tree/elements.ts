@@ -2,7 +2,7 @@ import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { RESOURCE_DIR_PATH } from './index';
+import { RESOURCE_DIR_PATH } from '../configuration';
 import { fileDisplay } from './treeHelpers';
 
 export type Element = LibraryItem | Sketch | FilePathItem;

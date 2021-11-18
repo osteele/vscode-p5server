@@ -2,16 +2,19 @@ import { BrowserConnectionEvent, BrowserConsoleEvent, BrowserErrorEvent, Server 
 import { BrowserConsoleEventMethods, BrowserDocumentEvent } from 'p5-server/dist/server/eventTypes';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
-import { ConsoleMessageLensProvider } from './consoleMessageLensProvider';
+import { padCenter } from '../helpers';
 import { formatConsoleEventArgs } from './consoleHelpers';
+import { ConsoleMessageLensProvider } from './consoleMessageLensProvider';
 import util = require('util');
 
+/** Manages the output channel that displays console logs and errors from the
+ * running sketch. */
 export default class ScriptConsole {
-  private _sketchConsole: vscode.OutputChannel | null = null;
-  private file?: string;
-  private messageCount = 0;
-  private lensProvider: ConsoleMessageLensProvider;
   private banner: string | null = null;
+  private channel: vscode.OutputChannel | null = null;
+  private file?: string; // the current file that is being displayed in the output
+  private lensProvider: ConsoleMessageLensProvider;
+  private messageCount = 0; // how many messages have been displayed since clear()?
 
   constructor() {
     const provider = new ConsoleMessageLensProvider();
@@ -81,10 +84,8 @@ export default class ScriptConsole {
   }
 
   private get sketchConsole() {
-    if (!this._sketchConsole) {
-      this._sketchConsole = window.createOutputChannel('P5-Sketch');
-    }
-    return this._sketchConsole;
+    this.channel ??= window.createOutputChannel('P5-Sketch');
+    return this.channel;
   }
 
   private appendLine(value: string) {
@@ -111,37 +112,39 @@ export default class ScriptConsole {
     if (this.file === file) return false;
     this.file = file;
     const label = file ? ` (${file || url}) ` : '';
-    const halfLen = (80 - label.length) / 2;
-    this.banner = '='.repeat(Math.floor(halfLen)) + label + '='.repeat(Math.ceil(halfLen));
+    this.banner = padCenter(label, 80, '=');
     this.messageCount = 0;
     return true;
   }
 
   /** Show the console if the method's log level is greater than the
    * configuration's p5-server.integratedBrowser.autoShow.level. */
-  private maybeShowConsole(level: BrowserConsoleEventMethods | 'always') {
-    // This supports using different configuration for the integrated and
-    // external browser, although the configuration for this has been removed.
+  private maybeShowConsole(level: BrowserConsoleEventMethods) {
+    // This code supports using different configuration for the integrated and
+    // external browser, although the configuration for this has been removed
+    // from the contribution configuration.
     const browser = workspace.getConfiguration('p5-server').get('browser', 'integrated');
     const [configKey, defaultValue]: [string, BrowserConsoleEventMethods] =
       browser === 'integrated' ? ['integratedBrowser', 'info'] : ['externalBrowser', 'error'];
     const threshold = workspace
       .getConfiguration('p5-server.console')
       .get<BrowserConsoleEventMethods | 'always' | 'never'>(configKey + '.autoShow.level', defaultValue);
-    const logLevelOrder: (BrowserConsoleEventMethods | 'always')[] = [
-      'error',
-      'warn',
-      'log',
-      'info',
-      'debug',
-      'always'
-    ];
-    if (
-      logLevelOrder.includes(level) &&
-      threshold !== 'never' &&
-      logLevelOrder.indexOf(level) <= logLevelOrder.indexOf(threshold)
-    ) {
+    const logLevelIndex = logLevelOrder.indexOf(level);
+    const thresholdIndex = logLevelOrder.indexOf(threshold);
+    if (logLevelIndex >= 0 && logLevelIndex <= thresholdIndex) {
       this.sketchConsole.show(true);
     }
   }
 }
+
+/** The log level importance, in decreasing order. A console log message causes the output panel to display if the
+ * message's log level is earlier in the array than the log level set in the configuration setting.
+*/
+const logLevelOrder: (BrowserConsoleEventMethods | 'always' | 'never')[] = [
+  'error',
+  'warn',
+  'log',
+  'info',
+  'debug',
+  'always'
+];
