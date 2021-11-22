@@ -24,13 +24,13 @@ export function registerCommands(context: vscode.ExtensionContext) {
   );
 }
 
-// async function convertSketch(sketch: Sketch, type: 'html'|'script') {
 async function convertSketch(sketch: Sketch, type: 'html' | 'script') {
   sketch.convert({ type });
 }
 
 async function deleteSketch(sketch: Sketch) {
   // TODO: check whether any of these are used by other sketches
+  // TODO: close any open editors and run windows
   const files = sketch.files.map(file => path.join(sketch.dir, file));
   const result = await window.showInformationMessage(
     files.length === 1
@@ -190,6 +190,7 @@ export function openLibraryPane(library: Library) {
 }
 
 export async function renameSketch(item: Sketch | Uri): Promise<void> {
+  // TODO: close running windows
   const defaultName = item instanceof Sketch ? item.name : path.basename(item.fsPath);
   let name = await window.showInputBox({ value: defaultName });
   if (!name) return;

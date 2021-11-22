@@ -10,8 +10,8 @@ import util = require('util');
 /** Manages the output channel that displays console logs and errors from the
  * running sketch. */
 export default class ScriptConsole {
+  private _channel: vscode.OutputChannel | null = null;
   private banner: string | null = null;
-  private channel: vscode.OutputChannel | null = null;
   private file?: string; // the current file that is being displayed in the output
   private lensProvider: ConsoleMessageLensProvider;
   private messageCount = 0; // how many messages have been displayed since clear()?
@@ -21,7 +21,7 @@ export default class ScriptConsole {
     this.lensProvider = provider;
     vscode.languages.registerCodeLensProvider('javascript', provider);
     vscode.commands.registerCommand('p5-server.showScriptOutput', () => {
-      this.sketchConsole.show(true);
+      this.channel.show(true);
     });
   }
 
@@ -72,7 +72,7 @@ export default class ScriptConsole {
         if (!this.setFile(file, url) && this.messageCount > 0) {
           const label = '[RELOAD]';
           const halfLen = Math.floor((80 - label.length) / 2);
-          this.sketchConsole.appendLine('-'.repeat(halfLen) + label + '-'.repeat(halfLen));
+          this.channel.appendLine('-'.repeat(halfLen) + label + '-'.repeat(halfLen));
         }
         this.messageCount = 0;
         if (workspace.getConfiguration('p5-server').get('console.clearOnReload', true)) {
@@ -83,22 +83,23 @@ export default class ScriptConsole {
     });
   }
 
-  private get sketchConsole() {
-    this.channel ??= window.createOutputChannel('P5-Sketch');
-    return this.channel;
+  private get channel() {
+    this._channel ??= window.createOutputChannel('P5 Sketch');
+    return this._channel;
   }
 
   private appendLine(value: string) {
     if (this.banner) {
-      this.sketchConsole.appendLine(this.banner);
+      this.channel.appendLine(this.banner);
       this.banner = null;
     }
-    this.sketchConsole.appendLine(value);
+    this.channel.show(true);
+    this.channel.appendLine(value);
     this.messageCount++;
   }
 
   private clear() {
-    this.sketchConsole.clear();
+    this.channel.clear();
     this.banner = null;
     this.messageCount = 0;
   }
@@ -132,7 +133,7 @@ export default class ScriptConsole {
     const logLevelIndex = logLevelOrder.indexOf(level);
     const thresholdIndex = logLevelOrder.indexOf(threshold);
     if (logLevelIndex >= 0 && logLevelIndex <= thresholdIndex) {
-      this.sketchConsole.show(true);
+      this.channel.show(true);
     }
   }
 }
