@@ -20,3 +20,11 @@ tell application "Visual Studio Code"
 end tell
 END
 ```
+
+## Publish
+
+```sh
+npm run publish
+```
+
+Note that this is not `npm publish`, which would try to publish the npm package to the npm package registry.
