@@ -14,10 +14,26 @@ export function registerCommands(context: vscode.ExtensionContext) {
     ),
     commands.registerCommand('p5-server.convertSketch#html', (sketch: Sketch) => convertSketch(sketch, 'html')),
     commands.registerCommand('p5-server.convertSketch#script', (sketch: Sketch) => convertSketch(sketch, 'script')),
-    commands.registerCommand('p5-server.deleteSketch', deleteSketch),
     commands.registerCommand('p5-server.createSketchFile', () => createSketch({ type: 'script' })),
     commands.registerCommand('p5-server.createSketchFolder', () => createSketch({ type: 'folder' })),
+    commands.registerCommand('p5-server.deleteSketch', deleteSketch),
     commands.registerCommand('p5-server.duplicateSketch', duplicateSketch),
+    commands.registerCommand('p5-server.run', () => {
+      const editorPath = window.activeTextEditor?.document.fileName;
+      return commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
+    }),
+    commands.registerCommand('p5-server.run#browser', () => {
+      const editorPath = window.activeTextEditor?.document.fileName;
+      return commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined, {
+        browser: 'external'
+      });
+    }),
+    commands.registerCommand('p5-server.run#sidebar', () => {
+      const editorPath = window.activeTextEditor?.document.fileName;
+      return commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined, {
+        browser: 'integrated'
+      });
+    }),
     commands.registerCommand('p5-server.openSettings', () =>
       commands.executeCommand('workbench.action.openSettings', 'p5-server')
     )

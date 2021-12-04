@@ -28,10 +28,6 @@ export class ServerManager {
     context.subscriptions.push(
       commands.registerCommand('p5-server.start', this.startServer.bind(this)),
       commands.registerCommand('p5-server.stop', this.stopServer.bind(this)),
-      commands.registerCommand('p5-server.openInBrowser', () => {
-        const editorPath = window.activeTextEditor?.document.fileName;
-        return commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined);
-      }),
       commands.registerCommand('p5-server.openBrowser', async (uri?: Uri, options?: { browser: string }) => {
         if (this.state === 'stopped') {
           await this.startServer(uri, options);

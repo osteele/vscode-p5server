@@ -52,10 +52,27 @@
         "enablement": "p5-server.available"
       },
       {
-        "command": "p5-server.openInBrowser",
-        "title": "P5 Server: Open In Browser",
-        "icon": "$(globe)",
+        "command": "p5-server.run",
+        "title": "Run P5 Sketch (in Browser or Sidebar)",
         "enablement": "p5-server.available"
+      },
+      {
+        "command": "p5-server.run#browser",
+        "title": "Run P5 Sketch in Browser",
+        "enablement": "p5-server.available",
+        "icon": {
+          "dark": "./resources/dark/sketch.svg",
+          "light": "./resources/light/sketch.svg"
+        }
+      },
+      {
+        "command": "p5-server.run#sidebar",
+        "title": "Run P5 Sketch in Sidebar",
+        "enablement": "p5-server.available",
+        "icon": {
+          "dark": "./resources/dark/sketch.svg",
+          "light": "./resources/light/sketch.svg"
+        }
       },
       {
         "command": "p5-server.createSketchFile",
@@ -253,8 +270,13 @@
     "menus": {
       "editor/title": [
         {
-          "command": "p5-server.openInBrowser",
-          "when": "p5-server.runIconEnabled && p5-server.available && resourceExtname =~ /\\.(js|html)/",
+          "command": "p5-server.run#browser",
+          "when": "p5-server.runIconEnabled && p5-server.available && p5-server.browser != integrated && resourceExtname =~ /\\.(js|html)/",
+          "group": "navigation"
+        },
+        {
+          "command": "p5-server.run#sidebar",
+          "when": "p5-server.runIconEnabled && p5-server.available && p5-server.browser == integrated && resourceExtname =~ /\\.(js|html)/",
           "group": "navigation"
         }
       ],
