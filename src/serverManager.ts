@@ -6,6 +6,7 @@ import { getWorkspaceFolderPaths } from './helpers/fileHelpers';
 import { openInBrowser } from './openInBrowser';
 import { StatusBarManager } from './statusBar';
 import open = require('open');
+import { Configuration } from './configuration';
 
 type ServerState = 'stopped' | 'starting' | 'running' | 'stopping';
 
@@ -45,9 +46,6 @@ export class ServerManager {
   }
 
   updateFromConfiguration() {
-    const config = workspace.getConfiguration('p5-server');
-    const runIconEnabled = config.get('editorTitle.RunIcon.enabled', true);
-    commands.executeCommand('setContext', 'p5-server.runIconEnabled', runIconEnabled);
     this.updateStatusBar();
   }
 
@@ -142,13 +140,10 @@ export class ServerManager {
     const openApps = { safari: 'safari', ...open.apps };
 
     type BrowserKey = AppName | 'system' | 'integrated';
-    const configBrowser = workspace
-      .getConfiguration('p5-server')
-      .get('browser', 'integrated')
-      .replace('default', 'system');
+    const configBrowser = Configuration.browser;
     const browserName =
       options?.browser === 'external'
-        ? configBrowser.replace('integrated', 'system')
+        ? Configuration.browser.replace('integrated', 'system')
         : options?.browser || configBrowser;
     const browserKey = browserName.toLowerCase() as BrowserKey;
 
