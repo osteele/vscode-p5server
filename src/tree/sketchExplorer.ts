@@ -13,7 +13,7 @@ export class SketchExplorer {
   private selection: Element | null = null;
 
   constructor(context: vscode.ExtensionContext) {
-    this.provider = new SketchTreeProvider();
+    this.provider = new SketchTreeProvider(context);
     const treeView = vscode.window.createTreeView('p5sketchExplorer', {
       showCollapseAll: true,
       treeDataProvider: this.provider

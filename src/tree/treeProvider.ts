@@ -12,6 +12,10 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
   private watchers: vscode.FileSystemWatcher[] = [];
   private _fileElementMap: Map<string, Element> = new Map();
 
+  constructor(context: vscode.ExtensionContext) {
+    SketchItem.resourceBaseUri = vscode.Uri.joinPath(context.extensionUri, 'resources');
+}
+
   public refresh(element?: Element | undefined | null): void {
     this._onDidChangeTreeData.fire(element);
   }

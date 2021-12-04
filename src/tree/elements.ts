@@ -36,6 +36,8 @@ export class FileItem extends vscode.TreeItem {
 }
 
 export class SketchItem extends vscode.TreeItem {
+  static resourceBaseUri: Uri = Uri.file(RESOURCE_DIR_PATH);
+
   constructor(
     public readonly sketch: Sketch,
     public readonly parent: DirectoryItem | null,
@@ -57,8 +59,8 @@ export class SketchItem extends vscode.TreeItem {
   }
 
   iconPath = {
-    dark: path.join(RESOURCE_DIR_PATH, 'dark', 'sketch.svg'),
-    light: path.join(RESOURCE_DIR_PATH, 'light', 'sketch.svg')
+    dark: vscode.Uri.joinPath(SketchItem.resourceBaseUri, 'dark/sketch.svg'),
+    light: vscode.Uri.joinPath(SketchItem.resourceBaseUri, 'light/sketch.svg')
   };
 }
 

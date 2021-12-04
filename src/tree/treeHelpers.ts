@@ -1,4 +1,4 @@
-export function fileDisplay(file: string) {
+export function fileDisplay(file: string): string {
   if (!process.env.HOME) {
     return file;
   }
