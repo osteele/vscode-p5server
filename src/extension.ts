@@ -8,7 +8,6 @@ import { getWorkspaceFolderPaths } from './helpers/fileHelpers';
 import { Configuration } from './configuration';
 
 export function activate(context: vscode.ExtensionContext) {
-  // create sketch explorer
   new SketchExplorer(context);
 
   registerCommands(context);

@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.10.0] - 2021-12-15
+
+Added:
+
+- CDN assets are cached on disk. A sketch that includes e.g.
+  `https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.min.js` or
+  `https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/addons/p5.sound.min.js` will cause
+  the server to look for a local copy first. This is true regardless of whether
+  the CDN asset is included explicitly, via an HTML file, or implicitly, because
+  a script-only sketch uses its API. A new configuration setting controls this.
+
+Fixed:
+
+- Replaced ghcdn.rawgit.org by cdn.jsdelivr.net
+
 ## [1.1.9] - 2021-11-22
 
 Changed:

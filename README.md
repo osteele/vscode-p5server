@@ -1,6 +1,7 @@
 # p5-server
 
 [![vscode version](https://vsmarketplacebadge.apphb.com/version/osteele.p5-server.svg)](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server)
+[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2)](https://twitter.com/osteele)
 
 > Create and run p5.js sketches, explore sketch collections. Includes a
 > sketch-aware development server with live reload; a sketch explorer; and
@@ -132,9 +133,9 @@ In particular:
   does not require additional internet access, but you will need internet access
   the first time you use this extension or after the browser cache has expired.
 - Similarly, the server requires an internet connection the first time it
-  displays a sketch or directory listing. (It does not need a connection to
-  display a second sketch or a second directory listing, unless the browser
-  cache has expired.)
+  displays a sketch or directory listing. (Remote assets are cached, so it does
+  not need a connection to display a second sketch or a second directory
+  listing.)
 
 ## Related Projects
 

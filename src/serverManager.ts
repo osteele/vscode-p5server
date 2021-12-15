@@ -80,7 +80,7 @@ export class ServerManager {
 
       let sbm = window.setStatusBarMessage(`Starting the P5 server at ${root}`);
 
-      this.server = new Server({ root, theme: 'grid' });
+      this.server = new Server({ root, theme: 'grid', proxyCache: Configuration.enableProxyCache });
       await this.server.start();
       const consolePane = new ScriptConsole();
       consolePane.subscribe(this.server);

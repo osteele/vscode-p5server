@@ -17,6 +17,10 @@ export class Configuration {
     );
   }
 
+  public static get enableProxyCache(): boolean {
+    return workspace.getConfiguration('p5-server').get('enableProxyCache', true);
+  }
+
   static update() {
     const config = workspace.getConfiguration('p5-server');
     const runIconEnabled = config.get('editorTitle.RunIcon.enabled', true);
