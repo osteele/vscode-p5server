@@ -1,7 +1,6 @@
 # p5-server
 
 [![vscode version](https://vsmarketplacebadge.apphb.com/version/osteele.p5-server.svg)](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server)
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2)](https://twitter.com/osteele)
 
 > Create and run p5.js sketches, explore sketch collections. Includes a
 > sketch-aware development server with live reload; a sketch explorer; and
@@ -160,8 +159,6 @@ materials.
 Bug reports, suggestions, and other contributions are cheerfully accepted.
 Please use the [Issues page of the GitHub
 repository](https://github.com/osteele/vscode-p5server/issues).
-
-Follow [@osteele on Twitter](https://twitter.com/osteele) for updates.
 
 ## Acknowledgements
 
