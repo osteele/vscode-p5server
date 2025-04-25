@@ -16,6 +16,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
     commands.registerCommand('p5-server.convertSketch#script', (sketch: Sketch) => convertSketch(sketch, 'script')),
     commands.registerCommand('p5-server.createSketchFile', () => createSketch({ type: 'script' })),
     commands.registerCommand('p5-server.createSketchFolder', () => createSketch({ type: 'folder' })),
+    commands.registerCommand('p5-server.explorer.createSketch', () => createSketch({ type: 'script' })),
     commands.registerCommand('p5-server.deleteSketch', deleteSketch),
     commands.registerCommand('p5-server.duplicateSketch', duplicateSketch),
     commands.registerCommand('p5-server.run', () => {

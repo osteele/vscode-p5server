@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.10.1] - 2024-04-25
+
+Fixed:
+
+- Fixed missing command registration for 'p5-server.explorer.createSketch', which was causing an error when trying to create a sketch from the explorer
+
 ## [1.10.0] - 2021-12-15
 
 Added:
