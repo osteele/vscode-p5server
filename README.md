@@ -18,6 +18,7 @@
 - [Configuration](#configuration)
 - [Limitations](#limitations)
 - [Related Projects](#related-projects)
+- [Development](#development)
 - [Keeping in Touch](#keeping-in-touch)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
@@ -154,6 +155,10 @@ package](https://osteele.github.io/p5-server/p5-analysis/).
 projects. These include tools, libraries, and examples and educational
 materials.
 
+## Development
+
+For information on developing and contributing to this extension, please see [DEVELOPMENT.md](DEVELOPMENT.md).
+
 ## Keeping in Touch
 
 Bug reports, suggestions, and other contributions are cheerfully accepted.
@@ -183,4 +188,4 @@ repository](https://github.com/osteele/vscode-p5server/issues).
 
 ## License
 
-[MIT](LICENSE) © by Oliver Steele
+[MIT](LICENSE) by Oliver Steele
