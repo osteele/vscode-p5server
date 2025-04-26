@@ -1,5 +1,11 @@
 # Change Log
 
+## [unreleased]
+
+Fixed:
+
+- Updated outdated VS Code marketplace badge URL in README.md to use the new shields.io format
+
 ## [1.10.1] - 2024-04-25
 
 Fixed:
