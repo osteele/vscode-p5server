@@ -1,6 +1,7 @@
 # p5-server
 
 [![vscode version](https://img.shields.io/visual-studio-marketplace/v/osteele.p5-server)](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server)
+[![Changelog](https://img.shields.io/badge/changelog-gray.svg)](./CHANGELOG.md)
 
 > Create and run p5.js sketches, explore sketch collections. Includes a
 > sketch-aware development server with live reload; a sketch explorer; and
