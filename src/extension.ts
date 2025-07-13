@@ -14,9 +14,14 @@ export function activate(context: vscode.ExtensionContext) {
   workspace.onDidChangeConfiguration(Configuration.update);
   Configuration.update();
 
-  // create server manager and set context variable
+  // Always initialize ServerManager to ensure all commands are registered.
+  // This fixes "Command 'p5-server.openBrowser' not found" errors.
+  // The server itself is lazy-loaded and only starts when needed, so there's
+  // minimal performance impact from always initializing the manager.
+  ServerManager.activate(context);
+  
+  // Set context variable when workspace folders are available
   if (getWorkspaceFolderPaths().length >= 1) {
-    ServerManager.activate(context);
     commands.executeCommand('setContext', 'p5-server.available', true);
   }
 

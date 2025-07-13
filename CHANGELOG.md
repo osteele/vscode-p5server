@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased]
+
+Fixed:
+
+- Fixed "Command 'p5-server.openBrowser' not found" error by ensuring ServerManager is always initialized regardless of workspace folder count
+
 ## [1.10.2] - 2025-04-27
 
 Fixed:
