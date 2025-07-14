@@ -2,7 +2,8 @@ import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
-import * as sketchCommands from '../commands';
+import { renameSketch } from '../commands/conversionCommands';
+import { openLibraryPane } from '../commands/runCommands';
 import { getWorkspaceFolderPaths } from '../helpers/fileHelpers';
 import { sketchIsEntireDirectory } from '../helpers/sketchHelpers';
 import { DirectoryItem, Element, FileItem, FilePathItem, LibraryItem } from './elements';
@@ -49,7 +50,7 @@ export class SketchExplorer {
         this.createSketchInSelectedFolder('folder')
       ),
       commands.registerCommand('p5-server.explorer.rename', (item: Sketch | FilePathItem) =>
-        sketchCommands.renameSketch(item instanceof Sketch ? item : item.resourceUri!)
+        renameSketch(item instanceof Sketch ? item : item.resourceUri!)
       ),
       commands.registerCommand('p5-server.explorer.open', (item: Sketch | FileItem) => {
         const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
@@ -74,7 +75,7 @@ export class SketchExplorer {
         this.runSelectedSketch(item, 'external')
       ),
       commands.registerCommand('p5-server.explorer.openLibrary', (item: LibraryItem) =>
-        sketchCommands.openLibraryPane(item.library)
+        openLibraryPane(item.library)
       )
     );
   }

@@ -14,9 +14,11 @@ export class ServerManager {
   private server: Server | null = null;
   private _state: ServerState = 'stopped';
   private statusBarManager: StatusBarManager;
+  private scriptConsole: ScriptConsole;
 
   constructor(context: vscode.ExtensionContext) {
     this.statusBarManager = new StatusBarManager();
+    this.scriptConsole = new ScriptConsole();
     this.registerCommands(context);
   }
 
@@ -82,8 +84,7 @@ export class ServerManager {
 
       this.server = new Server({ root, theme: 'grid', proxyCache: Configuration.enableProxyCache });
       await this.server.start();
-      const consolePane = new ScriptConsole();
-      consolePane.subscribe(this.server);
+      this.scriptConsole.subscribe(this.server);
       this.state = 'running';
 
       sbm.dispose();
