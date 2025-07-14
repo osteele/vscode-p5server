@@ -8,10 +8,20 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
+  // Adaptive debouncing for CodeLens updates
+  private updateTimes: number[] = [];
+  private debounceMode = false;
+  private debounceTimer?: NodeJS.Timeout;
+  private pendingUpdate = false;
+  private readonly rateWindowMs = 1000; // Track updates over 1 second
+  private readonly highRateThreshold = 15; // Updates per second
+  private readonly lowRateThreshold = 3; // Updates per second to exit debounce mode
+  private readonly debounceIntervalMs = 200; // Debounce for 200ms when in debounce mode
+
   constructor() {
     workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('p5-server.editor.infoLens')) {
-        this._onDidChangeCodeLenses.fire();
+        this.fireChangeEvent();
       }
     });
   }
@@ -31,7 +41,7 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
       this.messages.set(key, record);
     }
     record.data.addMessage(message);
-    this._onDidChangeCodeLenses.fire();
+    this.fireChangeEvent();
   }
 
   public removeMessages({ file, clientId }: { file?: string; clientId?: string }) {
@@ -42,7 +52,7 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
         changed = true;
       }
     }
-    if (changed) this._onDidChangeCodeLenses.fire();
+    if (changed) this.fireChangeEvent();
   }
 
   public provideCodeLenses(document: vscode.TextDocument): vscode.ProviderResult<vscode.CodeLens[]> {
@@ -54,6 +64,57 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
       }
     }
     return lenses;
+  }
+
+  /** Fire a change event with adaptive debouncing */
+  private fireChangeEvent() {
+    this.updateRate();
+    
+    if (this.debounceMode) {
+      // In debounce mode, schedule an update if not already pending
+      this.pendingUpdate = true;
+      if (!this.debounceTimer) {
+        this.debounceTimer = setTimeout(() => {
+          if (this.pendingUpdate) {
+            this._onDidChangeCodeLenses.fire();
+            this.pendingUpdate = false;
+          }
+          this.debounceTimer = undefined;
+        }, this.debounceIntervalMs);
+      }
+    } else {
+      // Immediate mode - fire directly
+      this._onDidChangeCodeLenses.fire();
+    }
+  }
+
+  /** Track update rate and adjust debounce mode */
+  private updateRate() {
+    const now = Date.now();
+    // Remove timestamps older than the rate window
+    this.updateTimes = this.updateTimes.filter(time => now - time < this.rateWindowMs);
+    // Add current timestamp
+    this.updateTimes.push(now);
+    
+    const currentRate = this.updateTimes.length;
+    
+    if (!this.debounceMode && currentRate > this.highRateThreshold) {
+      // Enter debounce mode
+      this.debounceMode = true;
+    } else if (this.debounceMode && currentRate < this.lowRateThreshold) {
+      // Exit debounce mode
+      this.debounceMode = false;
+      // Clear any pending debounced update
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer);
+        this.debounceTimer = undefined;
+      }
+      // Fire immediately if there was a pending update
+      if (this.pendingUpdate) {
+        this._onDidChangeCodeLenses.fire();
+        this.pendingUpdate = false;
+      }
+    }
   }
 }
 

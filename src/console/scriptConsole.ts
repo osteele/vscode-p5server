@@ -16,6 +16,16 @@ export default class ScriptConsole {
   private lensProvider: ConsoleMessageLensProvider;
   private messageCount = 0; // how many messages have been displayed since clear()?
 
+  // Adaptive throttling
+  private messageTimes: number[] = [];
+  private batchMode = false;
+  private messageBuffer: string[] = [];
+  private batchTimer?: NodeJS.Timeout;
+  private readonly rateWindowMs = 1000; // Track messages over 1 second
+  private readonly highRateThreshold = 20; // Messages per second
+  private readonly lowRateThreshold = 5; // Messages per second to exit batch mode
+  private readonly batchIntervalMs = 100; // Flush every 100ms when batching
+
   constructor() {
     const provider = new ConsoleMessageLensProvider();
     this.lensProvider = provider;
@@ -89,12 +99,20 @@ export default class ScriptConsole {
   }
 
   private appendLine(value: string) {
-    if (this.banner) {
-      this.channel.appendLine(this.banner);
-      this.banner = null;
+    this.updateMessageRate();
+    
+    if (this.batchMode) {
+      // In batch mode, buffer the message
+      this.messageBuffer.push(value);
+    } else {
+      // Immediate mode - output directly
+      if (this.banner) {
+        this.channel.appendLine(this.banner);
+        this.banner = null;
+      }
+      this.channel.show(true);
+      this.channel.appendLine(value);
     }
-    this.channel.show(true);
-    this.channel.appendLine(value);
     this.messageCount++;
   }
 
@@ -102,6 +120,12 @@ export default class ScriptConsole {
     this.channel.clear();
     this.banner = null;
     this.messageCount = 0;
+    
+    // Clear adaptive throttling state
+    this.messageTimes = [];
+    this.messageBuffer = [];
+    this.batchMode = false;
+    this.stopBatchTimer();
   }
 
   /** Display the banner if the console is empty, or this is a different url than was
@@ -135,6 +159,61 @@ export default class ScriptConsole {
     if (logLevelIndex >= 0 && logLevelIndex <= thresholdIndex) {
       this.channel.show(true);
     }
+  }
+
+  /** Track message rate and update batch mode if needed */
+  private updateMessageRate() {
+    const now = Date.now();
+    // Remove timestamps older than the rate window
+    this.messageTimes = this.messageTimes.filter(time => now - time < this.rateWindowMs);
+    // Add current timestamp
+    this.messageTimes.push(now);
+    
+    const currentRate = this.messageTimes.length;
+    
+    if (!this.batchMode && currentRate > this.highRateThreshold) {
+      // Enter batch mode
+      this.batchMode = true;
+      this.startBatchTimer();
+    } else if (this.batchMode && currentRate < this.lowRateThreshold) {
+      // Exit batch mode
+      this.batchMode = false;
+      this.flushMessageBuffer();
+      this.stopBatchTimer();
+    }
+  }
+
+  /** Start the batch timer to periodically flush messages */
+  private startBatchTimer() {
+    if (this.batchTimer) return;
+    
+    this.batchTimer = setInterval(() => {
+      this.flushMessageBuffer();
+    }, this.batchIntervalMs);
+  }
+
+  /** Stop the batch timer */
+  private stopBatchTimer() {
+    if (this.batchTimer) {
+      clearInterval(this.batchTimer);
+      this.batchTimer = undefined;
+    }
+  }
+
+  /** Flush all buffered messages to the output channel */
+  private flushMessageBuffer() {
+    if (this.messageBuffer.length === 0) return;
+    
+    if (this.banner) {
+      this.channel.appendLine(this.banner);
+      this.banner = null;
+    }
+    
+    // Join all messages and append at once for better performance
+    this.channel.append(this.messageBuffer.join('\n') + '\n');
+    this.channel.show(true);
+    
+    this.messageBuffer = [];
   }
 }
 
