@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Custom Styled Sketch</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    h1 {
+      margin: 0 0 20px 0;
+      color: #333;
+    }
+    #defaultCanvas0 {
+      border: 3px solid #667eea;
+      border-radius: 5px;
+    }
+    .controls {
+      margin-top: 20px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 0 5px;
+    }
+    button:hover {
+      background: #764ba2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Interactive Pattern Generator</h1>
+    <div id="sketch-holder"></div>
+    <div class="controls">
+      <button onclick="resetPattern()">Reset</button>
+      <button onclick="changeColors()">Change Colors</button>
+    </div>
+  </div>
+  <script src="custom-style.js"></script>
+</body>
+</html>

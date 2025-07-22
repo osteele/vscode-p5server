@@ -5,19 +5,26 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ## Prerequisites
 
 1. VS Code installed
-2. Extension loaded in development mode (F5 from the extension development environment)
-3. A test workspace folder open in VS Code
-4. Basic p5.js knowledge for testing sketch functionality
+2. Extension loaded in development mode:
+   - Open the extension project in VS Code: `code /path/to/vscode-p5server`
+   - Press F5 to launch Extension Development Host
+   - This opens a new VS Code window with the extension loaded
+3. Test workspace ready: In the Extension Development Host window, open the test workspace:
+   - File → Open Folder → Navigate to `test-workspaces` folder within the extension directory
 
 ## Core Functionality Tests
 
 ### 1. Extension Activation
 
 **Test**: Extension loads properly
-- [ ] Open VS Code with a folder containing `.js` files
+- [ ] Open VS Code with the `test-workspaces/basic-sketches` folder
 - [ ] Verify P5.js Sketch Explorer appears in the activity bar
-- [ ] Check that status bar shows "P5 Server" item
+- [ ] Check that status bar shows "P5 Server" item (bottom-left area)
 - [ ] Verify no error notifications appear
+- [ ] In the P5.js Sketch Explorer, you should see:
+  - `interactive-sketch.js`
+  - `particle-system.js`
+  - `simple-circle.js`
 
 ### 2. Server Management
 
@@ -31,84 +38,126 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 
 ### 3. Sketch Creation
 
+**Important**: First click on "P5.JS SKETCH EXPLORER" in the Activity Bar or Side Bar to ensure you're in the P5.js Sketch Explorer view, not the regular File Explorer.
+
 **Test**: Create JavaScript-only sketch
-- [ ] Right-click in sketch explorer → "Create Sketch (JavaScript)"
-- [ ] Enter name: `test-script`
-- [ ] Verify `test-script.js` is created with basic p5.js template
+- [ ] Click on the P5.JS SKETCH EXPLORER view to activate it
+- [ ] Navigate to the `basic-sketches` folder in the tree
+- [ ] Click the "+" icon in the P5.JS SKETCH EXPLORER title bar (top of the view)
+- [ ] Or use Command Palette: "P5 Server: Create Sketch (JavaScript)"
+- [ ] Enter name: `my-new-sketch`
+- [ ] Verify `my-new-sketch.js` is created with basic p5.js template
 - [ ] Check file opens in editor automatically
+- [ ] Should contain setup() and draw() functions
 
 **Test**: Create HTML + JavaScript sketch
-- [ ] Right-click in sketch explorer → "Create Sketch (HTML + JavaScript)"
-- [ ] Enter name: `test-html`
-- [ ] Verify `test-html.html` and corresponding `.js` file are created
+- [ ] In the P5.JS SKETCH EXPLORER view
+- [ ] Navigate to `html-sketches` folder
+- [ ] Click the ellipsis (...) in the title bar and select "Create Sketch (HTML + JavaScript)"
+- [ ] Or use Command Palette: "P5 Server: Create Sketch (HTML + JavaScript)"
+- [ ] Enter name: `my-html-sketch`
+- [ ] Verify `my-html-sketch.html` and corresponding `.js` file are created
 - [ ] Check HTML file includes proper script tag reference
+- [ ] Compare with existing `bouncing-ball.html` for reference
 
 **Test**: Create sketch folder
-- [ ] Right-click in sketch explorer → "Create Sketch (Single-Sketch Folder)"
-- [ ] Enter name: `test-folder`
+- [ ] In the P5.JS SKETCH EXPLORER view
+- [ ] Navigate to `folder-sketches` folder
+- [ ] Click the ellipsis (...) in the title bar and select "Create Sketch (Single-Sketch Folder)"
+- [ ] Or use Command Palette: "P5 Server: Create Sketch (Single-Sketch Folder)"
+- [ ] Enter name: `my-folder-sketch`
 - [ ] Verify folder is created with `index.html` and `sketch.js`
-- [ ] Check proper folder structure
+- [ ] Check structure matches `game-project` folder
 
 ### 4. Sketch Running
 
 **Test**: Run sketch in integrated browser
-- [ ] Create or open a simple p5.js sketch
-- [ ] Set browser preference to "integrated" in settings
-- [ ] Click run button in editor title or use "Run P5 Sketch" command
-- [ ] Verify sketch opens in integrated browser pane
-- [ ] Check sketch renders correctly
+- [ ] Open `test-workspaces/basic-sketches/simple-circle.js`
+- [ ] Set browser preference to "integrated" in settings (Cmd/Ctrl+, then search for "p5-server.browser")
+- [ ] Use one of these methods to run:
+  - Command Palette (Cmd/Ctrl+Shift+P): "P5 Server: Run Sketch"
+  - Right-click the file in P5.JS SKETCH EXPLORER → "Run sketch"
+  - Play button in editor title (if visible - may be overridden by other extensions)
+- [ ] Verify sketch opens in integrated browser pane on the right
+- [ ] Check that a red circle moves across the screen
+- [ ] Console should show "Simple circle sketch started"
+
+**Note**: If the play button runs Node.js instead of opening the sketch, it's being handled by another extension (like Code Runner). Use the P5 Server commands instead.
 
 **Test**: Run sketch in external browser
-- [ ] Set browser preference to "Chrome" (or available browser)
-- [ ] Run the same sketch
-- [ ] Verify sketch opens in external browser
-- [ ] Test with different browser options
+- [ ] Open `test-workspaces/basic-sketches/interactive-sketch.js`
+- [ ] Set browser preference to "Chrome" (or your available browser) in settings
+- [ ] Use one of these methods to run:
+  - Command Palette: "P5 Server: Run Sketch" (will use your browser preference)
+  - Command Palette: "P5 Server: Run Sketch in Browser" (forces external browser)
+  - Right-click in P5.JS SKETCH EXPLORER → "Run in external browser"
+- [ ] Verify sketch opens in Chrome (or your chosen browser)
+- [ ] Move your mouse - circles should follow the cursor
+- [ ] Click to see console messages with coordinates
 
 **Test**: Live reload
-- [ ] With sketch running, modify the sketch code
-- [ ] Save the file
-- [ ] Verify sketch automatically reloads in browser
-- [ ] Check changes are reflected
+- [ ] Keep `simple-circle.js` running
+- [ ] Change `fill(255, 0, 0)` to `fill(0, 255, 0)` (red to green)
+- [ ] Save the file (Cmd/Ctrl+S)
+- [ ] Verify sketch automatically reloads
+- [ ] Circle should now be green
 
 ### 5. Sketch Explorer
 
 **Test**: Tree view functionality
-- [ ] Verify sketches appear in the P5.js Sketch Explorer
-- [ ] Check folder structure is correctly displayed
-- [ ] Verify sketch files show appropriate icons
-- [ ] Test collapsing/expanding folders
+- [ ] Open `test-workspaces/nested-projects` folder
+- [ ] Verify P5.js Sketch Explorer shows:
+  - `project-a/main-sketch.js`
+  - `project-b/sketches/sketch1.js`
+  - `project-b/experiments/test.js`
+- [ ] Check folder structure is correctly displayed with indentation
+- [ ] Verify sketch files show p5 icons
+- [ ] Test collapsing/expanding `project-b` folder
 
 **Test**: Context menu operations
-- [ ] Right-click on sketch → "Run sketch"
-- [ ] Right-click on sketch → "Run in integrated browser"
-- [ ] Right-click on sketch → "Run in external browser"
-- [ ] Right-click on sketch → "Open in editor"
-- [ ] Right-click on sketch → "Rename"
-- [ ] Right-click on sketch → "Duplicate"
-- [ ] Right-click on sketch → "Delete"
+- [ ] Right-click on `basic-sketches/particle-system.js`:
+  - [ ] "Run sketch" - runs with default browser setting
+  - [ ] "Run in integrated browser" - forces integrated view
+  - [ ] "Run in external browser" - forces external browser
+  - [ ] "Open in editor" - opens file for editing
+  - [ ] "Rename" - test renaming to `particles-renamed.js`
+  - [ ] "Duplicate" - creates `particle-system copy.js`
+  - [ ] "Delete" - shows confirmation, then deletes (test on duplicate)
 
 ### 6. Sketch Conversion
 
 **Test**: Convert between formats
-- [ ] Create a JavaScript-only sketch
-- [ ] Right-click → "Convert to HTML + JavaScript"
-- [ ] Verify HTML file is created with proper structure
-- [ ] Test conversion from HTML back to script-only
+- [ ] Open `test-workspaces/basic-sketches` folder
+- [ ] Right-click on `simple-circle.js` → "Convert to HTML + JavaScript"
+- [ ] Verify `simple-circle.html` is created alongside the JS file
+- [ ] Check HTML contains proper p5.js CDN links and script reference
+- [ ] Open `test-workspaces/html-sketches` folder
+- [ ] Right-click on `bouncing-ball.html` → "Convert to Script-Only"
+- [ ] Verify it creates a standalone JS file without the HTML
 
 ### 7. Console Integration
 
 **Test**: Console output (with integrated browser)
-- [ ] Create sketch with `console.log("Hello World")`
+- [ ] Open `test-workspaces/error-examples/console-spam.js`
 - [ ] Run in integrated browser
 - [ ] Verify "P5 Sketch" output panel opens automatically
-- [ ] Check console message appears in output
-- [ ] Test with different log levels (info, warn, error)
+- [ ] Check console messages appear with different levels:
+  - Regular logs (every 5 frames)
+  - Info messages (📊 icon)
+  - Warnings (⚠️ icon)
+  - Errors (❌ icon)
+- [ ] Click in the sketch - verify burst messages appear
 
 **Test**: Error handling
-- [ ] Create sketch with syntax error: `let x = )`
-- [ ] Run sketch
+- [ ] Open `test-workspaces/error-examples/syntax-error.js`
+- [ ] Note the syntax error on line 7 (missing closing parenthesis)
+- [ ] Try to run sketch
 - [ ] Verify error appears in P5 Sketch output panel
-- [ ] Check error shows in editor as CodeLens
+- [ ] Check error location is highlighted in the editor
+- [ ] Open `test-workspaces/error-examples/runtime-error.js`
+- [ ] Run the sketch
+- [ ] Wait for runtime errors to appear (every 60 frames)
+- [ ] Click to trigger additional error
 
 ### 8. Configuration
 
@@ -126,10 +175,19 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ### 9. Library Detection
 
 **Test**: Automatic library inclusion
-- [ ] Create sketch using p5.sound: `let sound = loadSound('audio.mp3')`
+- [ ] Create a new sketch in `test-workspaces/basic-sketches`:
+  ```javascript
+  let osc;
+  function setup() {
+    osc = new p5.Oscillator();
+    osc.setType('sine');
+    osc.freq(440);
+  }
+  ```
 - [ ] Run sketch
-- [ ] Check browser developer tools → Network tab
-- [ ] Verify p5.sound.min.js is automatically loaded
+- [ ] Open browser developer tools (F12) → Network tab
+- [ ] Verify p5.sound.min.js is automatically loaded from CDN
+- [ ] The sketch explorer should show "p5.sound" under Libraries
 
 ### 10. File Operations
 
@@ -160,19 +218,21 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ## Performance Tests
 
 ### High-Frequency Console Output
-- [ ] Create sketch with rapid console output:
-  ```javascript
-  function draw() {
-    console.log(frameCount);
-  }
-  ```
-- [ ] Run sketch and verify console handles high message volume
-- [ ] Check that VS Code remains responsive
+- [ ] Open `test-workspaces/error-examples/console-spam.js`
+- [ ] Run the sketch
+- [ ] Watch the message counter increase rapidly
+- [ ] Click and hold to generate burst messages
+- [ ] Verify VS Code remains responsive
+- [ ] Check that console batches messages efficiently
 
 ### Multiple Sketches
-- [ ] Open multiple sketches simultaneously
-- [ ] Verify each runs independently
+- [ ] Open `test-workspaces` root folder
+- [ ] Run `basic-sketches/simple-circle.js` in integrated browser
+- [ ] Run `html-sketches/bouncing-ball.html` in another tab
+- [ ] Run `folder-sketches/game-project/index.html` 
+- [ ] Verify each runs independently in separate tabs/windows
 - [ ] Test switching between running sketches
+- [ ] Console output should be sketch-specific
 
 ## Clean-up
 

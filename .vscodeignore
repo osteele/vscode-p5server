@@ -1,6 +1,7 @@
 .vscode/**
 .vscode-test/**
 out/test/**
+test-workspaces/**
 
 src/**
 .gitignore
@@ -11,3 +12,5 @@ src/**
 **/*.ts
 
 TODO
+MANUAL_TESTING.md
+DEVELOPMENT.md
