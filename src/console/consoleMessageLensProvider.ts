@@ -69,7 +69,7 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   /** Fire a change event with adaptive debouncing */
   private fireChangeEvent() {
     this.updateRate();
-    
+
     if (this.debounceMode) {
       // In debounce mode, schedule an update if not already pending
       this.pendingUpdate = true;
@@ -95,9 +95,9 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
     this.updateTimes = this.updateTimes.filter(time => now - time < this.rateWindowMs);
     // Add current timestamp
     this.updateTimes.push(now);
-    
+
     const currentRate = this.updateTimes.length;
-    
+
     if (!this.debounceMode && currentRate > this.highRateThreshold) {
       // Enter debounce mode
       this.debounceMode = true;
@@ -124,7 +124,11 @@ export class ConsoleMessageLensData implements vscode.Command {
   private count = 0; // number of messages ever, including messages windowed out from this.messages
   public readonly key: string;
 
-  constructor(public readonly file: string, public readonly clientId: string, public readonly line: number) {
+  constructor(
+    public readonly file: string,
+    public readonly clientId: string,
+    public readonly line: number,
+  ) {
     this.key = ConsoleMessageLensData.key({ file, clientId, line });
   }
 
@@ -176,7 +180,7 @@ export class ConsoleMessageLensData implements vscode.Command {
             return formatConsoleEventArgs(event);
         }
       }),
-      this.count > this.messages.length ? `+${this.count - this.messages.length} more` : ''
+      this.count > this.messages.length ? `+${this.count - this.messages.length} more` : '',
     ].join('\n');
   }
 }

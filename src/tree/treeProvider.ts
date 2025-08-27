@@ -14,7 +14,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
 
   constructor(context: vscode.ExtensionContext) {
     SketchItem.resourceBaseUri = vscode.Uri.joinPath(context.extensionUri, 'resources');
-}
+  }
 
   public refresh(element?: Element | undefined | null): void {
     this._onDidChangeTreeData.fire(element);
@@ -43,7 +43,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
         null,
         sketch.files.length + sketch.libraries.length > 1
           ? vscode.TreeItemCollapsibleState.Collapsed
-          : vscode.TreeItemCollapsibleState.None
+          : vscode.TreeItemCollapsibleState.None,
       );
       this.register(element, sketch.mainFilePath);
       return item;
@@ -66,7 +66,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
           .filter(file => !file.startsWith('..' + path.sep))
           .sort((a, b) => b.localeCompare(a))
           .map(file => new FileItem(path.join(sketch.dir, file), element)),
-        ...sketch.libraries.map(lib => new LibraryItem(lib, element))
+        ...sketch.libraries.map(lib => new LibraryItem(lib, element)),
       ];
       children.forEach(child => this.register(child));
       return children;
@@ -123,7 +123,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
         .filter(filePath => fs.statSync(filePath).isDirectory())
         .map(dirPath => new DirectoryItem(dirPath, parent)),
       // files
-      ...files.filter(filePath => !fs.statSync(filePath).isDirectory()).map(filePath => new FileItem(filePath, parent))
+      ...files.filter(filePath => !fs.statSync(filePath).isDirectory()).map(filePath => new FileItem(filePath, parent)),
     ];
     children.forEach(child => this.register(child));
     return children;

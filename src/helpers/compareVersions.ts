@@ -5,7 +5,7 @@ export const enum VersionChange {
   minor,
   patch,
   preRelease,
-  build
+  build,
 }
 
 const versionDiscrimators: [RegExp, VersionChange][] = [
@@ -13,7 +13,7 @@ const versionDiscrimators: [RegExp, VersionChange][] = [
   [/^\d+\.\d+/, VersionChange.minor],
   [/^\d+\.\d+.\d+/, VersionChange.patch],
   [/^\d+\.\d+.\d+[^+]+/, VersionChange.preRelease],
-  [/^\d+\.\d+.\d+-.+\+/, VersionChange.build]
+  [/^\d+\.\d+.\d+-.+\+/, VersionChange.build],
 ];
 
 export function compareVersions(currentVersion: string, previousVersion: string | null | undefined): VersionChange {

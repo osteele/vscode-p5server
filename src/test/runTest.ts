@@ -9,7 +9,7 @@ async function main() {
     process.env.VSCODE_SKIP_PRELAUNCH = 'true';
     process.env.ELECTRON_ENABLE_LOGGING = 'false';
     process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
-    
+
     // The folder containing the Extension Manifest package.json
     // Passed to `--extensionDevelopmentPath`
     const extensionDevelopmentPath = path.resolve(__dirname, '../../');
@@ -40,8 +40,8 @@ async function main() {
         '--disable-dev-shm-usage',
         '--disable-web-security',
         '--enable-logging=stderr',
-        '--log-level=0'
-      ]
+        '--log-level=0',
+      ],
     });
   } catch (err) {
     console.error('Failed to run tests:', err);

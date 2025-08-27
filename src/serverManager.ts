@@ -42,7 +42,7 @@ export class ServerManager {
         } else if (this.state === 'running') {
           await this.openBrowser(uri, options);
         }
-      })
+      }),
     );
 
     workspace.onDidChangeConfiguration(this.updateFromConfiguration.bind(this));
@@ -73,14 +73,14 @@ export class ServerManager {
 
     this.state = 'starting';
     let sbm: vscode.Disposable | undefined;
-    
+
     try {
       const wsFolders = getWorkspaceFolderPaths();
       // TODO: select the folder that contains uri
       const root =
         wsFolders.length > 1
           ? await window.showQuickPick(wsFolders, {
-              placeHolder: 'Select a folder to serve'
+              placeHolder: 'Select a folder to serve',
             })
           : wsFolders[0] || '.';
       if (!root) {
@@ -172,7 +172,7 @@ export class ServerManager {
 
     if (browserKey === 'integrated') {
       await commands.executeCommand('simpleBrowser.api.open', target, {
-        viewColumn: vscode.ViewColumn.Beside
+        viewColumn: vscode.ViewColumn.Beside,
       });
       return;
     }

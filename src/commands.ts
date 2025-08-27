@@ -9,7 +9,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     commands.registerCommand(
       '_p5-server.createSketch',
-      (options: { dir?: string; type: 'script' | 'html' | 'folder' }) => createSketch(options)
+      (options: { dir?: string; type: 'script' | 'html' | 'folder' }) => createSketch(options),
     ),
     commands.registerCommand('p5-server.convertSketch#html', (sketch: Sketch) => convertSketch(sketch, 'html')),
     commands.registerCommand('p5-server.convertSketch#script', (sketch: Sketch) => convertSketch(sketch, 'script')),
@@ -20,7 +20,6 @@ export function registerCommands(context: vscode.ExtensionContext) {
     commands.registerCommand('p5-server.run', runSketch),
     commands.registerCommand('p5-server.run#browser', runSketchInBrowser),
     commands.registerCommand('p5-server.run#sidebar', runSketchInSidebar),
-    commands.registerCommand('p5-server.openSettings', openSettings)
+    commands.registerCommand('p5-server.openSettings', openSettings),
   );
 }
-

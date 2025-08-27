@@ -15,7 +15,7 @@ export async function fileExists(filepath: string): Promise<boolean> {
 export async function fsExists(uri: Uri): Promise<boolean> {
   return workspace.fs.stat(uri).then(
     () => true,
-    () => false
+    () => false,
   );
 }
 

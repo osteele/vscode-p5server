@@ -9,7 +9,11 @@ export type Element = LibraryItem | Sketch | FilePathItem;
 export type FilePathItem = FileItem | DirectoryItem;
 
 export class DirectoryItem extends vscode.TreeItem {
-  constructor(public readonly file: string, public readonly parent: DirectoryItem | null, name?: string) {
+  constructor(
+    public readonly file: string,
+    public readonly parent: DirectoryItem | null,
+    name?: string,
+  ) {
     super(name || path.basename(file), vscode.TreeItemCollapsibleState.Collapsed);
     this.resourceUri = Uri.file(file);
     this.tooltip = fileDisplay(file);
@@ -20,14 +24,17 @@ export class DirectoryItem extends vscode.TreeItem {
 }
 
 export class FileItem extends vscode.TreeItem {
-  constructor(public readonly file: string, public readonly parent: DirectoryItem | Sketch | null) {
+  constructor(
+    public readonly file: string,
+    public readonly parent: DirectoryItem | Sketch | null,
+  ) {
     super(path.basename(file), vscode.TreeItemCollapsibleState.None);
     this.resourceUri = Uri.file(file);
     this.tooltip = fileDisplay(file);
     this.command = {
       command: 'vscode.open',
       title: 'Edit File',
-      arguments: [Uri.file(file)]
+      arguments: [Uri.file(file)],
     };
   }
 
@@ -41,7 +48,7 @@ export class SketchItem extends vscode.TreeItem {
   constructor(
     public readonly sketch: Sketch,
     public readonly parent: DirectoryItem | null,
-    collapsibleState: vscode.TreeItemCollapsibleState
+    collapsibleState: vscode.TreeItemCollapsibleState,
   ) {
     super(sketch.name.replace(/\/$/, ''), collapsibleState);
     this.tooltip = fileDisplay(this.file);
@@ -49,7 +56,7 @@ export class SketchItem extends vscode.TreeItem {
     this.command = {
       command: 'p5-server.explorer.openSketch',
       title: 'Edit P5.js Sketch',
-      arguments: [sketch]
+      arguments: [sketch],
     };
     this.contextValue = `sketch:${sketch.structureType}`;
   }
@@ -60,12 +67,15 @@ export class SketchItem extends vscode.TreeItem {
 
   iconPath = {
     dark: vscode.Uri.joinPath(SketchItem.resourceBaseUri, 'dark/sketch.svg'),
-    light: vscode.Uri.joinPath(SketchItem.resourceBaseUri, 'light/sketch.svg')
+    light: vscode.Uri.joinPath(SketchItem.resourceBaseUri, 'light/sketch.svg'),
   };
 }
 
 export class LibraryItem extends vscode.TreeItem {
-  constructor(readonly library: Library, public readonly parent: Sketch | null) {
+  constructor(
+    readonly library: Library,
+    public readonly parent: Sketch | null,
+  ) {
     super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
     const description = library.description.replace(/\.?$/, '.');
     this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${description}`;

@@ -10,14 +10,14 @@ export function runSketch() {
 export function runSketchInBrowser() {
   const editorPath = window.activeTextEditor?.document.fileName;
   return commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined, {
-    browser: 'external'
+    browser: 'external',
   });
 }
 
 export function runSketchInSidebar() {
   const editorPath = window.activeTextEditor?.document.fileName;
   return commands.executeCommand('p5-server.openBrowser', editorPath ? Uri.file(editorPath) : undefined, {
-    browser: 'integrated'
+    browser: 'integrated',
   });
 }
 
@@ -32,7 +32,7 @@ export function openLibraryPane(library: Library) {
     // return commands.executeCommand('simpleBrowser.api.open', Uri.parse(library.homepage));
   }
   const panel = vscode.window.createWebviewPanel('p5LibraryHomepage', library.name, vscode.ViewColumn.One, {
-    enableScripts: true
+    enableScripts: true,
   });
   panel.webview.html = `
     <!DOCTYPE html>

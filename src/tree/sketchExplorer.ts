@@ -17,7 +17,7 @@ export class SketchExplorer {
     this.provider = new SketchTreeProvider(context);
     const treeView = vscode.window.createTreeView('p5sketchExplorer', {
       showCollapseAll: true,
-      treeDataProvider: this.provider
+      treeDataProvider: this.provider,
     });
     treeView.onDidChangeSelection(e => {
       this.selection = e.selection[0];
@@ -32,7 +32,7 @@ export class SketchExplorer {
           const element = this.provider.getElementForFile(file);
           if (element) treeView.reveal(element);
         }
-      })
+      }),
     );
   }
 
@@ -41,16 +41,16 @@ export class SketchExplorer {
       commands.registerCommand('p5-server.explorer.refresh', () => this.provider.refresh()),
       commands.registerCommand('p5-server.explorer.createFolder', async () => this.createFolderInSelectedLocation()),
       commands.registerCommand('p5-server.explorer.createSketch', async () =>
-        this.createSketchInSelectedFolder('script')
+        this.createSketchInSelectedFolder('script'),
       ),
       commands.registerCommand('p5-server.explorer.createSketch#html', async () =>
-        this.createSketchInSelectedFolder('html')
+        this.createSketchInSelectedFolder('html'),
       ),
       commands.registerCommand('p5-server.explorer.createSketch#folder', async () =>
-        this.createSketchInSelectedFolder('folder')
+        this.createSketchInSelectedFolder('folder'),
       ),
       commands.registerCommand('p5-server.explorer.rename', (item: Sketch | FilePathItem) =>
-        renameSketch(item instanceof Sketch ? item : item.resourceUri!)
+        renameSketch(item instanceof Sketch ? item : item.resourceUri!),
       ),
       commands.registerCommand('p5-server.explorer.open', (item: Sketch | FileItem) => {
         const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
@@ -61,7 +61,7 @@ export class SketchExplorer {
         return workspace.getConfiguration('p5-server.explorer').get<boolean>('autoRunSketchOnSide')
           ? Promise.all([
               commands.executeCommand('vscode.open', uri, { preview: true, viewColumn: 1 }),
-              commands.executeCommand('p5-server.openBrowser', uri, { browser: 'integrated' })
+              commands.executeCommand('p5-server.openBrowser', uri, { browser: 'integrated' }),
             ])
           : commands.executeCommand('vscode.open', uri);
       }),
@@ -69,14 +69,12 @@ export class SketchExplorer {
       // Run sketch commands. The view/item/context[].when clause narrow the argument types to sketch | file
       commands.registerCommand('p5-server.explorer.run', (item: Sketch | FilePathItem) => this.runSelectedSketch(item)),
       commands.registerCommand('p5-server.explorer.run#integrated', (item: Sketch | FilePathItem) =>
-        this.runSelectedSketch(item, 'integrated')
+        this.runSelectedSketch(item, 'integrated'),
       ),
       commands.registerCommand('p5-server.explorer.run#external', (item: Sketch | FilePathItem) =>
-        this.runSelectedSketch(item, 'external')
+        this.runSelectedSketch(item, 'external'),
       ),
-      commands.registerCommand('p5-server.explorer.openLibrary', (item: LibraryItem) =>
-        openLibraryPane(item.library)
-      )
+      commands.registerCommand('p5-server.explorer.openLibrary', (item: LibraryItem) => openLibraryPane(item.library)),
     );
   }
 
@@ -119,12 +117,12 @@ export class SketchExplorer {
         ? path.dirname(selection.dir)
         : selection.dir
       : selection instanceof Library
-      ? null
-      : selection instanceof DirectoryItem
-      ? selection.file
-      : selection instanceof FileItem
-      ? path.dirname(selection.file)
-      : null;
+        ? null
+        : selection instanceof DirectoryItem
+          ? selection.file
+          : selection instanceof FileItem
+            ? path.dirname(selection.file)
+            : null;
   }
 
   runSelectedSketch(item: Sketch | FilePathItem, where: 'integrated' | 'external' | undefined = undefined) {

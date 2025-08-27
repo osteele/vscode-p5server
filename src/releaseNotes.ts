@@ -87,7 +87,7 @@ export class ReleaseNotes {
     const item = await window.showInformationMessage(
       `${this.extensionName} has been updated to version ${this.currentVersion}.`,
       {},
-      { title: 'Show Release Notes', command: 'p5-server.showReleaseNotes' }
+      { title: 'Show Release Notes', command: 'p5-server.showReleaseNotes' },
     );
     if (item) {
       await commands.executeCommand(item.command);

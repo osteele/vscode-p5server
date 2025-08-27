@@ -20,7 +20,7 @@ export async function createSketch({ dir, type }: { dir?: string; type: 'script'
   if (!wsPath) return; // the user cancelled
 
   let sketchName = await window.showInputBox({
-    prompt: `Enter the name of the p5.js sketch`
+    prompt: `Enter the name of the p5.js sketch`,
   });
   sketchName = sketchName?.trim();
   if (!sketchName) return;
@@ -32,7 +32,7 @@ export async function createSketch({ dir, type }: { dir?: string; type: 'script'
       await workspace.fs.createDirectory(Uri.file(filePath));
       sketch = Sketch.create(path.join(filePath, 'index.html'), {
         scriptFile: 'sketch.js',
-        title: sketchName
+        title: sketchName,
       });
       break;
     case 'script':
@@ -79,7 +79,7 @@ export async function deleteSketch(sketch: Sketch) {
       ? `Are you sure you want to delete '${files.join(' ')}'?`
       : `Are you sure you want to delete the following files: ${files.map(s => `'${s}'`).join(', ')}?`,
     'Delete',
-    'Cancel'
+    'Cancel',
   );
   if (result !== 'Delete') return;
   await Promise.all(files.map(Uri.file).map(uri => workspace.fs.delete(uri)));

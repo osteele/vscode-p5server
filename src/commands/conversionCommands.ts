@@ -25,7 +25,7 @@ export async function duplicateSketch(sketch: Sketch) {
     const basename = name.replace(/\.(js|html?)$/i, '');
     const replacements = ([sketch.scriptFile, sketch.htmlFile].filter(Boolean) as string[]).map(name => ({
       src: Uri.file(path.join(sketch.dir, name)),
-      target: Uri.file(path.join(sketch.dir, basename + path.extname(name)))
+      target: Uri.file(path.join(sketch.dir, basename + path.extname(name))),
     }));
     const targetsExist = await Promise.all(replacements.map(({ target }) => fsExists(target)));
     if (targetsExist.some(Boolean)) {

@@ -12,7 +12,7 @@ export class Configuration {
       .getConfiguration('p5-server')
       .get<string>('browser', 'integrated')
       .replace('default', 'system');
-    
+
     return browserSetting as open.AppName | 'integrated' | 'safari' | 'system';
   }
 

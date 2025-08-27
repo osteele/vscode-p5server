@@ -4,7 +4,7 @@ import { exclusions } from '../../configuration';
 suite('Configuration', () => {
   test('exclusions should contain expected patterns', () => {
     const expectedExclusions = ['.*', '*.lock', '*.log', 'node_modules', 'package.json'];
-    
+
     assert.deepStrictEqual(exclusions, expectedExclusions);
   });
 
