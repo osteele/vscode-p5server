@@ -5,7 +5,9 @@ export async function fileExists(filepath: string): Promise<boolean> {
     await workspace.fs.stat(Uri.file(filepath));
     return true;
   } catch (e) {
-    if (e.code === 'FileNotFound') return false;
+    if (e instanceof Error && 'code' in e && e.code === 'FileNotFound') {
+      return false;
+    }
     throw e;
   }
 }

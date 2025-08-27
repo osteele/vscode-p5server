@@ -70,7 +70,8 @@ suite('Commands Integration', () => {
         // If we get here, the command executed without throwing
         assert.ok(true, `Command '${command}' executed successfully`);
       } catch (error) {
-        assert.fail(`Command '${command}' failed with error: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        assert.fail(`Command '${command}' failed with error: ${errorMessage}`);
       }
     }
   });

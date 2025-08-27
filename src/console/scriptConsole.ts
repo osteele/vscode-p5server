@@ -18,6 +18,7 @@ export default class ScriptConsole {
 
   // Adaptive throttling
   private messageTimes: number[] = [];
+  private messageTimeIndex = 0; // Track start of valid timestamps
   private batchMode = false;
   private messageBuffer: string[] = [];
   private batchTimer?: NodeJS.Timeout;
@@ -164,12 +165,24 @@ export default class ScriptConsole {
   /** Track message rate and update batch mode if needed */
   private updateMessageRate() {
     const now = Date.now();
-    // Remove timestamps older than the rate window
-    this.messageTimes = this.messageTimes.filter(time => now - time < this.rateWindowMs);
+    const cutoff = now - this.rateWindowMs;
+    
+    // Efficiently remove old timestamps without creating new array every time
+    while (this.messageTimeIndex < this.messageTimes.length && 
+           this.messageTimes[this.messageTimeIndex] < cutoff) {
+      this.messageTimeIndex++;
+    }
+    
+    // Compact array when needed (only when significant portion is stale)
+    if (this.messageTimeIndex > 100 && this.messageTimeIndex > this.messageTimes.length / 2) {
+      this.messageTimes = this.messageTimes.slice(this.messageTimeIndex);
+      this.messageTimeIndex = 0;
+    }
+    
     // Add current timestamp
     this.messageTimes.push(now);
     
-    const currentRate = this.messageTimes.length;
+    const currentRate = this.messageTimes.length - this.messageTimeIndex;
     
     if (!this.batchMode && currentRate > this.highRateThreshold) {
       // Enter batch mode
@@ -214,6 +227,18 @@ export default class ScriptConsole {
     this.channel.show(true);
     
     this.messageBuffer = [];
+  }
+
+  /** Clean up resources */
+  dispose() {
+    this.stopBatchTimer();
+    if (this._channel) {
+      this._channel.dispose();
+      this._channel = null;
+    }
+    this.messageBuffer = [];
+    this.messageTimes = [];
+    this.messageTimeIndex = 0;
   }
 }
 

@@ -11,6 +11,7 @@ import { Configuration } from './configuration';
 type ServerState = 'stopped' | 'starting' | 'running' | 'stopping';
 
 export class ServerManager {
+  private static instance: ServerManager | null = null;
   private server: Server | null = null;
   private _state: ServerState = 'stopped';
   private statusBarManager: StatusBarManager;
@@ -23,7 +24,12 @@ export class ServerManager {
   }
 
   static activate(context: vscode.ExtensionContext) {
-    new ServerManager(context);
+    ServerManager.instance = new ServerManager(context);
+    return ServerManager.instance;
+  }
+
+  static getInstance(): ServerManager | null {
+    return ServerManager.instance;
   }
 
   private registerCommands(context: vscode.ExtensionContext) {
@@ -66,6 +72,8 @@ export class ServerManager {
     }
 
     this.state = 'starting';
+    let sbm: vscode.Disposable | undefined;
+    
     try {
       const wsFolders = getWorkspaceFolderPaths();
       // TODO: select the folder that contains uri
@@ -75,12 +83,15 @@ export class ServerManager {
               placeHolder: 'Select a folder to serve'
             })
           : wsFolders[0] || '.';
-      if (!root) return; // the user cancelled
+      if (!root) {
+        this.state = 'stopped';
+        return; // the user cancelled
+      }
 
       this.server?.close();
       this.server = null;
 
-      let sbm = window.setStatusBarMessage(`Starting the P5 server at ${root}`);
+      sbm = window.setStatusBarMessage(`Starting the P5 server at ${root}`);
 
       this.server = new Server({ root, theme: 'grid', proxyCache: Configuration.enableProxyCache });
       await this.server.start();
@@ -89,7 +100,14 @@ export class ServerManager {
 
       sbm.dispose();
       sbm = window.setStatusBarMessage(`p5-server is running at ${this.server.url}`);
-      setTimeout(() => sbm.dispose(), 10000);
+      setTimeout(() => sbm?.dispose(), 10000);
+    } catch (error) {
+      this.state = 'stopped';
+      sbm?.dispose();
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      window.showErrorMessage(`Failed to start P5 server: ${errorMessage}`);
+      console.error('Failed to start P5 server:', error);
+      return;
     } finally {
       if (this.state !== 'running') {
         this.state = 'stopped';
@@ -109,13 +127,21 @@ export class ServerManager {
 
     let sbm = window.setStatusBarMessage('Shutting down the P5 server…');
 
-    await this.server.close();
-    this.server = null;
-    this.state = 'stopped';
+    try {
+      await this.server.close();
+      this.server = null;
+      this.state = 'stopped';
 
-    sbm.dispose();
-    sbm = window.setStatusBarMessage('The P5 server is no longer running.');
-    setTimeout(() => sbm.dispose(), 10000);
+      sbm.dispose();
+      sbm = window.setStatusBarMessage('The P5 server is no longer running.');
+      setTimeout(() => sbm.dispose(), 10000);
+    } catch (error) {
+      this.state = 'stopped';
+      sbm.dispose();
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      window.showErrorMessage(`Failed to stop P5 server: ${errorMessage}`);
+      console.error('Failed to stop P5 server:', error);
+    }
   }
 
   /** Open `uri` if supplied, or the server root if not, in the specified browser */
@@ -172,5 +198,16 @@ export class ServerManager {
           : `The ${browserName} browser failed to open. It may not be available on your system.`;
       await window.showErrorMessage(msg);
     }
+  }
+
+  /** Clean up resources */
+  async dispose() {
+    if (this.server) {
+      await this.server.close();
+      this.server = null;
+    }
+    this.scriptConsole.dispose();
+    this.statusBarManager.dispose();
+    this.state = 'stopped';
   }
 }

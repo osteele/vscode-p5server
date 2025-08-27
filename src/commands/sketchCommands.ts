@@ -60,8 +60,9 @@ export async function createSketch({ dir, type }: { dir?: string; type: 'script'
   try {
     await sketch.generate();
   } catch (e) {
-    window.showErrorMessage(e.message);
-    console.error(e.message);
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    window.showErrorMessage(`Failed to generate sketch: ${errorMessage}`);
+    console.error('Sketch generation failed:', e);
     return;
   }
 

@@ -7,11 +7,27 @@ import { SketchExplorer } from './tree';
 import { getWorkspaceFolderPaths } from './helpers/fileHelpers';
 import { Configuration } from './configuration';
 
+let configUpdateTimer: NodeJS.Timeout | undefined;
+
 export function activate(context: vscode.ExtensionContext) {
   new SketchExplorer(context);
 
   registerCommands(context);
-  workspace.onDidChangeConfiguration(Configuration.update);
+  
+  // Debounce configuration updates to prevent excessive calls
+  const debouncedConfigUpdate = () => {
+    if (configUpdateTimer) {
+      clearTimeout(configUpdateTimer);
+    }
+    configUpdateTimer = setTimeout(() => {
+      Configuration.update();
+      configUpdateTimer = undefined;
+    }, 500); // Wait 500ms after last change before updating
+  };
+  
+  context.subscriptions.push(
+    workspace.onDidChangeConfiguration(debouncedConfigUpdate)
+  );
   Configuration.update();
 
   // Always initialize ServerManager to ensure all commands are registered.
@@ -30,4 +46,16 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
  
-export function deactivate() {}
+export async function deactivate() {
+  // Clean up any pending configuration update timer
+  if (configUpdateTimer) {
+    clearTimeout(configUpdateTimer);
+    configUpdateTimer = undefined;
+  }
+
+  // Dispose ServerManager if it exists
+  const serverManager = ServerManager.getInstance();
+  if (serverManager) {
+    await serverManager.dispose();
+  }
+}

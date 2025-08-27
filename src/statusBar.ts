@@ -54,4 +54,9 @@ export class StatusBarManager {
       statusBarServerItem.hide();
     }
   }
+
+  dispose() {
+    this.statusBarOpenItem.dispose();
+    this.statusBarServerItem.dispose();
+  }
 }
