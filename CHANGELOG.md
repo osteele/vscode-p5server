@@ -2,9 +2,30 @@
 
 ## [Unreleased]
 
+Added:
+
+- Adaptive throttling for high-frequency console messages to prevent extension host overload
+- Enhanced test coverage with automated and manual testing approaches
+- Comprehensive manual testing documentation (MANUAL_TESTING.md)
+- Debounced configuration updates to prevent excessive updates when multiple settings change rapidly
+
+Changed:
+
+- Modularized commands.ts into separate modules for better maintainability:
+  - sketchCommands.ts - Sketch creation and deletion logic
+  - conversionCommands.ts - Sketch manipulation operations  
+  - runCommands.ts - Execution and UI commands
+- Updated dependencies to latest versions including ESLint v9, TypeScript v5.9.2, and other dev dependencies
+- Improved resource management with proper disposal methods for ScriptConsole, ServerManager, and StatusBar classes
+- Enhanced error handling throughout the extension
+
 Fixed:
 
 - Fixed "Command 'p5-server.openBrowser' not found" error by ensuring ServerManager is always initialized regardless of workspace folder count
+- Fixed performance issues with p5.js draw() functions generating 60+ console messages per second
+- Fixed sketch generation error handling to correctly capture error messages
+- Fixed server start/stop operations to provide more specific error messages
+- Improved file existence checking with explicit error property handling
 
 ## [1.10.2] - 2025-04-27
 

@@ -186,6 +186,7 @@ repository](https://github.com/osteele/vscode-p5server/issues).
   in my own VSCode configuration.)
 - The What's New page uses the HTML structure and the CSS from the [GitHub
   Desktop web site](https://desktop.github.com).
+- Thanks to GitHub users [@munusshih](https://github.com/munusshih), [@xuzheng465](https://github.com/xuzheng465), [@ronyginosar](https://github.com/ronyginosar), [@lorenzo-leuck](https://github.com/lorenzo-leuck), and [@pwalsh](https://github.com/pwalsh) for reporting bugs and helping improve the extension.
 
 ## License
 
