@@ -10,7 +10,7 @@
     "email": "steele@osteele.com"
   },
   "engines": {
-    "vscode": "^1.58.0"
+    "vscode": "^1.103.0"
   },
   "categories": [
     "Other"
@@ -421,7 +421,7 @@
     "build:changelog": "ts-node scripts/changelog2html.ts",
     "watch:changelog": "cross-env NODE_ENV=development CHANGE_LOG_WATCH=true ts-node-dev --project scripts/tsconfig.json --watch scripts,CHANGELOG.md scripts/changelog2html.ts",
     "compile": "tsc -p ./",
-    "format": "prettier-eslint --write \"{,!(node_modules)/**/}*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" && eslint --fix \"src/**/*.ts\"",
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
     "test": "timeout 240s node ./out/test/runTest.js || echo 'Tests completed or timed out'",
@@ -436,29 +436,32 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "open": "^8.4.0",
+    "open": "^10.2.0",
     "p5-server": "0.9.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.34.0",
     "@osteele/changelog-parser": "0.1.0",
-    "@types/glob": "^7.2.0",
-    "@types/mocha": "^9.0.0",
-    "@types/node": "14.x",
-    "@types/pug": "^2.0.5",
-    "@types/vscode": "^1.58.0",
-    "@typescript-eslint/eslint-plugin": "^5.3.1",
-    "@typescript-eslint/parser": "^5.3.1",
-    "eslint": "^8.2.0",
-    "glob": "^7.2.0",
-    "husky": "^7.0.4",
-    "mocha": "^11.1.0",
-    "node-html-parser": "^5.1.0",
+    "@types/glob": "^9.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "24.x",
+    "@types/pug": "^2.0.10",
+    "@types/vscode": "^1.103.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "eslint": "^9.34.0",
+    "glob": "^11.0.3",
+    "husky": "^9.1.7",
+    "mocha": "^11.7.1",
+    "node-html-parser": "^7.0.1",
+    "prettier": "^3.6.2",
     "prettier-eslint-cli": "^8.0.1",
-    "pug": "^3.0.2",
-    "ts-node": "^10.4.0",
-    "ts-node-dev": "^1.1.8",
-    "typescript": "^4.4.4",
-    "vsce": "^1.103.1",
+    "pug": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.41.0",
+    "vsce": "^2.15.0",
     "vscode-test": "^1.6.1"
   }
 }

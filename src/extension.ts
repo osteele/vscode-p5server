@@ -29,5 +29,5 @@ export function activate(context: vscode.ExtensionContext) {
   releaseNoteManager.showStartupMessageIfNewVersion();
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
+ 
 export function deactivate() {}

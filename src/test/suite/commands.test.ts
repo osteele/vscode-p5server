@@ -106,7 +106,7 @@ suite('Commands Integration', () => {
       // This should show an error message but not crash
       await vscode.commands.executeCommand('p5-server.createSketchFile');
       assert.ok(true, 'Create sketch file command handled gracefully');
-    } catch (error) {
+    } catch {
       // Command might fail due to no workspace, but shouldn't crash extension
       assert.ok(true, 'Create sketch file command failed gracefully');
     }
@@ -114,7 +114,7 @@ suite('Commands Integration', () => {
     try {
       await vscode.commands.executeCommand('p5-server.createSketchFolder');
       assert.ok(true, 'Create sketch folder command handled gracefully');
-    } catch (error) {
+    } catch {
       assert.ok(true, 'Create sketch folder command failed gracefully');
     }
   });
