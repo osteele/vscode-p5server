@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased]
+## [1.11.0] -- 2025-09-27
 
 Added:
 
