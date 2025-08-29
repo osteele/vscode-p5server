@@ -137,27 +137,34 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 
 ### 7. Console Integration
 
-**Test**: Console output (with integrated browser)
+> **⚠️ Known Issue**: Console output is not currently working. The WebSocket connection for console message relay is not being established. See [GitHub Issue #7](https://github.com/osteele/vscode-p5server/issues/7) for details. The following tests will currently fail:
+
+**Test**: Console output (with integrated browser) **[CURRENTLY FAILING]**
 - [ ] Open `test-workspaces/error-examples/console-spam.js`
-- [ ] Run in integrated browser
-- [ ] Verify "P5 Sketch" output panel opens automatically
+- [ ] Run in integrated browser using Command Palette: "P5 Server: Run Sketch"
+- [ ] The "P5 Sketch" output panel should appear when console messages start
+  - If it doesn't appear automatically, open it manually: View → Output → Select "P5 Sketch" from dropdown
 - [ ] Check console messages appear with different levels:
   - Regular logs (every 5 frames)
   - Info messages (📊 icon)
   - Warnings (⚠️ icon)
   - Errors (❌ icon)
 - [ ] Click in the sketch - verify burst messages appear
+- [ ] Note: Console output now works with the integrated browser using a custom webview
+- [ ] Note: Messages may be batched during high-frequency output (>20 msg/sec) for performance
 
-**Test**: Error handling
+**Test**: Error handling **[PARTIALLY FAILING]**
 - [ ] Open `test-workspaces/error-examples/syntax-error.js`
 - [ ] Note the syntax error on line 7 (missing closing parenthesis)
 - [ ] Try to run sketch
-- [ ] Verify error appears in P5 Sketch output panel
-- [ ] Check error location is highlighted in the editor
+- [ ] ~~Verify error appears in P5 Sketch output panel~~ *(Errors do not appear in panel)*
+- [ ] ~~Check error location is highlighted in the editor~~ *(May not work without console relay)*
 - [ ] Open `test-workspaces/error-examples/runtime-error.js`
 - [ ] Run the sketch
-- [ ] Wait for runtime errors to appear (every 60 frames)
-- [ ] Click to trigger additional error
+- [ ] ~~Wait for runtime errors to appear (every 60 frames)~~ *(Errors only visible in browser console)*
+- [ ] ~~Click to trigger additional error~~ *(Error occurs but not shown in VS Code)*
+
+**Workaround**: Use the browser's developer console (F12 or right-click → Inspect) to view console output and errors until this issue is resolved.
 
 ### 8. Configuration
 
@@ -217,13 +224,14 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 
 ## Performance Tests
 
-### High-Frequency Console Output
+### High-Frequency Console Output **[CURRENTLY FAILING]**
+> **Note**: This test depends on console output working. See Known Issue above.
 - [ ] Open `test-workspaces/error-examples/console-spam.js`
 - [ ] Run the sketch
-- [ ] Watch the message counter increase rapidly
-- [ ] Click and hold to generate burst messages
-- [ ] Verify VS Code remains responsive
-- [ ] Check that console batches messages efficiently
+- [ ] ~~Watch the message counter increase rapidly~~ *(Console output not working)*
+- [ ] ~~Click and hold to generate burst messages~~ *(Messages generated but not visible in VS Code)*
+- [ ] Verify VS Code remains responsive *(Can still be tested)*
+- [ ] ~~Check that console batches messages efficiently~~ *(Cannot test without console output)*
 
 ### Multiple Sketches
 - [ ] Open `test-workspaces` root folder
@@ -232,7 +240,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 - [ ] Run `folder-sketches/game-project/index.html` 
 - [ ] Verify each runs independently in separate tabs/windows
 - [ ] Test switching between running sketches
-- [ ] Console output should be sketch-specific
+- [ ] ~~Console output should be sketch-specific~~ *(Console output not working - see Known Issue)*
 
 ## Clean-up
 

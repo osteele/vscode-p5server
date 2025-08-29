@@ -13,7 +13,7 @@ Changed:
 
 - Modularized commands.ts into separate modules for better maintainability:
   - sketchCommands.ts - Sketch creation and deletion logic
-  - conversionCommands.ts - Sketch manipulation operations  
+  - conversionCommands.ts - Sketch manipulation operations
   - runCommands.ts - Execution and UI commands
 - Updated dependencies to latest versions including ESLint v9, TypeScript v5.9.2, and other dev dependencies
 - Improved resource management with proper disposal methods for ScriptConsole, ServerManager, and StatusBar classes
@@ -26,6 +26,10 @@ Fixed:
 - Fixed sketch generation error handling to correctly capture error messages
 - Fixed server start/stop operations to provide more specific error messages
 - Improved file existence checking with explicit error property handling
+
+Known Issues:
+
+- Console output from sketches is not currently appearing in the P5 Sketch output panel. This affects both integrated and external browsers. The WebSocket connection for console message relay is not being established properly. See [GitHub Issue #7] for details and workarounds.
 
 ## [1.10.2] - 2025-04-27
 
