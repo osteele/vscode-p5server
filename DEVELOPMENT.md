@@ -137,6 +137,7 @@ npm run format
 - Strict mode enabled for type safety
 - DOM library included for browser APIs
 - Source maps enabled for debugging
+- TypeScript auto-detection disabled in favor of npm scripts for consistent build process
 
 ## Architecture
 

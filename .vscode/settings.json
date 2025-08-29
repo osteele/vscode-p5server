@@ -1,0 +1,42 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+  "files.exclude": {
+    "*.vsix": true,
+    "out": true
+  },
+  "search.exclude": {
+    "out": true // set this to false to include "out" folder in search results
+  },
+  // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
+  "typescript.tsc.autoDetect": "off",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "pasteImage.path": "${currentFileDir}/images",
+  "terminal.integrated.automationShell.linux": "/bin/bash",
+  "editor.formatOnSave": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#E7EEFD",
+    "activityBar.activeBorder": "#8B9DC3",
+    "activityBar.background": "#E7EEFD",
+    "activityBar.foreground": "#2C3E50",
+    "activityBar.inactiveForeground": "#2C3E5099",
+    "activityBarBadge.background": "#8B9DC3",
+    "activityBarBadge.foreground": "#2C3E50",
+    "statusBar.background": "#D1DCF2",
+    "statusBar.foreground": "#2C3E50",
+    "statusBarItem.hoverBackground": "#BBC8E6",
+    "titleBar.activeBackground": "#D1DCF2",
+    "titleBar.activeForeground": "#2C3E50",
+    "titleBar.inactiveBackground": "#D1DCF299",
+    "titleBar.inactiveForeground": "#2C3E5099",
+    "sash.hoverBorder": "#E7EEFD",
+    "statusBarItem.remoteBackground": "#D1DCF2",
+    "statusBarItem.remoteForeground": "#2C3E50",
+    "commandCenter.border": "#2C3E5099"
+  },
+  "peacock.color": "#E7EEFD"
+}
