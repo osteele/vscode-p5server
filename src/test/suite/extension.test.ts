@@ -6,10 +6,10 @@ import * as vscode from 'vscode';
 // import * as myExtension from '../../extension';
 
 suite('Extension Test Suite', () => {
-  vscode.window.showInformationMessage('Start all tests.');
-
-  test('Sample test', () => {
-    assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-    assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+  test('activates the extension', async () => {
+    const extension = vscode.extensions.getExtension('osteele.p5-server');
+    assert.ok(extension, 'Extension should be installed in the test host');
+    await extension.activate();
+    assert.ok(extension.isActive, 'Extension should be active');
   });
 });

@@ -21,7 +21,7 @@ async function main() {
     // Download VS Code if not cached, with specific version for consistency
     // Use the correct platform for Apple Silicon Macs
     const platform = process.platform === 'darwin' && process.arch === 'arm64' ? 'darwin-arm64' : undefined;
-    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.102.0', platform);
+    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.103.0', platform);
 
     // Run the integration test with optimized settings
     await runTests({

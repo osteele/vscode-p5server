@@ -76,18 +76,6 @@ suite('Commands Integration', () => {
     }
   });
 
-  test('should have p5-server context variables set', async () => {
-    // Check that extension sets appropriate context variables
-    const commands = await vscode.commands.getCommands();
-
-    // These commands should be available when p5-server.available context is true
-    const contextDependentCommands = ['p5-server.start', 'p5-server.stop', 'p5-server.run'];
-
-    for (const command of contextDependentCommands) {
-      assert.ok(commands.includes(command), `Context-dependent command '${command}' should be registered`);
-    }
-  });
-
   test('should register internal commands', async () => {
     const commands = await vscode.commands.getCommands();
 
@@ -102,21 +90,11 @@ suite('Commands Integration', () => {
   });
 
   test('should execute sketch creation commands without workspace errors', async () => {
-    // Test that sketch creation commands handle missing workspace gracefully
-    try {
-      // This should show an error message but not crash
+    await assert.doesNotReject(async () => {
       await vscode.commands.executeCommand('p5-server.createSketchFile');
-      assert.ok(true, 'Create sketch file command handled gracefully');
-    } catch {
-      // Command might fail due to no workspace, but shouldn't crash extension
-      assert.ok(true, 'Create sketch file command failed gracefully');
-    }
-
-    try {
+    });
+    await assert.doesNotReject(async () => {
       await vscode.commands.executeCommand('p5-server.createSketchFolder');
-      assert.ok(true, 'Create sketch folder command handled gracefully');
-    } catch {
-      assert.ok(true, 'Create sketch folder command failed gracefully');
-    }
+    });
   });
 });
