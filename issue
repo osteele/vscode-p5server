@@ -1,0 +1,74 @@
+Console output not appearing in P5 Sketch panel
+
+## Description
+Console messages from p5.js sketches are not appearing in the VS Code P5 Sketch output panel. This affects both the integrated browser and external browsers.
+
+## Expected Behavior
+When a p5.js sketch runs and calls console methods (console.log, console.error, etc.), these messages should appear in the P5 Sketch output panel in VS Code.
+
+## Actual Behavior
+- The P5 Sketch output panel shows "Waiting for console messages..." but never receives any messages
+- No WebSocket connection events are logged
+- Console messages work normally in the browser's developer console but are not relayed to VS Code
+
+## Investigation Summary
+
+### Root Cause
+The p5-server's WebSocket-based console relay system is not working properly:
+
+1. **Static HTML files bypass script injection**: When p5-server serves existing HTML files, it serves them as static files without processing them through the middleware that injects the console relay script (`/__p5_server_static/console-relay.min.js`).
+
+2. **WebSocket connection not established**: Even when the console relay script is manually included in HTML files, the WebSocket connection to relay console messages is not being established.
+
+3. **Event listeners may need earlier registration**: The server's event listeners for console messages might need to be registered before `server.start()` is called, not after.
+
+### Technical Details
+- The server is configured with `relayConsoleMessages: true`
+- The console relay script exists and is accessible at `/__p5_server_static/console-relay.min.js`
+- WebSocket server is attached to the HTTP server via the `upgrade` event
+- Both SimpleBrowser and custom webview implementations fail to establish WebSocket connections
+
+### Files Involved
+- `/src/serverManager.ts` - Server initialization and event listener registration
+- `/src/console/scriptConsole.ts` - Console message handling and display
+- `/src/integratedBrowser.ts` - Custom webview implementation (attempted fix)
+- `node_modules/p5-server/src/server/browserScriptEventRelay.ts` - WebSocket relay implementation
+- `node_modules/p5-server/src/server/routes.ts` - Script injection logic
+
+## Steps to Reproduce
+1. Open VS Code with the P5 Server extension
+2. Open a workspace with p5.js sketch files
+3. Run a sketch using the P5 Server (either integrated or external browser)
+4. Add console.log statements to the sketch
+5. Observe that no console output appears in the P5 Sketch output panel
+
+## Test Files
+Created test files in `/test-workspaces/error-examples/`:
+- `console-spam.html` - HTML file with p5.js sketch that generates console output
+- `console-spam.js` - JavaScript sketch with frequent console messages
+- `console-spam-test.html` - Minimal test with direct console relay script inclusion
+- `test-websocket.html` - Direct WebSocket connection test
+
+## Workarounds
+Currently, there are no known workarounds. Users must use the browser's developer console to view console output from their sketches.
+
+## Next Steps
+1. **Identify working version**: Find the last version where console output was working properly
+2. **Compare implementations**: Diff the working version with current to identify what changed
+3. **Test WebSocket directly**: Verify WebSocket server is accepting connections
+4. **Review p5-server updates**: Check if updates to the p5-server dependency introduced breaking changes
+5. **Consider alternative approaches**:
+   - Inject console relay script on the server side for all HTML files
+   - Use a different mechanism than WebSockets for console relay
+   - Implement browser extension or other bridge for console capture
+
+## Environment
+- VS Code version: [Version info from testing]
+- P5 Server extension version: 1.11.0 (development)
+- p5-server dependency: 0.9.2
+- OS: macOS
+- Node.js version: [Version from testing]
+
+## Related Issues
+- Previous console throttling implementation (commit nqmytllk) may have introduced side effects
+- SimpleBrowser and webview Content Security Policy restrictions may prevent WebSocket connections

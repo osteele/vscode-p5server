@@ -237,7 +237,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 - [ ] Open `test-workspaces` root folder
 - [ ] Run `basic-sketches/simple-circle.js` in integrated browser
 - [ ] Run `html-sketches/bouncing-ball.html` in another tab
-- [ ] Run `folder-sketches/game-project/index.html` 
+- [ ] Run `folder-sketches/game-project/index.html`
 - [ ] Verify each runs independently in separate tabs/windows
 - [ ] Test switching between running sketches
 - [ ] ~~Console output should be sketch-specific~~ *(Console output not working - see Known Issue)*
@@ -266,13 +266,13 @@ When you find issues during manual testing:
 ## Manual Testing Results - [Date]
 
 **Environment:**
-- OS: 
-- VS Code Version: 
-- Browser: 
+- OS:
+- VS Code Version:
+- Browser:
 
 **Test Results:**
 - [ ] Extension Activation: PASS/FAIL
-- [ ] Server Management: PASS/FAIL  
+- [ ] Server Management: PASS/FAIL
 - [ ] Sketch Creation: PASS/FAIL
 - [ ] Sketch Running: PASS/FAIL
 - [ ] Sketch Explorer: PASS/FAIL
