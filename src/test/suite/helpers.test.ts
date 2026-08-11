@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import { compareVersions, VersionChange } from '../../helpers/compareVersions';
 import { toZeroBasedPosition, withConsoleRelayQuery } from '../../helpers';
+import { validateChildName } from '../../helpers/fileNames';
 
 suite('Helpers', () => {
   test('compareVersions', () => {
@@ -26,5 +27,15 @@ suite('Helpers', () => {
     assert.deepStrictEqual(toZeroBasedPosition(1, 1), { line: 0, col: 0 });
     assert.deepStrictEqual(toZeroBasedPosition(12, 4), { line: 11, col: 3 });
     assert.deepStrictEqual(toZeroBasedPosition(0, 0), { line: 0, col: 0 });
+  });
+
+  test('validateChildName', () => {
+    assert.strictEqual(validateChildName('sketch.js'), undefined);
+    assert.strictEqual(validateChildName('project name'), undefined);
+    assert.ok(validateChildName('../outside'));
+    assert.ok(validateChildName('folder/sketch'));
+    assert.ok(validateChildName('folder\\sketch'));
+    assert.ok(validateChildName('C:\\outside'));
+    assert.ok(validateChildName('..'));
   });
 });

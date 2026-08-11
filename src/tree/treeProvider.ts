@@ -6,7 +6,7 @@ import { commands, workspace } from 'vscode';
 import { exclusions } from '../configuration';
 import { Element, SketchItem, LibraryItem, FileItem, DirectoryItem } from './elements';
 
-export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
+export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vscode.Disposable {
   private readonly _onDidChangeTreeData = new vscode.EventEmitter<Element | undefined | null>();
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private watchers: vscode.FileSystemWatcher[] = [];
@@ -17,6 +17,9 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
   }
 
   public refresh(element?: Element | undefined | null): void {
+    if (!element) {
+      void commands.executeCommand('setContext', 'p5-server.explorer.loaded', false);
+    }
     this._onDidChangeTreeData.fire(element);
   }
 
@@ -88,8 +91,8 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
       const w = workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, '**/*.{htm,html,js}'));
       w.onDidCreate(() => this.refresh());
       w.onDidChange(uri => {
-        const element = this.getElementForFile(uri.path);
-        const parent = element instanceof Sketch ? this.getElementForFile(path.dirname(uri.path)) : element?.parent;
+        const element = this.getElementForFile(uri.fsPath);
+        const parent = element instanceof Sketch ? this.getElementForFile(path.dirname(uri.fsPath)) : element?.parent;
         this.refresh(parent || element);
       });
       w.onDidDelete(() => this.refresh());
@@ -105,10 +108,10 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
         default:
           return wsFolders
             .filter(folder => folder.uri.scheme === 'file')
-            .map(folder => new DirectoryItem(folder.uri.fsPath, null, folder.name));
+            .map(folder => this.register(new DirectoryItem(folder.uri.fsPath, null, folder.name)));
       }
     } finally {
-      setTimeout(() => commands.executeCommand('setContext', 'p5-server.explorer.loaded', true), 1000);
+      void commands.executeCommand('setContext', 'p5-server.explorer.loaded', true);
     }
   }
 
@@ -127,5 +130,12 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element> {
     ];
     children.forEach(child => this.register(child));
     return children;
+  }
+
+  public dispose() {
+    this.watchers.forEach(watcher => watcher.dispose());
+    this.watchers = [];
+    this._onDidChangeTreeData.dispose();
+    this._fileElementMap.clear();
   }
 }

@@ -34,10 +34,10 @@ export function activate(context: vscode.ExtensionContext) {
   // minimal performance impact from always initializing the manager.
   ServerManager.activate(context);
 
-  // Set context variable when workspace folders are available
-  if (getWorkspaceFolderPaths().length >= 1) {
-    commands.executeCommand('setContext', 'p5-server.available', true);
-  }
+  const updateWorkspaceAvailability = () =>
+    commands.executeCommand('setContext', 'p5-server.available', getWorkspaceFolderPaths().length >= 1);
+  context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(updateWorkspaceAvailability));
+  updateWorkspaceAvailability();
 
   const releaseNoteManager = new ReleaseNotes(context);
   releaseNoteManager.showStartupMessageIfNewVersion();

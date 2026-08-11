@@ -6,6 +6,7 @@ import { renameSketch } from '../commands/conversionCommands';
 import { openLibraryPane } from '../commands/runCommands';
 import { getWorkspaceFolderPaths } from '../helpers/fileHelpers';
 import { sketchIsEntireDirectory } from '../helpers/sketchHelpers';
+import { validateChildName } from '../helpers/fileNames';
 import { DirectoryItem, Element, FileItem, FilePathItem, LibraryItem } from './elements';
 import { SketchTreeProvider } from './treeProvider';
 
@@ -19,15 +20,19 @@ export class SketchExplorer {
       showCollapseAll: true,
       treeDataProvider: this.provider,
     });
-    treeView.onDidChangeSelection(e => {
-      this.selection = e.selection[0];
-    });
+    context.subscriptions.push(
+      this.provider,
+      treeView,
+      treeView.onDidChangeSelection(e => {
+        this.selection = e.selection[0];
+      }),
+    );
     context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => this.provider.refresh()));
     this.registerCommands(context);
 
     context.subscriptions.push(
       window.onDidChangeActiveTextEditor(editor => {
-        if (editor && workspace.getConfiguration('p5-server').get<boolean>('p5-server.explorer.autoReveal')) {
+        if (editor && workspace.getConfiguration('p5-server').get<boolean>('explorer.autoReveal', true)) {
           const file = editor.document.uri.fsPath;
           const element = this.provider.getElementForFile(file);
           if (element) treeView.reveal(element);
@@ -39,7 +44,9 @@ export class SketchExplorer {
   public registerCommands(context: vscode.ExtensionContext) {
     context.subscriptions.push(
       commands.registerCommand('p5-server.explorer.refresh', () => this.provider.refresh()),
-      commands.registerCommand('p5-server.explorer.createFolder', async () => this.createFolderInSelectedLocation()),
+      commands.registerCommand('p5-server.explorer.createFolder', async (item?: FilePathItem) =>
+        this.createFolderInSelectedLocation(item),
+      ),
       commands.registerCommand('p5-server.explorer.createSketch', async () =>
         this.createSketchInSelectedFolder('script'),
       ),
@@ -78,31 +85,26 @@ export class SketchExplorer {
     );
   }
 
-  async createFolderInSelectedLocation(): Promise<void> {
+  async createFolderInSelectedLocation(item?: FilePathItem): Promise<void> {
     const wsFolders = getWorkspaceFolderPaths();
+    const selectedItem = item || this.selection;
+    const selectedDir =
+      selectedItem instanceof DirectoryItem
+        ? selectedItem.file
+        : selectedItem instanceof FileItem
+          ? path.dirname(selectedItem.file)
+          : undefined;
     const dir =
-      wsFolders.length > 1
-        ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
-        : wsFolders[0];
-    if (!dir) return; // the user cancelled
-
-    const name = await window.showInputBox();
-    if (!name) return;
-
-    await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
-  }
-
-  async createFolder({ dir }: { dir?: string } = {}): Promise<void> {
-    const wsFolders = getWorkspaceFolderPaths();
-    dir =
-      dir ||
+      selectedDir ||
       (wsFolders.length > 1
         ? await window.showQuickPick(wsFolders, { placeHolder: 'Select a workspace folder' })
         : wsFolders[0]);
     if (!dir) return; // the user cancelled
-    const name = await window.showInputBox();
+
+    const name = await window.showInputBox({ validateInput: validateChildName });
     if (!name) return;
-    await workspace.fs.createDirectory(Uri.file(path.join(dir, name)));
+
+    await workspace.fs.createDirectory(Uri.file(path.join(dir, name.trim())));
   }
 
   async createSketchInSelectedFolder(type: 'script' | 'html' | 'folder') {
@@ -127,6 +129,6 @@ export class SketchExplorer {
 
   runSelectedSketch(item: Sketch | FilePathItem, where: 'integrated' | 'external' | undefined = undefined) {
     const uri = item instanceof Sketch ? Uri.file(item.mainFilePath) : item.resourceUri;
-    commands.executeCommand('p5-server.openBrowser', uri, { browser: where });
+    return commands.executeCommand('p5-server.openBrowser', uri, { browser: where });
   }
 }

@@ -1,20 +1,23 @@
 import { parse as parseHTML } from 'node-html-parser';
 import { Sketch } from 'p5-server';
-import { Uri, window, workspace } from 'vscode';
+import { commands, Uri, window, workspace } from 'vscode';
 import { fsExists } from '../helpers/fileHelpers';
 import { exclusions } from '../configuration';
 import path = require('path');
+import { validateChildName } from '../helpers/fileNames';
 
 export async function convertSketch(sketch: Sketch, type: 'html' | 'script') {
-  sketch.convert({ type });
+  await sketch.convert({ type });
+  await commands.executeCommand('p5-server.explorer.refresh');
 }
 
 export async function duplicateSketch(sketch: Sketch) {
   if (!(sketch instanceof Sketch)) throw new Error(`${sketch} is not a Sketch`);
 
   const defaultName = `${sketch.name}-2`;
-  const name = await window.showInputBox({ value: defaultName });
+  let name = await window.showInputBox({ value: defaultName, validateInput: validateChildName });
   if (!name) return;
+  name = name.trim();
 
   // if the sketch is the only sketch in the directory, copy the directory
   const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
@@ -49,25 +52,30 @@ export async function duplicateSketch(sketch: Sketch) {
       await workspace.fs.writeFile(htmlFile, Buffer.from(htmlRoot.toString(), 'utf-8'));
     }
   }
+  await commands.executeCommand('p5-server.explorer.refresh');
 }
 
 export async function renameSketch(item: Sketch | Uri): Promise<void> {
   // TODO: close running windows
   const defaultName = item instanceof Sketch ? item.name : path.basename(item.fsPath);
-  let name = await window.showInputBox({ value: defaultName });
+  let name = await window.showInputBox({ value: defaultName, validateInput: validateChildName });
   if (!name) return;
+  name = name.trim();
   // TODO: rename single-sketch folders
   if (item instanceof Sketch) {
     switch (item.structureType) {
       case 'html':
         if (!/\.html?$/i.test(name)) name += '.html';
-        return workspace.fs.rename(Uri.file(item.mainFilePath), Uri.file(path.join(item.dir, name)));
+        await workspace.fs.rename(Uri.file(item.mainFilePath), Uri.file(path.join(item.dir, name)));
+        break;
       case 'script':
         if (!/\.js$/i.test(name)) name += '.js';
-        return workspace.fs.rename(Uri.file(item.scriptFilePath), Uri.file(path.join(item.dir, name)));
+        await workspace.fs.rename(Uri.file(item.scriptFilePath), Uri.file(path.join(item.dir, name)));
+        break;
     }
   } else {
     const target = Uri.file(path.join(path.dirname(item.fsPath), name));
-    return workspace.fs.rename(item, target);
+    await workspace.fs.rename(item, target);
   }
+  await commands.executeCommand('p5-server.explorer.refresh');
 }

@@ -2,6 +2,7 @@ import { Sketch } from 'p5-server';
 import * as vscode from 'vscode';
 import { Uri, window, workspace } from 'vscode';
 import { fileExists, getWorkspaceFolderPaths } from '../helpers/fileHelpers';
+import { validateChildName } from '../helpers/fileNames';
 import path = require('path');
 
 export async function createSketch({ dir, type }: { dir?: string; type: 'script' | 'html' | 'folder' }) {
@@ -21,6 +22,7 @@ export async function createSketch({ dir, type }: { dir?: string; type: 'script'
 
   let sketchName = await window.showInputBox({
     prompt: `Enter the name of the p5.js sketch`,
+    validateInput: validateChildName,
   });
   sketchName = sketchName?.trim();
   if (!sketchName) return;
@@ -36,11 +38,11 @@ export async function createSketch({ dir, type }: { dir?: string; type: 'script'
       });
       break;
     case 'script':
-      if (!/\.js/i.test(filePath)) filePath += '.js';
+      if (!/\.js$/i.test(filePath)) filePath += '.js';
       sketch = Sketch.create(filePath);
       break;
     case 'html': {
-      if (!/\.html?/i.test(filePath)) filePath += '.html';
+      if (!/\.html?$/i.test(filePath)) filePath += '.html';
 
       // find a unique name for the script file
       const dir = path.dirname(filePath);
