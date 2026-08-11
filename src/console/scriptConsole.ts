@@ -12,8 +12,9 @@ import util = require('util');
 export default class ScriptConsole {
   private _channel: vscode.OutputChannel | null = null;
   private banner: string | null = null;
-  private file?: string; // the current file that is being displayed in the output
+  private source?: string; // the current file or URL that is being displayed in the output
   private lensProvider: ConsoleMessageLensProvider;
+  private readonly disposables: vscode.Disposable[];
   private messageCount = 0; // how many messages have been displayed since clear()?
 
   // Adaptive throttling
@@ -30,10 +31,13 @@ export default class ScriptConsole {
   constructor() {
     const provider = new ConsoleMessageLensProvider();
     this.lensProvider = provider;
-    vscode.languages.registerCodeLensProvider('javascript', provider);
-    vscode.commands.registerCommand('p5-server.showScriptOutput', () => {
-      this.channel.show(true);
-    });
+    this.disposables = [
+      vscode.languages.registerCodeLensProvider('javascript', provider),
+      vscode.commands.registerCommand('p5-server.showScriptOutput', () => {
+        this.channel.show(true);
+      }),
+      provider,
+    ];
   }
 
   subscribe(server: Server) {
@@ -54,7 +58,7 @@ export default class ScriptConsole {
 
     server.onScriptEvent('document', (event: BrowserDocumentEvent) => {
       const { type, clientId, visibilityState } = event;
-      if (type === 'visibilitychange' && !visibilityState) {
+      if (type === 'visibilitychange' && visibilityState === 'hidden') {
         this.lensProvider.removeMessages({ clientId });
       }
     });
@@ -111,7 +115,6 @@ export default class ScriptConsole {
         this.channel.appendLine(this.banner);
         this.banner = null;
       }
-      this.channel.show(true);
       this.channel.appendLine(value);
     }
     this.messageCount++;
@@ -124,6 +127,7 @@ export default class ScriptConsole {
 
     // Clear adaptive throttling state
     this.messageTimes = [];
+    this.messageTimeIndex = 0;
     this.messageBuffer = [];
     this.batchMode = false;
     this.stopBatchTimer();
@@ -135,9 +139,10 @@ export default class ScriptConsole {
    * Return true iff the banner was displayed.
    */
   private setFile(file?: string, url?: string) {
-    if (this.file === file) return false;
-    this.file = file;
-    const label = file ? ` (${file || url}) ` : '';
+    const source = file || url;
+    if (this.source === source) return false;
+    this.source = source;
+    const label = source ? ` (${source}) ` : '';
     this.banner = padCenter(label, 80, '=');
     this.messageCount = 0;
     return true;
@@ -165,6 +170,11 @@ export default class ScriptConsole {
   /** Track message rate and update batch mode if needed */
   private updateMessageRate() {
     const now = Date.now();
+    this.messageTimes.push(now);
+    this.updateBatchMode(now);
+  }
+
+  private updateBatchMode(now: number) {
     const cutoff = now - this.rateWindowMs;
 
     // Efficiently remove old timestamps without creating new array every time
@@ -177,9 +187,6 @@ export default class ScriptConsole {
       this.messageTimes = this.messageTimes.slice(this.messageTimeIndex);
       this.messageTimeIndex = 0;
     }
-
-    // Add current timestamp
-    this.messageTimes.push(now);
 
     const currentRate = this.messageTimes.length - this.messageTimeIndex;
 
@@ -200,6 +207,7 @@ export default class ScriptConsole {
     if (this.batchTimer) return;
 
     this.batchTimer = setInterval(() => {
+      this.updateBatchMode(Date.now());
       this.flushMessageBuffer();
     }, this.batchIntervalMs);
   }
@@ -223,14 +231,13 @@ export default class ScriptConsole {
 
     // Join all messages and append at once for better performance
     this.channel.append(this.messageBuffer.join('\n') + '\n');
-    this.channel.show(true);
-
     this.messageBuffer = [];
   }
 
   /** Clean up resources */
   dispose() {
     this.stopBatchTimer();
+    this.disposables.forEach(disposable => disposable.dispose());
     if (this._channel) {
       this._channel.dispose();
       this._channel = null;

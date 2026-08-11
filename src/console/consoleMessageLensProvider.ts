@@ -2,10 +2,12 @@ import { BrowserConsoleEvent, BrowserErrorEvent } from 'p5-server';
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
 import { formatConsoleEventArgs } from './consoleHelpers';
+import { toZeroBasedPosition } from '../helpers';
 
-export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
+export class ConsoleMessageLensProvider implements vscode.CodeLensProvider, vscode.Disposable {
   private messages = new Map<string, { data: ConsoleMessageLensData; lens: vscode.CodeLens }>();
   private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
+  private readonly configurationSubscription: vscode.Disposable;
   readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
 
   // Adaptive debouncing for CodeLens updates
@@ -19,7 +21,7 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
   private readonly debounceIntervalMs = 200; // Debounce for 200ms when in debounce mode
 
   constructor() {
-    workspace.onDidChangeConfiguration(e => {
+    this.configurationSubscription = workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('p5-server.editor.infoLens')) {
         this.fireChangeEvent();
       }
@@ -33,8 +35,8 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
     const key = ConsoleMessageLensData.key({ file, clientId, line });
     let record = this.messages.get(key);
     if (!record) {
-      const col = message.col || 0;
-      const range = new vscode.Range(line, col, line, col);
+      const position = toZeroBasedPosition(line, message.col);
+      const range = new vscode.Range(position.line, position.col, position.line, position.col);
       const data = new ConsoleMessageLensData(file, clientId, line);
       const lens = new vscode.CodeLens(range, data);
       record = { data, lens };
@@ -115,6 +117,16 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider {
         this.pendingUpdate = false;
       }
     }
+  }
+
+  public dispose() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = undefined;
+    }
+    this.configurationSubscription.dispose();
+    this._onDidChangeCodeLenses.dispose();
+    this.messages.clear();
   }
 }
 

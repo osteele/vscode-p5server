@@ -2,6 +2,7 @@ import { Server } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
 import ScriptConsole from './console/scriptConsole';
+import { withConsoleRelayQuery } from './helpers';
 import { getWorkspaceFolderPaths } from './helpers/fileHelpers';
 import { openInBrowser } from './openInBrowser';
 import { StatusBarManager } from './statusBar';
@@ -16,6 +17,7 @@ export class ServerManager {
   private _state: ServerState = 'stopped';
   private statusBarManager: StatusBarManager;
   private scriptConsole: ScriptConsole;
+  private startPromise: Promise<void> | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     this.statusBarManager = new StatusBarManager();
@@ -37,7 +39,7 @@ export class ServerManager {
       commands.registerCommand('p5-server.start', this.startServer.bind(this)),
       commands.registerCommand('p5-server.stop', this.stopServer.bind(this)),
       commands.registerCommand('p5-server.openBrowser', async (uri?: Uri, options?: { browser: string }) => {
-        if (this.state === 'stopped') {
+        if (this.state === 'stopped' || this.state === 'starting') {
           await this.startServer(uri, options);
         } else if (this.state === 'running') {
           await this.openBrowser(uri, options);
@@ -45,7 +47,7 @@ export class ServerManager {
       }),
     );
 
-    workspace.onDidChangeConfiguration(this.updateFromConfiguration.bind(this));
+    context.subscriptions.push(workspace.onDidChangeConfiguration(this.updateFromConfiguration.bind(this)));
     this.updateFromConfiguration();
   }
 
@@ -67,10 +69,29 @@ export class ServerManager {
   }
 
   async startServer(uri?: Uri, options?: { browser: string }) {
+    if (this.startPromise) {
+      await this.startPromise;
+      if (this.state === 'running') {
+        await this.openBrowser(uri, options);
+      }
+      return;
+    }
     if (this.state !== 'stopped') {
       return;
     }
 
+    const startPromise = this.startServerOnce(uri, options);
+    this.startPromise = startPromise;
+    try {
+      await startPromise;
+    } finally {
+      if (this.startPromise === startPromise) {
+        this.startPromise = null;
+      }
+    }
+  }
+
+  private async startServerOnce(uri?: Uri, options?: { browser: string }) {
     this.state = 'starting';
     let sbm: vscode.Disposable | undefined;
 
@@ -88,12 +109,17 @@ export class ServerManager {
         return; // the user cancelled
       }
 
-      this.server?.close();
+      await this.server?.close();
       this.server = null;
 
       sbm = window.setStatusBarMessage(`Starting the P5 server at ${root}`);
 
-      this.server = new Server({ root, theme: 'grid', proxyCache: Configuration.enableProxyCache });
+      this.server = new Server({
+        root,
+        theme: 'grid',
+        proxyCache: Configuration.enableProxyCache,
+        relayConsoleMessages: true,
+      });
       await this.server.start();
       this.scriptConsole.subscribe(this.server);
       this.state = 'running';
@@ -113,7 +139,7 @@ export class ServerManager {
         this.state = 'stopped';
       }
     }
-    this.openBrowser(uri?.with({ query: 'send-console-messages' }), options);
+    await this.openBrowser(uri, options);
   }
 
   async stopServer() {
@@ -136,7 +162,7 @@ export class ServerManager {
       sbm = window.setStatusBarMessage('The P5 server is no longer running.');
       setTimeout(() => sbm.dispose(), 10000);
     } catch (error) {
-      this.state = 'stopped';
+      this.state = this.server ? 'running' : 'stopped';
       sbm.dispose();
       const errorMessage = error instanceof Error ? error.message : String(error);
       window.showErrorMessage(`Failed to stop P5 server: ${errorMessage}`);
@@ -150,13 +176,14 @@ export class ServerManager {
     if (!server?.url) {
       return;
     }
-    const target = uri ? server.filePathToUrl(uri.fsPath) : server.url;
-    if (!target) {
+    const serverTarget = uri ? server.filePathToUrl(uri.fsPath) : server.url;
+    if (!serverTarget) {
       if (uri) {
         await window.showErrorMessage(`${uri.fsPath} is not in a directory that is served by the P5 server.`);
       }
       return;
     }
+    const target = withConsoleRelayQuery(serverTarget);
 
     // Wrap open.xxx with versions that know about Safari
     type AppName = open.AppName | 'safari';
@@ -209,5 +236,6 @@ export class ServerManager {
     this.scriptConsole.dispose();
     this.statusBarManager.dispose();
     this.state = 'stopped';
+    ServerManager.instance = null;
   }
 }

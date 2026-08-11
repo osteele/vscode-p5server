@@ -5,3 +5,16 @@ export function padCenter(label: string, width: number, fill = ' '): string {
   const rightPad = fill.repeat(Math.ceil(rightPadWidth / fill.length)).slice(0, rightPadWidth);
   return [leftPad, label, rightPad].join('');
 }
+
+export function withConsoleRelayQuery(target: string): string {
+  const url = new URL(target);
+  url.searchParams.set('send-console-messages', '1');
+  return url.toString();
+}
+
+export function toZeroBasedPosition(line: number, col = 1): { line: number; col: number } {
+  return {
+    line: Math.max(0, line - 1),
+    col: Math.max(0, col - 1),
+  };
+}
