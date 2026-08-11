@@ -1,16 +1,28 @@
 .vscode/**
 .vscode-test/**
+.claude/**
+.github/**
+.husky/**
+.jj/**
+docs/**
 out/test/**
 test-workspaces/**
 
 src/**
+scripts/**
+.eslintrc*
+eslint.config.js
 .gitignore
 .yarnrc
 **/tsconfig.json
 **/.eslintrc.json
+**/.DS_Store
 **/*.map
 **/*.ts
 
+CLAUDE.md
+DEVELOPMENT.md
+NOTES.txt
 TODO
 MANUAL_TESTING.md
-DEVELOPMENT.md
+package-lock.json
