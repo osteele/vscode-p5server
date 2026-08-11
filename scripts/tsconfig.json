@@ -1,5 +1,5 @@
 {
   "compilerOptions": {},
-  "extends": "@tsconfig/node14/tsconfig.json",
+  "extends": "@tsconfig/node22/tsconfig.json",
   "root": true
 }
