@@ -17,6 +17,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ### 1. Extension Activation
 
 **Test**: Extension loads properly
+
 - [ ] Open VS Code with the `test-workspaces/basic-sketches` folder
 - [ ] Verify P5.js Sketch Explorer appears in the activity bar
 - [ ] Check that status bar shows "P5 Server" item (bottom-left area)
@@ -29,6 +30,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ### 2. Server Management
 
 **Test**: Server start/stop functionality
+
 - [ ] Click "P5 Server" in status bar (should show "Click to start")
 - [ ] Verify server starts successfully
 - [ ] Check status bar updates to show running state with spinning icon, then solid icon
@@ -41,6 +43,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 **Important**: First click on "P5.JS SKETCH EXPLORER" in the Activity Bar or Side Bar to ensure you're in the P5.js Sketch Explorer view, not the regular File Explorer.
 
 **Test**: Create JavaScript-only sketch
+
 - [ ] Click on the P5.JS SKETCH EXPLORER view to activate it
 - [ ] Navigate to the `basic-sketches` folder in the tree
 - [ ] Click the "+" icon in the P5.JS SKETCH EXPLORER title bar (top of the view)
@@ -51,6 +54,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 - [ ] Should contain setup() and draw() functions
 
 **Test**: Create HTML + JavaScript sketch
+
 - [ ] In the P5.JS SKETCH EXPLORER view
 - [ ] Navigate to `html-sketches` folder
 - [ ] Click the ellipsis (...) in the title bar and select "Create Sketch (HTML + JavaScript)"
@@ -61,6 +65,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 - [ ] Compare with existing `bouncing-ball.html` for reference
 
 **Test**: Create sketch folder
+
 - [ ] In the P5.JS SKETCH EXPLORER view
 - [ ] Navigate to `folder-sketches` folder
 - [ ] Click the ellipsis (...) in the title bar and select "Create Sketch (Single-Sketch Folder)"
@@ -72,6 +77,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ### 4. Sketch Running
 
 **Test**: Run sketch in integrated browser
+
 - [ ] Open `test-workspaces/basic-sketches/simple-circle.js`
 - [ ] Set browser preference to "integrated" in settings (Cmd/Ctrl+, then search for "p5-server.browser")
 - [ ] Use one of these methods to run:
@@ -85,6 +91,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 **Note**: If the play button runs Node.js instead of opening the sketch, it's being handled by another extension (like Code Runner). Use the P5 Server commands instead.
 
 **Test**: Run sketch in external browser
+
 - [ ] Open `test-workspaces/basic-sketches/interactive-sketch.js`
 - [ ] Set browser preference to "Chrome" (or your available browser) in settings
 - [ ] Use one of these methods to run:
@@ -96,6 +103,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 - [ ] Click to see console messages with coordinates
 
 **Test**: Live reload
+
 - [ ] Keep `simple-circle.js` running
 - [ ] Change `fill(255, 0, 0)` to `fill(0, 255, 0)` (red to green)
 - [ ] Save the file (Cmd/Ctrl+S)
@@ -105,6 +113,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ### 5. Sketch Explorer
 
 **Test**: Tree view functionality
+
 - [ ] Open `test-workspaces/nested-projects` folder
 - [ ] Verify P5.js Sketch Explorer shows:
   - `project-a/main-sketch.js`
@@ -115,6 +124,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 - [ ] Test collapsing/expanding `project-b` folder
 
 **Test**: Context menu operations
+
 - [ ] Right-click on `basic-sketches/particle-system.js`:
   - [ ] "Run sketch" - runs with default browser setting
   - [ ] "Run in integrated browser" - forces integrated view
@@ -127,6 +137,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ### 6. Sketch Conversion
 
 **Test**: Convert between formats
+
 - [ ] Open `test-workspaces/basic-sketches` folder
 - [ ] Right-click on `simple-circle.js` → "Convert to HTML + JavaScript"
 - [ ] Verify `simple-circle.html` is created alongside the JS file
@@ -137,9 +148,8 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 
 ### 7. Console Integration
 
-> **⚠️ Known Issue**: Console output is not currently working. The WebSocket connection for console message relay is not being established. See [GitHub Issue #7](https://github.com/osteele/vscode-p5server/issues/7) for details. The following tests will currently fail:
+**Test**: Console output (with integrated browser)
 
-**Test**: Console output (with integrated browser) **[CURRENTLY FAILING]**
 - [ ] Open `test-workspaces/error-examples/console-spam.js`
 - [ ] Run in integrated browser using Command Palette: "P5 Server: Run Sketch"
 - [ ] The "P5 Sketch" output panel should appear when console messages start
@@ -150,31 +160,34 @@ This document provides step-by-step instructions for manually testing the P5 Ser
   - Warnings (⚠️ icon)
   - Errors (❌ icon)
 - [ ] Click in the sketch - verify burst messages appear
-- [ ] Note: Console output now works with the integrated browser using a custom webview
-- [ ] Note: Messages may be batched during high-frequency output (>20 msg/sec) for performance
+- [ ] Verify messages are batched during high-frequency output (>20 msg/sec)
+- [ ] Set "Console > Integrated Browser > Auto Show: Level" to `never`
+- [ ] Close the output panel, reload the sketch, and verify messages do not reopen it
+- [ ] Run "P5 Server: Show Script Output" and verify the buffered messages are present
 
-**Test**: Error handling **[PARTIALLY FAILING]**
+**Test**: Error handling
+
 - [ ] Open `test-workspaces/error-examples/syntax-error.js`
 - [ ] Note the syntax error on line 7 (missing closing parenthesis)
 - [ ] Try to run sketch
-- [ ] ~~Verify error appears in P5 Sketch output panel~~ *(Errors do not appear in panel)*
-- [ ] ~~Check error location is highlighted in the editor~~ *(May not work without console relay)*
+- [ ] Verify error appears in P5 Sketch output panel
+- [ ] Check error location is highlighted in the editor
 - [ ] Open `test-workspaces/error-examples/runtime-error.js`
 - [ ] Run the sketch
-- [ ] ~~Wait for runtime errors to appear (every 60 frames)~~ *(Errors only visible in browser console)*
-- [ ] ~~Click to trigger additional error~~ *(Error occurs but not shown in VS Code)*
-
-**Workaround**: Use the browser's developer console (F12 or right-click → Inspect) to view console output and errors until this issue is resolved.
+- [ ] Wait for runtime errors to appear (every 60 frames)
+- [ ] Click to trigger an additional error
 
 ### 8. Configuration
 
 **Test**: Settings integration
+
 - [ ] Open P5 Server settings (Command Palette → "P5 Server: Open Settings")
 - [ ] Modify browser setting
 - [ ] Test that changes take effect
 - [ ] Verify status bar updates accordingly
 
 **Test**: Status bar configuration
+
 - [ ] Disable "P5 Server > Status Bar: Server Item Enabled"
 - [ ] Verify server status bar item is hidden
 - [ ] Re-enable and verify it reappears
@@ -182,6 +195,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ### 9. Library Detection
 
 **Test**: Automatic library inclusion
+
 - [ ] Create a new sketch in `test-workspaces/basic-sketches`:
   ```javascript
   let osc;
@@ -199,6 +213,7 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ### 10. File Operations
 
 **Test**: File manipulation
+
 - [ ] Create multiple sketches
 - [ ] Test renaming sketches
 - [ ] Test duplicating sketches
@@ -208,43 +223,49 @@ This document provides step-by-step instructions for manually testing the P5 Ser
 ## Error Scenarios
 
 ### Network Issues
+
 - [ ] Start server, then manually kill the process
 - [ ] Verify extension handles server disconnect gracefully
 - [ ] Test server restart functionality
 
 ### File System Issues
+
 - [ ] Try creating sketch with invalid name (special characters)
 - [ ] Verify appropriate error messages
 - [ ] Test behavior with read-only directories
 
 ### Browser Issues
+
 - [ ] Set browser to non-existent application
 - [ ] Verify fallback to system default browser
 - [ ] Check error messaging
 
 ## Performance Tests
 
-### High-Frequency Console Output **[CURRENTLY FAILING]**
-> **Note**: This test depends on console output working. See Known Issue above.
+### High-Frequency Console Output
+
 - [ ] Open `test-workspaces/error-examples/console-spam.js`
 - [ ] Run the sketch
-- [ ] ~~Watch the message counter increase rapidly~~ *(Console output not working)*
-- [ ] ~~Click and hold to generate burst messages~~ *(Messages generated but not visible in VS Code)*
-- [ ] Verify VS Code remains responsive *(Can still be tested)*
-- [ ] ~~Check that console batches messages efficiently~~ *(Cannot test without console output)*
+- [ ] Watch the message counter increase rapidly
+- [ ] Click and hold to generate burst messages
+- [ ] Verify VS Code remains responsive
+- [ ] Check that console batches messages efficiently
+- [ ] Stop generating messages and verify CPU use returns to idle
 
 ### Multiple Sketches
+
 - [ ] Open `test-workspaces` root folder
 - [ ] Run `basic-sketches/simple-circle.js` in integrated browser
 - [ ] Run `html-sketches/bouncing-ball.html` in another tab
 - [ ] Run `folder-sketches/game-project/index.html`
 - [ ] Verify each runs independently in separate tabs/windows
 - [ ] Test switching between running sketches
-- [ ] ~~Console output should be sketch-specific~~ *(Console output not working - see Known Issue)*
+- [ ] Console output should be sketch-specific
 
 ## Clean-up
 
 After testing:
+
 - [ ] Stop any running servers
 - [ ] Close test sketches
 - [ ] Delete test files created during testing

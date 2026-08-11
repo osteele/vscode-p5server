@@ -1,5 +1,19 @@
 # Change Log
 
+## [Unreleased]
+
+Changed:
+
+- Automated checks now run on pushes and pull requests and report integration test failures.
+
+Fixed:
+
+- Restored browser console and error relaying to the P5 Sketch output panel and inline CodeLens display ([GitHub Issue #3](https://github.com/osteele/vscode-p5server/issues/3)).
+- Honored console auto-show settings and stopped high-frequency batching timers after traffic subsides.
+- Kept workspace command availability and Sketch Explorer state synchronized with workspace changes.
+- Restored Sketch Explorer auto-reveal and folder creation in the selected directory.
+- Rejected sketch and folder names that escape the selected directory.
+
 ## [1.11.0] -- 2025-09-27
 
 Added:
@@ -29,7 +43,7 @@ Fixed:
 
 Known Issues:
 
-- Console output from sketches is not currently appearing in the P5 Sketch output panel. This affects both integrated and external browsers. The WebSocket connection for console message relay is not being established properly. See [GitHub Issue #7] for details and workarounds.
+- Console output from sketches is not currently appearing in the P5 Sketch output panel. This affects both integrated and external browsers. The WebSocket connection for console message relay is not being established properly. See [GitHub Issue #3](https://github.com/osteele/vscode-p5server/issues/3) for details and workarounds.
 
 ## [1.10.2] - 2025-04-27
 
@@ -140,12 +154,12 @@ Fixed:
 New:
 
 - The Run Sketch command defaults to the new integrated browser. Change the
-  "*P5-server: Browser*" setting to `system` in order to open sketches in the
+  "_P5-server: Browser_" setting to `system` in order to open sketches in the
   default system browser. Or, change it to the name of a specific browser (such
   as Chrome, Edge, or Safari).
 
 - In the sketch explorer, clicking on a sketch runs it in the internal browser.
-  Uncheck the "*P5-server: Explorer > Explorer: Auto Run Sketch On Side*" setting
+  Uncheck the "_P5-server: Explorer > Explorer: Auto Run Sketch On Side_" setting
   to disabled this.
 
 - The first time the extension is activated, it displays release notes (this
@@ -154,7 +168,7 @@ New:
 
 Changed:
 
-- In the "*P5-server: Browser*" setting, the default system browser is named
+- In the "_P5-server: Browser_" setting, the default system browser is named
   `system` instead of `default`.
 
 ## [1.0.9] - 2021-09-12
@@ -166,19 +180,19 @@ New:
 - The sketch explorer can be used to rename and duplicate sketches. Right-click
   / control-click for a context menu that provides these items.
 
-The following features are disabled by default. Change the "*P5-server:
-Browser*" setting to `integrated` in order to use the integrated browser. This
+The following features are disabled by default. Change the "_P5-server:
+Browser_" setting to `integrated` in order to use the integrated browser. This
 will be the default in the next minor release.
 
 New:
 
 - The extension now includes an integrated browser, that runs inside of VS Code.
-  To activate this, change the new "*P5-server: Browser*" setting to
+  To activate this, change the new "_P5-server: Browser_" setting to
   `integrated`. (In the next release, this will become the default value for
   this setting.)
 - Console messages from the integrated browser are displayed in an output
   channel. This channel opens automatically when a message is printed to the
-  console. Use the "*Console > Integrated Browser > Auto Show: Level*" setting
+  console. Use the "_Console > Integrated Browser > Auto Show: Level_" setting
   to modify this behavior.
 
 Fixed:
