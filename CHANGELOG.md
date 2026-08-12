@@ -2,9 +2,12 @@
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-08-12
+
 Changed:
 
 - Automated checks now run on pushes and pull requests and report integration test failures.
+- Updated p5-server to 1.0.1 and refreshed production and development dependencies.
 
 Fixed:
 
@@ -13,6 +16,7 @@ Fixed:
 - Kept workspace command availability and Sketch Explorer state synchronized with workspace changes.
 - Restored Sketch Explorer auto-reveal and folder creation in the selected directory.
 - Rejected sketch and folder names that escape the selected directory.
+- Excluded development files and repository metadata from extension packages.
 
 ## [1.11.0] -- 2025-09-27
 
