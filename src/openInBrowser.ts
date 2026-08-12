@@ -1,5 +1,5 @@
-import { ChildProcess } from 'child_process';
-const open = require('open');
+import type { ChildProcess } from 'node:child_process';
+import type { Options } from 'open';
 
 /**
  * A wrapper for the open.open function that waits until the process status code
@@ -7,21 +7,20 @@ const open = require('open');
  *
  * @internal
  */
-export async function openInBrowser(target: string, options?: typeof open.Options): Promise<ChildProcess> {
-  const process = await open.default(target, options);
+export async function openInBrowser(target: string, options?: Options): Promise<ChildProcess> {
+  const { default: open } = await import('open');
+  const process = await open(target, options);
   if (process.exitCode === null) {
     await new Promise<void>(resolve => {
-      const intervalTimer = setInterval(() => {
-        if (process.exitCode !== null) {
-          clearInterval(intervalTimer);
-          clearTimeout(timeoutTimer);
-          resolve();
-        }
-      }, 50);
-      const timeoutTimer = setTimeout(() => {
-        clearInterval(intervalTimer);
+      const finish = () => {
+        clearTimeout(timeoutTimer);
+        process.removeListener('exit', finish);
+        process.removeListener('error', finish);
         resolve();
-      }, 5000);
+      };
+      process.once('exit', finish);
+      process.once('error', finish);
+      const timeoutTimer = setTimeout(finish, 5000);
     });
   }
   return process;

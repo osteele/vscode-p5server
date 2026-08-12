@@ -35,6 +35,9 @@ the Sketch Explorer is organized around sketches instead of files. It supports
 both sketches that are included in HTML files, and JavaScript-only sketches
 (that don't have an HTML file).
 
+The extension loads when you open the Sketch Explorer or run one of its
+commands. JavaScript files alone do not activate it in unrelated workspaces.
+
 ![Screenshot: Sketch explorer](images/sketch-explorer.png)
 
 Clicking on a sketch in the Sketch Explorer opens its JavaScript file in the
@@ -72,6 +75,11 @@ messages also appear inline in the JavaScript source file.
 The console output pane automatically appears when a message is printed to it.
 This behavior can be changed via the "Console > Integrated Browser > Auto Show:
 Level" setting.
+
+High-volume output is batched to keep the editor responsive. Inline messages
+are coalesced and retain a bounded recent history. Turning off the Editor >
+Info Lens setting also stops collecting inline messages; output-channel logging
+continues.
 
 ### Automatic Library Includes
 

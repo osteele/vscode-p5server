@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -11,9 +10,13 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vsc
   public readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private watchers: vscode.FileSystemWatcher[] = [];
   private _fileElementMap: Map<string, Element> = new Map();
+  private directoryAnalysis = new Map<string, ReturnType<typeof Sketch.analyzeDirectory>>();
+  private refreshTimer?: NodeJS.Timeout;
+  private pendingRefresh: Element | undefined | null;
 
   constructor(context: vscode.ExtensionContext) {
     SketchItem.resourceBaseUri = vscode.Uri.joinPath(context.extensionUri, 'resources');
+    this.updateWatchers();
   }
 
   public refresh(element?: Element | undefined | null): void {
@@ -21,6 +24,12 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vsc
       void commands.executeCommand('setContext', 'p5-server.explorer.loaded', false);
     }
     this._onDidChangeTreeData.fire(element);
+  }
+
+  public workspaceFoldersChanged(): void {
+    this.directoryAnalysis.clear();
+    this.updateWatchers();
+    this.refresh();
   }
 
   private register(element: Element, key?: string): Element {
@@ -86,18 +95,6 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vsc
     const wsFolders = workspace.workspaceFolders
       ? workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')
       : [];
-    this.watchers.forEach(w => w.dispose());
-    this.watchers = wsFolders.map(folder => {
-      const w = workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, '**/*.{htm,html,js}'));
-      w.onDidCreate(() => this.refresh());
-      w.onDidChange(uri => {
-        const element = this.getElementForFile(uri.fsPath);
-        const parent = element instanceof Sketch ? this.getElementForFile(path.dirname(uri.fsPath)) : element?.parent;
-        this.refresh(parent || element);
-      });
-      w.onDidDelete(() => this.refresh());
-      return w;
-    });
     this._fileElementMap.clear();
     try {
       switch (wsFolders.length) {
@@ -106,36 +103,94 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vsc
         case 1:
           return this.getDirectoryChildren(wsFolders[0].uri.fsPath, null);
         default:
-          return wsFolders
-            .filter(folder => folder.uri.scheme === 'file')
-            .map(folder => this.register(new DirectoryItem(folder.uri.fsPath, null, folder.name)));
+          return wsFolders.map(folder => this.register(new DirectoryItem(folder.uri.fsPath, null, folder.name)));
       }
     } finally {
       void commands.executeCommand('setContext', 'p5-server.explorer.loaded', true);
     }
   }
 
+  private updateWatchers() {
+    const wsFolders = workspace.workspaceFolders?.filter(folder => folder.uri.scheme === 'file') ?? [];
+    this.watchers.forEach(watcher => watcher.dispose());
+    this.watchers = wsFolders.map(folder => {
+      const w = workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, '**/*.{htm,html,js}'));
+      w.onDidCreate(uri => this.handleFileChange(uri, true));
+      w.onDidChange(uri => this.handleFileChange(uri, false));
+      w.onDidDelete(uri => this.handleFileChange(uri, true));
+      return w;
+    });
+  }
+
+  private handleFileChange(uri: vscode.Uri, structural: boolean) {
+    const dir = path.dirname(uri.fsPath);
+    this.directoryAnalysis.delete(dir);
+    if (structural) {
+      const workspaceRoot = workspace.getWorkspaceFolder(uri)?.uri.fsPath;
+      for (let ancestor = path.dirname(dir); workspaceRoot && ancestor.startsWith(workspaceRoot);) {
+        this.directoryAnalysis.delete(ancestor);
+        if (ancestor === workspaceRoot) break;
+        ancestor = path.dirname(ancestor);
+      }
+    }
+    const element = this.getElementForFile(uri.fsPath);
+    const parent =
+      element instanceof Sketch ? this.getElementForFile(dir) : element?.parent || this.getElementForFile(dir);
+    this.scheduleRefresh(parent || element || null);
+  }
+
+  private scheduleRefresh(element: Element | undefined | null) {
+    if (!element || (this.pendingRefresh && this.pendingRefresh !== element)) {
+      this.pendingRefresh = null;
+    } else if (this.pendingRefresh === undefined) {
+      this.pendingRefresh = element;
+    }
+    if (this.refreshTimer) return;
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = undefined;
+      const pendingRefresh = this.pendingRefresh;
+      this.pendingRefresh = undefined;
+      this.refresh(pendingRefresh);
+    }, 100);
+  }
+
   private async getDirectoryChildren(dir: string, parent: DirectoryItem | null): Promise<Element[]> {
-    const { sketches, unassociatedFiles } = await Sketch.analyzeDirectory(dir, { exclusions });
+    let analysis = this.directoryAnalysis.get(dir);
+    if (!analysis) {
+      analysis = Sketch.analyzeDirectory(dir, { exclusions });
+      this.directoryAnalysis.set(dir, analysis);
+      void analysis.catch(() => this.directoryAnalysis.delete(dir));
+    }
+    const { sketches, unassociatedFiles } = await analysis;
     const files = unassociatedFiles.map(fileName => path.join(dir, fileName));
+    const classifiedFiles = await Promise.all(
+      files.map(async filePath => ({
+        filePath,
+        isDirectory: (await workspace.fs.stat(vscode.Uri.file(filePath))).type === vscode.FileType.Directory,
+      })),
+    );
     const children = [
       // sketches
       ...sketches.sort((a, b) => a.name.localeCompare(b.name)),
       // directories
-      ...files
-        .filter(filePath => fs.statSync(filePath).isDirectory())
-        .map(dirPath => new DirectoryItem(dirPath, parent)),
+      ...classifiedFiles
+        .filter(({ isDirectory }) => isDirectory)
+        .map(({ filePath }) => new DirectoryItem(filePath, parent)),
       // files
-      ...files.filter(filePath => !fs.statSync(filePath).isDirectory()).map(filePath => new FileItem(filePath, parent)),
+      ...classifiedFiles
+        .filter(({ isDirectory }) => !isDirectory)
+        .map(({ filePath }) => new FileItem(filePath, parent)),
     ];
     children.forEach(child => this.register(child));
     return children;
   }
 
   public dispose() {
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
     this.watchers.forEach(watcher => watcher.dispose());
     this.watchers = [];
     this._onDidChangeTreeData.dispose();
     this._fileElementMap.clear();
+    this.directoryAnalysis.clear();
   }
 }

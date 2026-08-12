@@ -6,30 +6,29 @@ import { toZeroBasedPosition } from '../helpers';
 
 export class ConsoleMessageLensProvider implements vscode.CodeLensProvider, vscode.Disposable {
   private messages = new Map<string, { data: ConsoleMessageLensData; lens: vscode.CodeLens }>();
+  private keysByFile = new Map<string, Set<string>>();
   private readonly _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
   private readonly configurationSubscription: vscode.Disposable;
   readonly onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
+  private enabled: boolean;
+  private changeTimer?: NodeJS.Timeout;
 
-  // Adaptive debouncing for CodeLens updates
-  private updateTimes: number[] = [];
-  private debounceMode = false;
-  private debounceTimer?: NodeJS.Timeout;
-  private pendingUpdate = false;
-  private readonly rateWindowMs = 1000; // Track updates over 1 second
-  private readonly highRateThreshold = 15; // Updates per second
-  private readonly lowRateThreshold = 3; // Updates per second to exit debounce mode
-  private readonly debounceIntervalMs = 200; // Debounce for 200ms when in debounce mode
+  private static readonly maxMessageLocations = 1000;
+  private static readonly changeDebounceMs = 50;
 
   constructor() {
+    this.enabled = workspace.getConfiguration('p5-server').get('editor.infoLens', true);
     this.configurationSubscription = workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('p5-server.editor.infoLens')) {
-        this.fireChangeEvent();
+        this.enabled = workspace.getConfiguration('p5-server').get('editor.infoLens', true);
+        if (!this.enabled) this.clearMessages();
+        this.scheduleChangeEvent();
       }
     });
   }
 
   public addMessage(message: BrowserConsoleEvent | BrowserErrorEvent) {
-    if (message.type === 'unhandledRejection') return;
+    if (!this.enabled || message.type === 'unhandledRejection') return;
     const { file, clientId, line } = message;
     if (!file || !line) return;
     const key = ConsoleMessageLensData.key({ file, clientId, line });
@@ -41,98 +40,90 @@ export class ConsoleMessageLensProvider implements vscode.CodeLensProvider, vsco
       const lens = new vscode.CodeLens(range, data);
       record = { data, lens };
       this.messages.set(key, record);
+      const fileKeys = this.keysByFile.get(file) ?? new Set<string>();
+      fileKeys.add(key);
+      this.keysByFile.set(file, fileKeys);
+      this.evictOldestLocations();
+    } else {
+      // Preserve insertion order as a least-recently-used eviction order.
+      this.messages.delete(key);
+      this.messages.set(key, record);
     }
     record.data.addMessage(message);
-    this.fireChangeEvent();
+    this.scheduleChangeEvent();
   }
 
   public removeMessages({ file, clientId }: { file?: string; clientId?: string }) {
     let changed = false;
-    for (const [key, { data }] of this.messages) {
-      if ((file && data.file === file) || (clientId && data.clientId === clientId)) {
-        this.messages.delete(key); // delete during iteration is safe in javascript
-        changed = true;
+    if (file && !clientId) {
+      for (const key of this.keysByFile.get(file) ?? []) {
+        changed = this.deleteMessage(key) || changed;
+      }
+    } else {
+      for (const [key, { data }] of this.messages) {
+        if ((file && data.file === file) || (clientId && data.clientId === clientId)) {
+          changed = this.deleteMessage(key) || changed;
+        }
       }
     }
-    if (changed) this.fireChangeEvent();
+    if (changed) this.scheduleChangeEvent();
   }
 
   public provideCodeLenses(document: vscode.TextDocument): vscode.ProviderResult<vscode.CodeLens[]> {
-    if (!workspace.getConfiguration('p5-server').get<boolean>('editor.infoLens')) return [];
-    const lenses = [];
-    for (const { data, lens } of this.messages.values()) {
-      if (data.file === document.fileName) {
-        lenses.push(lens);
-      }
+    if (!this.enabled) return [];
+    const lenses: vscode.CodeLens[] = [];
+    for (const key of this.keysByFile.get(document.fileName) ?? []) {
+      const record = this.messages.get(key);
+      if (record) lenses.push(record.lens);
     }
     return lenses;
   }
 
-  /** Fire a change event with adaptive debouncing */
-  private fireChangeEvent() {
-    this.updateRate();
-
-    if (this.debounceMode) {
-      // In debounce mode, schedule an update if not already pending
-      this.pendingUpdate = true;
-      if (!this.debounceTimer) {
-        this.debounceTimer = setTimeout(() => {
-          if (this.pendingUpdate) {
-            this._onDidChangeCodeLenses.fire();
-            this.pendingUpdate = false;
-          }
-          this.debounceTimer = undefined;
-        }, this.debounceIntervalMs);
-      }
-    } else {
-      // Immediate mode - fire directly
+  private scheduleChangeEvent() {
+    if (this.changeTimer) return;
+    this.changeTimer = setTimeout(() => {
+      this.changeTimer = undefined;
       this._onDidChangeCodeLenses.fire();
+    }, ConsoleMessageLensProvider.changeDebounceMs);
+  }
+
+  private evictOldestLocations() {
+    while (this.messages.size > ConsoleMessageLensProvider.maxMessageLocations) {
+      const oldestKey = this.messages.keys().next().value;
+      if (oldestKey === undefined) return;
+      this.deleteMessage(oldestKey);
     }
   }
 
-  /** Track update rate and adjust debounce mode */
-  private updateRate() {
-    const now = Date.now();
-    // Remove timestamps older than the rate window
-    this.updateTimes = this.updateTimes.filter(time => now - time < this.rateWindowMs);
-    // Add current timestamp
-    this.updateTimes.push(now);
+  private deleteMessage(key: string): boolean {
+    const record = this.messages.get(key);
+    if (!record) return false;
+    this.messages.delete(key);
+    const fileKeys = this.keysByFile.get(record.data.file);
+    fileKeys?.delete(key);
+    if (fileKeys?.size === 0) this.keysByFile.delete(record.data.file);
+    return true;
+  }
 
-    const currentRate = this.updateTimes.length;
-
-    if (!this.debounceMode && currentRate > this.highRateThreshold) {
-      // Enter debounce mode
-      this.debounceMode = true;
-    } else if (this.debounceMode && currentRate < this.lowRateThreshold) {
-      // Exit debounce mode
-      this.debounceMode = false;
-      // Clear any pending debounced update
-      if (this.debounceTimer) {
-        clearTimeout(this.debounceTimer);
-        this.debounceTimer = undefined;
-      }
-      // Fire immediately if there was a pending update
-      if (this.pendingUpdate) {
-        this._onDidChangeCodeLenses.fire();
-        this.pendingUpdate = false;
-      }
-    }
+  private clearMessages() {
+    this.messages.clear();
+    this.keysByFile.clear();
   }
 
   public dispose() {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = undefined;
+    if (this.changeTimer) {
+      clearTimeout(this.changeTimer);
+      this.changeTimer = undefined;
     }
     this.configurationSubscription.dispose();
     this._onDidChangeCodeLenses.dispose();
-    this.messages.clear();
+    this.clearMessages();
   }
 }
 
 /** Aggregated console and error messages for a single (file, line) location. */
 export class ConsoleMessageLensData implements vscode.Command {
-  private messages = new Array<BrowserConsoleEvent | BrowserErrorEvent>();
+  private messages: ConsoleMessageSummary[] = [];
   private count = 0; // number of messages ever, including messages windowed out from this.messages
   public readonly key: string;
 
@@ -149,7 +140,13 @@ export class ConsoleMessageLensData implements vscode.Command {
   }
 
   public addMessage(message: BrowserConsoleEvent | BrowserErrorEvent) {
-    if (this.messages.unshift(message) > 10) {
+    const summary: ConsoleMessageSummary =
+      message.type === 'error'
+        ? { type: 'error', message: message.message, stack: message.stack }
+        : message.type === 'unhandledRejection'
+          ? { type: 'error', message: message.message }
+          : { type: 'console', method: message.method, text: formatConsoleEventArgs(message) };
+    if (this.messages.unshift(summary) > 10) {
       this.messages.pop();
     }
     this.count++;
@@ -163,11 +160,9 @@ export class ConsoleMessageLensData implements vscode.Command {
     const top = this.messages[0];
     if (top.type === 'error') {
       return top.message;
-    } else if (top.type === 'unhandledRejection') {
-      throw new Error('unandledRejection');
     } else {
       const { method } = top;
-      let title = `console.${method}: ${formatConsoleEventArgs(top)}`;
+      let title = `console.${method}: ${top.text}`;
       if (this.count > 1) {
         title += ` (+${this.count - 1} more)`;
       }
@@ -181,18 +176,12 @@ export class ConsoleMessageLensData implements vscode.Command {
       return top.stack || top.message;
     }
     return [
-      ...this.messages.map(event => {
-        // const ago = `(${(new Date() as any) - (event.timestamp as any)} ago)`;
-        switch (event.type) {
-          case 'error':
-            return `${event.message}`;
-          case 'unhandledRejection':
-            return `${event.message}`;
-          default:
-            return formatConsoleEventArgs(event);
-        }
-      }),
+      ...this.messages.map(message => (message.type === 'error' ? message.message : message.text)),
       this.count > this.messages.length ? `+${this.count - this.messages.length} more` : '',
     ].join('\n');
   }
 }
+
+type ConsoleMessageSummary =
+  | { type: 'console'; method: BrowserConsoleEvent['method']; text: string }
+  | { type: 'error'; message: string; stack?: string };

@@ -29,8 +29,14 @@ them in a disposable copy of `test-workspaces`, not in the repository copy.
 
 ### 1. Extension activation
 
+- [ ] Open a new Extension Development Host without opening the P5.js Sketch
+      Explorer or running a P5 Server command.
+- [ ] Run **Developer: Show Running Extensions** and confirm that P5 Server is
+      not active merely because the workspace contains JavaScript files.
 - [ ] Confirm that the P5.js Sketch Explorer icon appears in the Activity Bar.
 - [ ] Open the explorer and confirm that its view is named **Sketches**.
+- [ ] Run **Developer: Show Running Extensions** again and confirm that P5 Server
+      is now active.
 - [ ] Confirm that the top level contains `basic-sketches`, `error-examples`,
       `folder-sketches`, `html-sketches`, and `nested-projects`.
 - [ ] Expand `basic-sketches` and confirm that it contains these sketches:
@@ -349,6 +355,8 @@ installed.
 
 ### High-frequency console output
 
+- [ ] Open **Help > Open Process Explorer** and record the Extension Host CPU and
+      memory before generating console output.
 - [ ] Run `error-examples/console-spam.js`.
 - [ ] Hold the pointer button over the sketch for at least five seconds.
 - [ ] Confirm that the output channel continues to update and VS Code remains
@@ -357,6 +365,37 @@ installed.
       appearing.
 - [ ] Confirm that CPU use returns near its pre-test level after message traffic
       slows.
+- [ ] Leave the sketch running for at least one minute. Confirm that Extension
+      Host memory stabilizes instead of growing continuously.
+- [ ] Set `p5-server.editor.infoLens` to `false`, close and reopen the sketch,
+      and generate another five-second burst.
+- [ ] Confirm that output continues, no CodeLens messages appear, and Extension
+      Host memory does not grow with new inline-message locations.
+- [ ] Restore `p5-server.editor.infoLens` to `true`.
+
+### Explorer refresh load
+
+- [ ] In the disposable workspace, populate `performance-test` with at least 100
+      subdirectories and 1,000 JavaScript files distributed among them.
+- [ ] Expand and collapse several branches in the P5.js Sketch Explorer.
+- [ ] Confirm that editor typing, scrolling, and commands remain responsive
+      during the first scan and later expansions.
+- [ ] Collapse and re-expand the same branch. Confirm that the second expansion
+      is visibly faster or no slower than the first.
+- [ ] Save one JavaScript file repeatedly five times in quick succession.
+- [ ] Confirm that the explorer reaches the correct final state without visible
+      refresh flicker or repeated full-tree loading indicators.
+- [ ] Create, rename, and delete a nested JavaScript file. Confirm that its
+      containing branch updates without a manual refresh.
+- [ ] Remove the generated `performance-test` contents after this test.
+
+### Live-reload watcher overlap
+
+- [ ] Run `folder-sketches/game-project/index.html`.
+- [ ] Save `player.js` once and confirm that the browser reloads once, without a
+      second immediate reload.
+- [ ] Save `player.js` several times quickly and confirm that the final version
+      appears without duplicate reload loops.
 
 ### Multiple sketches
 

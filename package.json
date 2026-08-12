@@ -35,8 +35,7 @@
   },
   "homepage": "https://github.com/osteele/vscode-p5server#readme",
   "activationEvents": [
-    "onView:p5sketchExplorer",
-    "workspaceContains:**/*.js"
+    "onView:p5sketchExplorer"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -44,22 +43,22 @@
       {
         "command": "p5-server.start",
         "title": "P5 Server: Start",
-        "enablement": "p5-server.available"
+        "enablement": "workspaceFolderCount != 0"
       },
       {
         "command": "p5-server.stop",
         "title": "P5 Server: Stop",
-        "enablement": "p5-server.available"
+        "enablement": "workspaceFolderCount != 0"
       },
       {
         "command": "p5-server.run",
         "title": "Run P5 Sketch (in Browser or Sidebar)",
-        "enablement": "p5-server.available"
+        "enablement": "workspaceFolderCount != 0"
       },
       {
         "command": "p5-server.run#browser",
         "title": "Run P5 Sketch in Browser",
-        "enablement": "p5-server.available",
+        "enablement": "workspaceFolderCount != 0",
         "icon": {
           "dark": "./resources/dark/sketch.svg",
           "light": "./resources/light/sketch.svg"
@@ -68,7 +67,7 @@
       {
         "command": "p5-server.run#sidebar",
         "title": "Run P5 Sketch in Sidebar",
-        "enablement": "p5-server.available",
+        "enablement": "workspaceFolderCount != 0",
         "icon": {
           "dark": "./resources/dark/sketch.svg",
           "light": "./resources/light/sketch.svg"
@@ -276,12 +275,12 @@
       "editor/title": [
         {
           "command": "p5-server.run#browser",
-          "when": "p5-server.runIconEnabled && p5-server.available && p5-server.browser != integrated && resourceExtname =~ /\\.(js|html)/",
+          "when": "config.p5-server.editorTitle.RunIcon.enabled && workspaceFolderCount != 0 && config.p5-server.browser != integrated && resourceExtname =~ /\\.(js|html)/",
           "group": "navigation"
         },
         {
           "command": "p5-server.run#sidebar",
-          "when": "p5-server.runIconEnabled && p5-server.available && p5-server.browser == integrated && resourceExtname =~ /\\.(js|html)/",
+          "when": "config.p5-server.editorTitle.RunIcon.enabled && workspaceFolderCount != 0 && config.p5-server.browser == integrated && resourceExtname =~ /\\.(js|html)/",
           "group": "navigation"
         }
       ],
@@ -437,7 +436,6 @@
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
-    "chokidar": "3.6.0",
     "node-html-parser": "^9.0.1",
     "open": "^10.2.0",
     "p5-server": "1.0.1"

@@ -16,6 +16,9 @@ export default class ScriptConsole {
   private lensProvider: ConsoleMessageLensProvider;
   private readonly disposables: vscode.Disposable[];
   private messageCount = 0; // how many messages have been displayed since clear()?
+  private browser: string = 'integrated';
+  private autoShowThreshold: BrowserConsoleEventMethods | 'always' | 'never' = 'info';
+  private autoShownForSource = false;
 
   // Adaptive throttling
   private messageTimes: number[] = [];
@@ -33,11 +36,18 @@ export default class ScriptConsole {
     this.lensProvider = provider;
     this.disposables = [
       vscode.languages.registerCodeLensProvider('javascript', provider),
-      vscode.commands.registerCommand('p5-server.showScriptOutput', () => {
-        this.channel.show(true);
+      workspace.onDidChangeConfiguration(event => {
+        if (event.affectsConfiguration('p5-server.browser') || event.affectsConfiguration('p5-server.console')) {
+          this.updateConfiguration();
+        }
       }),
       provider,
     ];
+    this.updateConfiguration();
+  }
+
+  public show() {
+    this.channel.show(true);
   }
 
   subscribe(server: Server) {
@@ -83,6 +93,7 @@ export default class ScriptConsole {
     server.onScriptEvent('connection', (event: BrowserConnectionEvent) => {
       const { type, file, url } = event;
       if (type === 'opened') {
+        this.autoShownForSource = false;
         if (file) this.lensProvider.removeMessages({ file });
         if (!this.setFile(file, url) && this.messageCount > 0) {
           const label = '[RELOAD]';
@@ -142,6 +153,7 @@ export default class ScriptConsole {
     const source = file || url;
     if (this.source === source) return false;
     this.source = source;
+    this.autoShownForSource = false;
     const label = source ? ` (${source}) ` : '';
     this.banner = padCenter(label, 80, '=');
     this.messageCount = 0;
@@ -151,20 +163,23 @@ export default class ScriptConsole {
   /** Show the console if the method's log level is greater than the
    * configuration's p5-server.integratedBrowser.autoShow.level. */
   private maybeShowConsole(level: BrowserConsoleEventMethods) {
-    // This code supports using different configuration for the integrated and
-    // external browser, although the configuration for this has been removed
-    // from the contribution configuration.
-    const browser = workspace.getConfiguration('p5-server').get('browser', 'integrated');
-    const [configKey, defaultValue]: [string, BrowserConsoleEventMethods] =
-      browser === 'integrated' ? ['integratedBrowser', 'info'] : ['externalBrowser', 'error'];
-    const threshold = workspace
-      .getConfiguration('p5-server.console')
-      .get<BrowserConsoleEventMethods | 'always' | 'never'>(configKey + '.autoShow.level', defaultValue);
+    if (this.autoShownForSource) return;
     const logLevelIndex = logLevelOrder.indexOf(level);
-    const thresholdIndex = logLevelOrder.indexOf(threshold);
+    const thresholdIndex = logLevelOrder.indexOf(this.autoShowThreshold);
     if (logLevelIndex >= 0 && logLevelIndex <= thresholdIndex) {
       this.channel.show(true);
+      this.autoShownForSource = true;
     }
+  }
+
+  private updateConfiguration() {
+    this.browser = workspace.getConfiguration('p5-server').get('browser', 'integrated');
+    const [configKey, defaultValue]: [string, BrowserConsoleEventMethods] =
+      this.browser === 'integrated' ? ['integratedBrowser', 'info'] : ['externalBrowser', 'error'];
+    this.autoShowThreshold = workspace
+      .getConfiguration('p5-server.console')
+      .get<BrowserConsoleEventMethods | 'always' | 'never'>(configKey + '.autoShow.level', defaultValue);
+    this.autoShownForSource = false;
   }
 
   /** Track message rate and update batch mode if needed */

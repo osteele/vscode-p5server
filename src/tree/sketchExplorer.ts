@@ -2,8 +2,6 @@ import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
-import { renameSketch } from '../commands/conversionCommands';
-import { openLibraryPane } from '../commands/runCommands';
 import { getWorkspaceFolderPaths } from '../helpers/fileHelpers';
 import { sketchIsEntireDirectory } from '../helpers/sketchHelpers';
 import { validateChildName } from '../helpers/fileNames';
@@ -27,7 +25,7 @@ export class SketchExplorer {
         this.selection = e.selection[0];
       }),
     );
-    context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => this.provider.refresh()));
+    context.subscriptions.push(workspace.onDidChangeWorkspaceFolders(() => this.provider.workspaceFoldersChanged()));
     this.registerCommands(context);
 
     context.subscriptions.push(
@@ -56,8 +54,10 @@ export class SketchExplorer {
       commands.registerCommand('p5-server.explorer.createSketch#folder', async () =>
         this.createSketchInSelectedFolder('folder'),
       ),
-      commands.registerCommand('p5-server.explorer.rename', (item: Sketch | FilePathItem) =>
-        renameSketch(item instanceof Sketch ? item : item.resourceUri!),
+      commands.registerCommand('p5-server.explorer.rename', async (item: Sketch | FilePathItem) =>
+        (await import('../commands/conversionCommands')).renameSketch(
+          item instanceof Sketch ? item : item.resourceUri!,
+        ),
       ),
       commands.registerCommand('p5-server.explorer.open', (item: Sketch | FileItem) => {
         const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
@@ -81,7 +81,9 @@ export class SketchExplorer {
       commands.registerCommand('p5-server.explorer.run#external', (item: Sketch | FilePathItem) =>
         this.runSelectedSketch(item, 'external'),
       ),
-      commands.registerCommand('p5-server.explorer.openLibrary', (item: LibraryItem) => openLibraryPane(item.library)),
+      commands.registerCommand('p5-server.explorer.openLibrary', async (item: LibraryItem) =>
+        (await import('../commands/runCommands')).openLibraryPane(item.library),
+      ),
     );
   }
 

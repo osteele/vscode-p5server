@@ -1,12 +1,12 @@
-import { Server } from 'p5-server';
+import type { Server } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands, Uri, window, workspace } from 'vscode';
-import ScriptConsole from './console/scriptConsole';
+import type ScriptConsole from './console/scriptConsole';
 import { withConsoleRelayQuery } from './helpers';
 import { getWorkspaceFolderPaths } from './helpers/fileHelpers';
 import { openInBrowser } from './openInBrowser';
 import { StatusBarManager } from './statusBar';
-import open = require('open');
+import type { AppName, Options as OpenOptions } from 'open';
 import { Configuration } from './configuration';
 import { createVSCodeFileWatchProvider } from './fileWatchProvider';
 
@@ -17,12 +17,11 @@ export class ServerManager {
   private server: Server | null = null;
   private _state: ServerState = 'stopped';
   private statusBarManager: StatusBarManager;
-  private scriptConsole: ScriptConsole;
+  private scriptConsole: ScriptConsole | null = null;
   private startPromise: Promise<void> | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     this.statusBarManager = new StatusBarManager();
-    this.scriptConsole = new ScriptConsole();
     this.registerCommands(context);
   }
 
@@ -39,6 +38,10 @@ export class ServerManager {
     context.subscriptions.push(
       commands.registerCommand('p5-server.start', this.startServer.bind(this)),
       commands.registerCommand('p5-server.stop', this.stopServer.bind(this)),
+      commands.registerCommand('p5-server.showScriptOutput', async () => {
+        const scriptConsole = await this.getScriptConsole();
+        scriptConsole.show();
+      }),
       commands.registerCommand('p5-server.openBrowser', async (uri?: Uri, options?: { browser: string }) => {
         if (this.state === 'stopped' || this.state === 'starting') {
           await this.startServer(uri, options);
@@ -48,7 +51,11 @@ export class ServerManager {
       }),
     );
 
-    context.subscriptions.push(workspace.onDidChangeConfiguration(this.updateFromConfiguration.bind(this)));
+    context.subscriptions.push(
+      workspace.onDidChangeConfiguration(event => {
+        if (event.affectsConfiguration('p5-server')) this.updateFromConfiguration();
+      }),
+    );
     this.updateFromConfiguration();
   }
 
@@ -58,6 +65,19 @@ export class ServerManager {
 
   updateStatusBar() {
     this.statusBarManager.update(this.server, this.state);
+  }
+
+  private async getScriptConsole(): Promise<ScriptConsole> {
+    if (!this.scriptConsole) {
+      const scriptConsoleModule = await import('./console/scriptConsole');
+      this.scriptConsole = new scriptConsoleModule.default();
+    }
+    return this.scriptConsole;
+  }
+
+  private disposeScriptConsole() {
+    this.scriptConsole?.dispose();
+    this.scriptConsole = null;
   }
 
   get state() {
@@ -122,15 +142,20 @@ export class ServerManager {
         proxyCache: Configuration.enableProxyCache,
         relayConsoleMessages: true,
       };
-      this.server = new Server(serverOptions);
+      const serverModule = await import('p5-server');
+      this.server = new serverModule.Server(serverOptions);
       await this.server.start();
-      this.scriptConsole.subscribe(this.server);
+      const scriptConsole = await this.getScriptConsole();
+      scriptConsole.subscribe(this.server);
       this.state = 'running';
 
       sbm.dispose();
       sbm = window.setStatusBarMessage(`p5-server is running at ${this.server.url}`);
       setTimeout(() => sbm?.dispose(), 10000);
     } catch (error) {
+      await this.server?.close();
+      this.server = null;
+      this.disposeScriptConsole();
       this.state = 'stopped';
       sbm?.dispose();
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -159,6 +184,7 @@ export class ServerManager {
     try {
       await this.server.close();
       this.server = null;
+      this.disposeScriptConsole();
       this.state = 'stopped';
 
       sbm.dispose();
@@ -189,10 +215,9 @@ export class ServerManager {
     const target = withConsoleRelayQuery(serverTarget);
 
     // Wrap open.xxx with versions that know about Safari
-    type AppName = open.AppName | 'safari';
-    const openApps = { safari: 'safari', ...open.apps };
+    type SupportedAppName = AppName | 'safari';
 
-    type BrowserKey = AppName | 'system' | 'integrated';
+    type BrowserKey = SupportedAppName | 'system' | 'integrated';
     const configBrowser = Configuration.browser;
     const browserName =
       options?.browser === 'external'
@@ -208,8 +233,10 @@ export class ServerManager {
     }
 
     // TODO: exit with an error message if the browserKey === 'safari' and the os is not macOS
-    let openOptions: open.Options | undefined;
+    let openOptions: OpenOptions | undefined;
     if (browserKey !== 'system') {
+      const { apps } = await import('open');
+      const openApps = { safari: 'safari', ...apps };
       const name = openApps[browserKey];
       openOptions = { app: { name } };
     }
@@ -236,7 +263,7 @@ export class ServerManager {
       await this.server.close();
       this.server = null;
     }
-    this.scriptConsole.dispose();
+    this.disposeScriptConsole();
     this.statusBarManager.dispose();
     this.state = 'stopped';
     ServerManager.instance = null;

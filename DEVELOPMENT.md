@@ -44,8 +44,11 @@ This extension uses a multi-layered testing approach:
 - Run with: `npm run test`
 
 **Integration Tests**: Test VS Code API integration
-- Location: `src/test/suite/commands.test.ts`, `src/test/suite/extension.test.ts`
-- Focus: Command registration, extension activation
+- Location: `src/test/suite/commands.test.ts`, `src/test/suite/extension.test.ts`,
+  `src/test/suite/fileWatchProvider.test.ts`, and
+  `src/test/suite/consoleMessageLensProvider.test.ts`
+- Focus: Command registration, activation, file-watcher behavior, console
+  update coalescing, and message-retention limits
 - Run with: `npm run test`
 
 **Configuration Tests**: Test settings and exclusions
@@ -55,7 +58,7 @@ This extension uses a multi-layered testing approach:
 
 ### 2. Manual Testing
 
-For comprehensive functionality testing, use the manual testing guide:
+For full functionality testing, use the manual testing guide:
 
 ```sh
 # See detailed testing procedures
@@ -94,6 +97,9 @@ For this project, I've made a pragmatic decision to rely heavily on manual testi
 ```sh
 # Run all automated tests (includes VS Code integration tests)
 npm run test
+
+# Run VS Code integration tests without rebuilding
+npm run test:integration
 
 # Run only unit tests (fast, no VS Code required)
 npm run test:unit
@@ -157,6 +163,19 @@ Commands are modularized into focused areas:
 - `src/console/scriptConsole.ts` - Console output integration
 - `src/configuration.ts` - Settings management
 - `src/statusBar.ts` - Status bar UI
+
+### Runtime performance
+
+- VS Code activates the extension when its view or a command is opened. A
+  JavaScript file in an unrelated workspace does not activate it.
+- Conversion commands, the script console, and the external-browser package
+  load when first used. The server instance is created only when requested.
+- The Sketch Explorer caches directory analysis. File-system events invalidate
+  affected directories and coalesce refreshes.
+- Live-reload watchers combine duplicate paths and overlapping directory
+  coverage.
+- Console output is batched under load. CodeLens updates are coalesced, indexed
+  by file, and limited to a fixed number of source locations.
 
 ## Local Install
 

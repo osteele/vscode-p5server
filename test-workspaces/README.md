@@ -32,10 +32,11 @@ Complex folder structure for testing the tree view:
 - Archive folders
 
 ### performance-test/
-Large sketches for performance testing (if needed)
+Empty destination for generated performance fixtures. The manual testing guide
+describes how to populate it inside a disposable copy of this workspace.
 
 ## Usage
 
 1. Open VS Code
 2. File → Open Folder → Select `test-workspaces` or a subdirectory
-3. Follow the steps in MANUAL_TESTING.md using these specific files
+3. Follow [`docs/manual-testing.md`](../docs/manual-testing.md) using these files.
