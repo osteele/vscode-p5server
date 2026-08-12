@@ -1,311 +1,426 @@
 # Manual Testing Guide
 
-This document provides step-by-step instructions for manually testing the P5 Server VS Code extension to ensure all functionality works correctly.
+Use this checklist to test the P5 Server extension in a VS Code Extension
+Development Host. Several tests create, rename, modify, and delete files. Run
+them in a disposable copy of `test-workspaces`, not in the repository copy.
 
-## Prerequisites
+## Setup
 
-1. VS Code installed
-2. Extension loaded in development mode:
-   - Open the extension project in VS Code: `code /path/to/vscode-p5server`
-   - Press F5 to launch Extension Development Host
-   - This opens a new VS Code window with the extension loaded
-3. Test workspace ready: In the Extension Development Host window, open the test workspace:
-   - File → Open Folder → Navigate to `test-workspaces` folder within the extension directory
+1. Install the project dependencies and open this repository in VS Code.
+2. Press F5 and select the **Run Extension** launch configuration. The launch
+   task compiles the extension before opening an Extension Development Host.
+3. Make a disposable copy of `test-workspaces` outside the repository.
+4. In the Extension Development Host, choose **File > Open Folder** and open the
+   copied `test-workspaces` directory.
+5. Record the current P5 Server settings so that you can restore them after the
+   test. Use these values unless a test says otherwise:
 
-## Core Functionality Tests
+   - `p5-server.browser`: `integrated`
+   - `p5-server.console.clearOnReload`: `true`
+   - `p5-server.console.integratedBrowser.autoShow.level`: `always`
+   - `p5-server.editor.infoLens`: `true`
+   - `p5-server.explorer.autoReveal`: `true`
+   - `p5-server.explorer.autoRunSketchOnSide`: `true`
+   - `p5-server.editorTitle.RunIcon.enabled`: `true`
+   - `p5-server.statusBar.browserItem.enabled`: `true`
+   - `p5-server.statusBar.serverItem.enabled`: `true`
 
-### 1. Extension Activation
+## Core Functionality
 
-**Test**: Extension loads properly
+### 1. Extension activation
 
-- [ ] Open VS Code with the `test-workspaces/basic-sketches` folder
-- [ ] Verify P5.js Sketch Explorer appears in the activity bar
-- [ ] Check that status bar shows "P5 Server" item (bottom-left area)
-- [ ] Verify no error notifications appear
-- [ ] In the P5.js Sketch Explorer, you should see:
-  - `interactive-sketch.js`
-  - `particle-system.js`
-  - `simple-circle.js`
+- [ ] Confirm that the P5.js Sketch Explorer icon appears in the Activity Bar.
+- [ ] Open the explorer and confirm that its view is named **Sketches**.
+- [ ] Confirm that the top level contains `basic-sketches`, `error-examples`,
+      `folder-sketches`, `html-sketches`, and `nested-projects`.
+- [ ] Expand `basic-sketches` and confirm that it contains these sketches:
 
-### 2. Server Management
+  - `interactive sketch`
+  - `particle system`
+  - `simple circle`
 
-**Test**: Server start/stop functionality
+- [ ] Confirm that **P5 Server** appears on the right side of the status bar.
+- [ ] Confirm that no error notification appears during activation or scanning.
 
-- [ ] Click "P5 Server" in status bar (should show "Click to start")
-- [ ] Verify server starts successfully
-- [ ] Check status bar updates to show running state with spinning icon, then solid icon
-- [ ] Status bar should show "Stop the P5 server" tooltip when running
-- [ ] Click to stop server
-- [ ] Verify server stops and status bar updates accordingly
+### 2. Server management
 
-### 3. Sketch Creation
+- [ ] Hover over **P5 Server** and confirm that its tooltip says **Click to start
+      the P5 server**.
+- [ ] Click **P5 Server**. Confirm that the icon spins while the server starts.
+- [ ] Confirm that the server's directory listing opens in the integrated
+      browser.
+- [ ] Confirm that the running server uses a solid icon and its tooltip says
+      **Stop the P5 server**.
+- [ ] Confirm that the **P5 Browser** status-bar item appears while the server is
+      running and reopens the server page when clicked.
+- [ ] Click **P5 Server** again. Confirm that the icon spins while the server
+      stops, then returns to its stopped state.
+- [ ] Confirm that **P5 Browser** is hidden after the server stops.
 
-**Important**: First click on "P5.JS SKETCH EXPLORER" in the Activity Bar or Side Bar to ensure you're in the P5.js Sketch Explorer view, not the regular File Explorer.
+### 3. Sketch creation
 
-**Test**: Create JavaScript-only sketch
+Select a destination in the P5.js Sketch Explorer before using a command from
+the view title. The commands create files relative to that selection.
 
-- [ ] Click on the P5.JS SKETCH EXPLORER view to activate it
-- [ ] Navigate to the `basic-sketches` folder in the tree
-- [ ] Click the "+" icon in the P5.JS SKETCH EXPLORER title bar (top of the view)
-- [ ] Or use Command Palette: "P5 Server: Create Sketch (JavaScript)"
-- [ ] Enter name: `my-new-sketch`
-- [ ] Verify `my-new-sketch.js` is created with basic p5.js template
-- [ ] Check file opens in editor automatically
-- [ ] Should contain setup() and draw() functions
+#### JavaScript sketch
 
-**Test**: Create HTML + JavaScript sketch
+- [ ] Select `basic-sketches` in the P5.js Sketch Explorer.
+- [ ] Click the **Create Sketch (JavaScript)** button in the view title, or run
+      **Create Sketch (JavaScript)** from the Command Palette.
+- [ ] Enter `my-new-sketch`.
+- [ ] Confirm that `basic-sketches/my-new-sketch.js` is created and opens in the
+      editor.
+- [ ] Confirm that the generated file defines `setup()` and `draw()`.
+- [ ] Confirm that `my new sketch` appears in the P5.js Sketch Explorer without
+      a manual refresh.
 
-- [ ] In the P5.JS SKETCH EXPLORER view
-- [ ] Navigate to `html-sketches` folder
-- [ ] Click the ellipsis (...) in the title bar and select "Create Sketch (HTML + JavaScript)"
-- [ ] Or use Command Palette: "P5 Server: Create Sketch (HTML + JavaScript)"
-- [ ] Enter name: `my-html-sketch`
-- [ ] Verify `my-html-sketch.html` and corresponding `.js` file are created
-- [ ] Check HTML file includes proper script tag reference
-- [ ] Compare with existing `bouncing-ball.html` for reference
+#### HTML and JavaScript sketch
 
-**Test**: Create sketch folder
+- [ ] Select `html-sketches` in the P5.js Sketch Explorer.
+- [ ] Open the view's **...** menu and choose **Create Sketch (HTML +
+      JavaScript)**.
+- [ ] Enter `my-html-sketch`.
+- [ ] Confirm that `html-sketches/my-html-sketch.html` and
+      `html-sketches/sketch.js` are created.
+- [ ] Confirm that `my-html-sketch.html` loads p5.js and refers to `sketch.js`.
+- [ ] Confirm that `sketch.js` opens in the editor.
 
-- [ ] In the P5.JS SKETCH EXPLORER view
-- [ ] Navigate to `folder-sketches` folder
-- [ ] Click the ellipsis (...) in the title bar and select "Create Sketch (Single-Sketch Folder)"
-- [ ] Or use Command Palette: "P5 Server: Create Sketch (Single-Sketch Folder)"
-- [ ] Enter name: `my-folder-sketch`
-- [ ] Verify folder is created with `index.html` and `sketch.js`
-- [ ] Check structure matches `game-project` folder
+If `sketch.js` already exists, the command chooses an unused script name based
+on the sketch name. The expected `sketch.js` name above assumes a fresh copy of
+the fixtures.
 
-### 4. Sketch Running
+#### Single-sketch folder
 
-**Test**: Run sketch in integrated browser
+- [ ] Select `folder-sketches` in the P5.js Sketch Explorer.
+- [ ] Open the view's **...** menu and choose **Create Sketch (Single-Sketch
+      Folder)**.
+- [ ] Enter `my-folder-sketch`.
+- [ ] Confirm that `folder-sketches/my-folder-sketch` contains `index.html` and
+      `sketch.js`.
+- [ ] Confirm that `index.html` refers to `sketch.js` and `sketch.js` opens in
+      the editor.
 
-- [ ] Open `test-workspaces/basic-sketches/simple-circle.js`
-- [ ] Set browser preference to "integrated" in settings (Cmd/Ctrl+, then search for "p5-server.browser")
-- [ ] Use one of these methods to run:
-  - Command Palette (Cmd/Ctrl+Shift+P): "P5 Server: Run Sketch"
-  - Right-click the file in P5.JS SKETCH EXPLORER → "Run sketch"
-  - Play button in editor title (if visible - may be overridden by other extensions)
-- [ ] Verify sketch opens in integrated browser pane on the right
-- [ ] Check that a red circle moves across the screen
-- [ ] Console should show "Simple circle sketch started"
+### 4. Running sketches
 
-**Note**: If the play button runs Node.js instead of opening the sketch, it's being handled by another extension (like Code Runner). Use the P5 Server commands instead.
+#### Integrated browser
 
-**Test**: Run sketch in external browser
+- [ ] Set `p5-server.browser` to `integrated`.
+- [ ] Open `basic-sketches/simple-circle.js`.
+- [ ] Run **Run P5 Sketch (in Browser or Sidebar)** from the Command Palette.
+- [ ] Confirm that the sketch opens beside the editor in VS Code.
+- [ ] Confirm that a red circle moves across the canvas.
+- [ ] Confirm that `[LOG] Simple circle sketch started` appears in the **P5
+      Sketch** output channel.
+- [ ] Right-click `simple circle` in the P5.js Sketch Explorer and choose **Run
+      in integrated browser**. Confirm that the same sketch opens.
+- [ ] Confirm that the editor-title run icon uses the integrated browser while
+      `p5-server.browser` is `integrated`.
 
-- [ ] Open `test-workspaces/basic-sketches/interactive-sketch.js`
-- [ ] Set browser preference to "Chrome" (or your available browser) in settings
-- [ ] Use one of these methods to run:
-  - Command Palette: "P5 Server: Run Sketch" (will use your browser preference)
-  - Command Palette: "P5 Server: Run Sketch in Browser" (forces external browser)
-  - Right-click in P5.JS SKETCH EXPLORER → "Run in external browser"
-- [ ] Verify sketch opens in Chrome (or your chosen browser)
-- [ ] Move your mouse - circles should follow the cursor
-- [ ] Click to see console messages with coordinates
+Another extension can contribute a different editor-title play button. When a
+button runs the file with Node.js, use the P5 Server command or the P5.js Sketch
+Explorer context menu.
 
-**Test**: Live reload
+#### External browser
 
-- [ ] Keep `simple-circle.js` running
-- [ ] Change `fill(255, 0, 0)` to `fill(0, 255, 0)` (red to green)
-- [ ] Save the file (Cmd/Ctrl+S)
-- [ ] Verify sketch automatically reloads
-- [ ] Circle should now be green
+- [ ] Set `p5-server.browser` to `system`, or choose an installed named browser.
+- [ ] Open `basic-sketches/interactive-sketch.js`.
+- [ ] Run **Run P5 Sketch in Browser** from the Command Palette.
+- [ ] Confirm that the sketch opens in the selected external browser.
+- [ ] Move the pointer and confirm that circles follow it.
+- [ ] Click the canvas and confirm that the click coordinates appear in the
+      **P5 Sketch** output channel.
+- [ ] Right-click `interactive sketch` and choose **Run in external browser**.
+      Confirm that this forces an external browser even when
+      `p5-server.browser` is later restored to `integrated`.
 
-### 5. Sketch Explorer
+### 5. Live reload and file watching
 
-**Test**: Tree view functionality
+#### Main sketch file
 
-- [ ] Open `test-workspaces/nested-projects` folder
-- [ ] Verify P5.js Sketch Explorer shows:
-  - `project-a/main-sketch.js`
-  - `project-b/sketches/sketch1.js`
-  - `project-b/experiments/test.js`
-- [ ] Check folder structure is correctly displayed with indentation
-- [ ] Verify sketch files show p5 icons
-- [ ] Test collapsing/expanding `project-b` folder
+- [ ] Set `p5-server.browser` to `integrated` and run
+      `basic-sketches/simple-circle.js`.
+- [ ] Change `fill(255, 0, 0)` to `fill(0, 0, 255)` and save the file.
+- [ ] Confirm that the browser reloads without restarting the server and the
+      circle becomes blue.
+- [ ] Restore `fill(255, 0, 0)` and save. Confirm that the circle becomes red.
 
-**Test**: Context menu operations
+#### File within a multi-file sketch
 
-- [ ] Right-click on `basic-sketches/particle-system.js`:
-  - [ ] "Run sketch" - runs with default browser setting
-  - [ ] "Run in integrated browser" - forces integrated view
-  - [ ] "Run in external browser" - forces external browser
-  - [ ] "Open in editor" - opens file for editing
-  - [ ] "Rename" - test renaming to `particles-renamed.js`
-  - [ ] "Duplicate" - creates `particle-system copy.js`
-  - [ ] "Delete" - shows confirmation, then deletes (test on duplicate)
+- [ ] Run `folder-sketches/game-project/index.html`.
+- [ ] In `folder-sketches/game-project/player.js`, change
+      `fill(0, 255, 0)` to `fill(0, 0, 255)` and save.
+- [ ] Confirm that the browser reloads and the player circle becomes blue.
+- [ ] Restore `fill(0, 255, 0)` and save. Confirm that the player becomes green.
 
-### 6. Sketch Conversion
+#### Created, renamed, and deleted files
 
-**Test**: Convert between formats
+- [ ] Click **P5 Browser** to open the server's top-level directory listing.
+- [ ] Create `watcher-created.js` at the workspace root with this content and
+      save it:
 
-- [ ] Open `test-workspaces/basic-sketches` folder
-- [ ] Right-click on `simple-circle.js` → "Convert to HTML + JavaScript"
-- [ ] Verify `simple-circle.html` is created alongside the JS file
-- [ ] Check HTML contains proper p5.js CDN links and script reference
-- [ ] Open `test-workspaces/html-sketches` folder
-- [ ] Right-click on `bouncing-ball.html` → "Convert to Script-Only"
-- [ ] Verify it creates a standalone JS file without the HTML
-
-### 7. Console Integration
-
-**Test**: Console output (with integrated browser)
-
-- [ ] Open `test-workspaces/error-examples/console-spam.js`
-- [ ] Run in integrated browser using Command Palette: "P5 Server: Run Sketch"
-- [ ] The "P5 Sketch" output panel should appear when console messages start
-  - If it doesn't appear automatically, open it manually: View → Output → Select "P5 Sketch" from dropdown
-- [ ] Check console messages appear with different levels:
-  - Regular logs (every 5 frames)
-  - Info messages (📊 icon)
-  - Warnings (⚠️ icon)
-  - Errors (❌ icon)
-- [ ] Click in the sketch - verify burst messages appear
-- [ ] Verify messages are batched during high-frequency output (>20 msg/sec)
-- [ ] Set "Console > Integrated Browser > Auto Show: Level" to `never`
-- [ ] Close the output panel, reload the sketch, and verify messages do not reopen it
-- [ ] Run "P5 Server: Show Script Output" and verify the buffered messages are present
-
-**Test**: Error handling
-
-- [ ] Open `test-workspaces/error-examples/syntax-error.js`
-- [ ] Note the syntax error on line 7 (missing closing parenthesis)
-- [ ] Try to run sketch
-- [ ] Verify error appears in P5 Sketch output panel
-- [ ] Check error location is highlighted in the editor
-- [ ] Open `test-workspaces/error-examples/runtime-error.js`
-- [ ] Run the sketch
-- [ ] Wait for runtime errors to appear (every 60 frames)
-- [ ] Click to trigger an additional error
-
-### 8. Configuration
-
-**Test**: Settings integration
-
-- [ ] Open P5 Server settings (Command Palette → "P5 Server: Open Settings")
-- [ ] Modify browser setting
-- [ ] Test that changes take effect
-- [ ] Verify status bar updates accordingly
-
-**Test**: Status bar configuration
-
-- [ ] Disable "P5 Server > Status Bar: Server Item Enabled"
-- [ ] Verify server status bar item is hidden
-- [ ] Re-enable and verify it reappears
-
-### 9. Library Detection
-
-**Test**: Automatic library inclusion
-
-- [ ] Create a new sketch in `test-workspaces/basic-sketches`:
   ```javascript
-  let osc;
   function setup() {
-    osc = new p5.Oscillator();
-    osc.setType('sine');
-    osc.freq(440);
+    createCanvas(100, 100);
+  }
+
+  function draw() {
+    background(220);
   }
   ```
-- [ ] Run sketch
-- [ ] Open browser developer tools (F12) → Network tab
-- [ ] Verify p5.sound.min.js is automatically loaded from CDN
-- [ ] The sketch explorer should show "p5.sound" under Libraries
 
-### 10. File Operations
+- [ ] Confirm that the directory listing reloads and shows `watcher created`.
+- [ ] Rename the file to `watcher-renamed.js` in VS Code.
+- [ ] Confirm that the directory listing reloads and shows `watcher renamed`
+      instead of `watcher created`.
+- [ ] Delete `watcher-renamed.js` in VS Code.
+- [ ] Confirm that the directory listing reloads and removes the sketch.
+- [ ] Confirm that all four event types above work without restarting the P5
+      server: file change, file creation, rename, and deletion.
 
-**Test**: File manipulation
+### 6. Sketch Explorer
 
-- [ ] Create multiple sketches
-- [ ] Test renaming sketches
-- [ ] Test duplicating sketches
-- [ ] Test deleting sketches with confirmation dialog
-- [ ] Verify file system changes are reflected properly
+#### Tree structure and auto-reveal
 
-## Error Scenarios
+- [ ] Expand `nested-projects` and confirm this hierarchy:
 
-### Network Issues
+  - `project-a` contains `main sketch`.
+  - `project-b/experiments` contains `test`.
+  - `project-b/sketches` contains `sketch1`.
 
-- [ ] Start server, then manually kill the process
-- [ ] Verify extension handles server disconnect gracefully
-- [ ] Test server restart functionality
+- [ ] Collapse and expand `project-b` and confirm that its children remain
+      correctly nested.
+- [ ] Open `nested-projects/project-b/sketches/sketch1.js` from the File
+      Explorer. Confirm that the P5.js Sketch Explorer reveals and selects it.
+- [ ] Set `p5-server.explorer.autoReveal` to `false`, open
+      `nested-projects/project-a/main-sketch.js`, and confirm that the P5.js
+      Sketch Explorer does not change its selection.
+- [ ] Restore `p5-server.explorer.autoReveal` to `true`.
 
-### File System Issues
+#### Context menu operations
 
-- [ ] Try creating sketch with invalid name (special characters)
-- [ ] Verify appropriate error messages
-- [ ] Test behavior with read-only directories
+- [ ] Right-click `particle system` under `basic-sketches` and confirm that the
+      menu contains **Open in editor**, **Run sketch**, **Run in integrated
+      browser**, **Run in external browser**, **Convert to HTML + JavaScript**,
+      **Duplicate**, **Delete**, and **Rename**.
+- [ ] Choose **Duplicate**, accept the default name `particle system-2`, and
+      confirm that `particle system-2.js` appears.
+- [ ] Rename `particle system-2` to `particles-renamed` and confirm that the file
+      becomes `particles-renamed.js` and the explorer label becomes
+      `particles renamed`.
+- [ ] Delete `particles renamed`, choose **Cancel**, and confirm that the file
+      remains.
+- [ ] Delete it again, choose **Delete**, and confirm that the file is removed.
+- [ ] Confirm that each change appears without using **p5.js Explorer: Refresh**.
 
-### Browser Issues
+### 7. Sketch conversion
 
-- [ ] Set browser to non-existent application
-- [ ] Verify fallback to system default browser
-- [ ] Check error messaging
+- [ ] Right-click `simple circle` under `basic-sketches` and choose **Convert to
+      HTML + JavaScript**.
+- [ ] Confirm that `basic-sketches/simple-circle.html` is created alongside
+      `simple-circle.js` and refers to that script.
+- [ ] Confirm that the explorer now represents the files as one HTML sketch.
+- [ ] Right-click `html-sketches/bouncing-ball` and choose **Convert to
+      Script-Only**.
+- [ ] Confirm that `bouncing-ball.html` is deleted and `bouncing-ball.js`
+      remains.
+- [ ] Confirm that the explorer now represents `bouncing-ball.js` as a
+      JavaScript-only sketch.
 
-## Performance Tests
+### 8. Console and error reporting
 
-### High-Frequency Console Output
+#### Console output and auto-show behavior
 
-- [ ] Open `test-workspaces/error-examples/console-spam.js`
-- [ ] Run the sketch
-- [ ] Watch the message counter increase rapidly
-- [ ] Click and hold to generate burst messages
-- [ ] Verify VS Code remains responsive
-- [ ] Check that console batches messages efficiently
-- [ ] Stop generating messages and verify CPU use returns to idle
+- [ ] Set `p5-server.browser` to `integrated` and
+      `p5-server.console.integratedBrowser.autoShow.level` to `always`.
+- [ ] Run `error-examples/console-spam.js`.
+- [ ] Confirm that the **P5 Sketch** output channel opens automatically.
+- [ ] Confirm that `[LOG]`, `[INFO]`, `[WARN]`, and `[ERROR]` messages appear.
+- [ ] Hold the pointer button over the sketch. Confirm that burst messages
+      continue to appear and VS Code remains responsive.
+- [ ] Open `console-spam.js` in the editor and confirm that console messages also
+      appear as CodeLens text above the corresponding source lines.
+- [ ] Set `p5-server.console.integratedBrowser.autoShow.level` to `never` and
+      close the output panel.
+- [ ] Reload the sketch and confirm that new messages do not reopen the panel.
+- [ ] Run **P5 Server: Show Script Output** and confirm that the buffered
+      messages are present.
+- [ ] Restore the auto-show setting to `always`.
 
-### Multiple Sketches
+#### Reload behavior
 
-- [ ] Open `test-workspaces` root folder
-- [ ] Run `basic-sketches/simple-circle.js` in integrated browser
-- [ ] Run `html-sketches/bouncing-ball.html` in another tab
-- [ ] Run `folder-sketches/game-project/index.html`
-- [ ] Verify each runs independently in separate tabs/windows
-- [ ] Test switching between running sketches
-- [ ] Console output should be sketch-specific
+- [ ] Set `p5-server.console.clearOnReload` to `true`, save
+      `console-spam.js`, and confirm that earlier output is cleared after the
+      reload.
+- [ ] Set `p5-server.console.clearOnReload` to `false`, save again, and confirm
+      that earlier output remains with a `[RELOAD]` separator.
+- [ ] Restore `p5-server.console.clearOnReload` to `true`.
 
-## Clean-up
+#### Syntax and runtime errors
 
-After testing:
+- [ ] Run `error-examples/syntax-error.js`.
+- [ ] Confirm that the browser page displays the syntax error, file, line,
+      column, and nearby source text.
+- [ ] Confirm that the syntax error is also reported in the **P5 Sketch** output
+      channel.
+- [ ] Run `error-examples/runtime-error.js`.
+- [ ] Wait for the error generated every 60 frames. Confirm that it appears in
+      the output channel.
+- [ ] Click the sketch and confirm that the additional runtime error appears.
+- [ ] Open `runtime-error.js` and confirm that runtime errors appear as CodeLens
+      text at the corresponding source lines.
+- [ ] Set `p5-server.editor.infoLens` to `false` and confirm that the CodeLens
+      messages disappear while output-channel messages remain available.
+- [ ] Restore `p5-server.editor.infoLens` to `true`.
 
-- [ ] Stop any running servers
-- [ ] Close test sketches
-- [ ] Delete test files created during testing
-- [ ] Reset any modified settings
+### 9. Settings and UI contributions
+
+- [ ] Run **P5 Server: Open Settings** and confirm that the Settings editor is
+      filtered to P5 Server settings.
+- [ ] Change `p5-server.browser` between `integrated` and `system`. Confirm that
+      the editor-title run command changes between **Run P5 Sketch in Sidebar**
+      and **Run P5 Sketch in Browser**.
+- [ ] Set `p5-server.editorTitle.RunIcon.enabled` to `false` and confirm that the
+      P5 run icon is hidden from JavaScript and HTML editor titles. Restore it to
+      `true`.
+- [ ] Set `p5-server.statusBar.serverItem.enabled` to `false` and confirm that
+      **P5 Server** is hidden. Restore it to `true`.
+- [ ] Start the server, set `p5-server.statusBar.browserItem.enabled` to `false`,
+      and confirm that **P5 Browser** is hidden. Restore it to `true`.
+- [ ] Set `p5-server.explorer.autoRunSketchOnSide` to `true` and click a sketch
+      in the P5.js Sketch Explorer. Confirm that its source opens on the left and
+      the sketch runs on the right.
+- [ ] Set `p5-server.explorer.autoRunSketchOnSide` to `false` and click another
+      sketch. Confirm that its source opens without automatically running it.
+- [ ] Restore `p5-server.explorer.autoRunSketchOnSide` to `true`.
+
+### 10. Library detection
+
+- [ ] Create `basic-sketches/sound-test.js` with this content:
+
+  ```javascript
+  let oscillator;
+
+  function setup() {
+    createCanvas(200, 200);
+    oscillator = new p5.Oscillator();
+    oscillator.setType('sine');
+    oscillator.freq(440);
+  }
+
+  function draw() {
+    background(220);
+  }
+  ```
+
+- [ ] Confirm that `sound test` appears in the P5.js Sketch Explorer.
+- [ ] Expand it and confirm that **p5.sound** appears as a library.
+- [ ] Run the sketch in an external browser and inspect its Network panel.
+- [ ] Confirm that `p5.sound.min.js` is loaded. The request may use the local
+      proxy cache when `p5-server.enableProxyCache` is enabled.
+- [ ] Delete `sound-test.js` after this test.
+
+### 11. File operations and validation
+
+- [ ] Select `basic-sketches`, open its context menu, and choose **Create
+      Folder**.
+- [ ] Enter `scratch` and confirm that `basic-sketches/scratch` is created.
+- [ ] Select a file inside `basic-sketches`, run **Create Sketch
+      (JavaScript)**, enter `selected-location-test`, and confirm that the new
+      sketch is created beside the selected file.
+- [ ] Start another create or rename operation and enter `../outside`.
+- [ ] Confirm that the input reports **Enter a name without a directory path**
+      and does not create a file outside the selected directory.
+- [ ] Repeat with `.` and `..` and confirm that both names are rejected.
+- [ ] Delete `selected-location-test.js` and the `scratch` directory after this
+      test.
+
+## Failure and Stress Scenarios
+
+### Unavailable browser fallback
+
+Run this test only when one of the named browsers in the Browser setting is not
+installed.
+
+- [ ] Set `p5-server.browser` to a named browser that is not installed.
+- [ ] Run `basic-sketches/interactive-sketch.js`.
+- [ ] Confirm that a status message reports the named browser failure.
+- [ ] Confirm that the extension retries with the default system browser.
+- [ ] Restore `p5-server.browser` to `integrated`.
+
+### High-frequency console output
+
+- [ ] Run `error-examples/console-spam.js`.
+- [ ] Hold the pointer button over the sketch for at least five seconds.
+- [ ] Confirm that the output channel continues to update and VS Code remains
+      responsive.
+- [ ] Release the pointer button and confirm that buffered messages finish
+      appearing.
+- [ ] Confirm that CPU use returns near its pre-test level after message traffic
+      slows.
+
+### Multiple sketches
+
+- [ ] Run `basic-sketches/simple-circle.js`,
+      `html-sketches/custom-style.html`, and
+      `folder-sketches/game-project/index.html`.
+- [ ] Confirm that each requested sketch opens and runs.
+- [ ] Switch among their browser tabs or panes and confirm that each sketch
+      remains usable.
+- [ ] Generate console output from more than one sketch and confirm that the
+      **P5 Sketch** output includes a source banner when the source changes.
+
+## Cleanup
+
+- [ ] Stop the P5 server.
+- [ ] Close the Extension Development Host.
+- [ ] Restore every P5 Server setting changed during testing.
+- [ ] Delete the disposable test workspace.
+- [ ] Confirm that the repository working copy was not changed by the manual
+      tests.
 
 ## Reporting Issues
 
-When you find issues during manual testing:
+Include these details in each issue:
 
-1. **Document the issue**: Include steps to reproduce, expected vs actual behavior
-2. **Check browser console**: Include any JavaScript errors
-3. **Check VS Code Developer Console**: Help → Toggle Developer Tools
-4. **Include environment details**: OS, VS Code version, browser version
-5. **Test in different environments**: Different browsers, OS, etc.
+1. Steps to reproduce the problem.
+2. Expected and actual behavior.
+3. Relevant messages from the **P5 Sketch** output channel.
+4. Relevant errors from **Help > Toggle Developer Tools** in the Extension
+   Development Host.
+5. OS, VS Code version, extension commit or version, and browser version.
 
 ## Test Results Template
 
-```
-## Manual Testing Results - [Date]
+```markdown
+# Manual Testing Results: YYYY-MM-DD
 
-**Environment:**
+## Environment
+
 - OS:
-- VS Code Version:
-- Browser:
+- VS Code version:
+- Extension commit or version:
+- Browser and version:
 
-**Test Results:**
-- [ ] Extension Activation: PASS/FAIL
-- [ ] Server Management: PASS/FAIL
-- [ ] Sketch Creation: PASS/FAIL
-- [ ] Sketch Running: PASS/FAIL
-- [ ] Sketch Explorer: PASS/FAIL
-- [ ] Console Integration: PASS/FAIL
-- [ ] Configuration: PASS/FAIL
-- [ ] Library Detection: PASS/FAIL
-- [ ] File Operations: PASS/FAIL
+## Results
 
-**Issues Found:**
-1. [Issue description]
-2. [Issue description]
+- [ ] Extension activation: PASS / FAIL
+- [ ] Server management: PASS / FAIL
+- [ ] Sketch creation: PASS / FAIL
+- [ ] Running sketches: PASS / FAIL
+- [ ] Live reload and file watching: PASS / FAIL
+- [ ] Sketch Explorer: PASS / FAIL
+- [ ] Sketch conversion: PASS / FAIL
+- [ ] Console and error reporting: PASS / FAIL
+- [ ] Settings and UI contributions: PASS / FAIL
+- [ ] Library detection: PASS / FAIL
+- [ ] File operations and validation: PASS / FAIL
+- [ ] Failure and stress scenarios: PASS / FAIL / SKIPPED
 
-**Notes:**
-[Any additional observations]
+## Issues
+
+1. Issue description or link
+
+## Notes
+
+Additional observations
 ```
