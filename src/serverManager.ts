@@ -8,6 +8,7 @@ import { openInBrowser } from './openInBrowser';
 import { StatusBarManager } from './statusBar';
 import open = require('open');
 import { Configuration } from './configuration';
+import { createVSCodeFileWatchProvider } from './fileWatchProvider';
 
 type ServerState = 'stopped' | 'starting' | 'running' | 'stopping';
 
@@ -114,12 +115,14 @@ export class ServerManager {
 
       sbm = window.setStatusBarMessage(`Starting the P5 server at ${root}`);
 
-      this.server = new Server({
+      const serverOptions = {
+        fileWatchProvider: createVSCodeFileWatchProvider,
         root,
         theme: 'grid',
         proxyCache: Configuration.enableProxyCache,
         relayConsoleMessages: true,
-      });
+      };
+      this.server = new Server(serverOptions);
       await this.server.start();
       this.scriptConsole.subscribe(this.server);
       this.state = 'running';

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+Changed:
+
+- Use VS Code's file watcher for live reload instead of starting a second watcher in the extension host.
+
 ## [1.11.1] - 2026-08-12
 
 Changed:
