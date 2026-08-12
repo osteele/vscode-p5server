@@ -15,25 +15,22 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Compile, lint, and unit test
-        run: npm run test:quick
+        run: bun run test:quick
 
       - name: Integration test (Linux)
         if: runner.os == 'Linux'
-        run: xvfb-run -a npm run test:integration
+        run: xvfb-run -a bun run test:integration
 
       - name: Integration test (macOS)
         if: runner.os == 'macOS'
-        run: npm run test:integration
+        run: bun run test:integration

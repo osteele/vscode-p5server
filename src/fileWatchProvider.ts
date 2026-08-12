@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Disposable, RelativePattern, Uri, workspace } from 'vscode';
+import { workspaceUriForPath } from './helpers/fileHelpers';
 
 type FileWatchProvider = (filePaths: readonly string[], onDidChange: (filePath: string) => void) => Disposable;
 
@@ -39,7 +40,7 @@ export const createVSCodeFileWatchProvider: FileWatchProvider = (filePaths, onDi
   );
 
   for (const directoryPath of watchedDirectories) {
-    const watcher = workspace.createFileSystemWatcher(new RelativePattern(Uri.file(directoryPath), '**/*'));
+    const watcher = workspace.createFileSystemWatcher(new RelativePattern(workspaceUriForPath(directoryPath), '**/*'));
     subscriptions.push(
       watcher,
       watcher.onDidCreate(uri => reportChange(uri.fsPath)),
@@ -50,7 +51,7 @@ export const createVSCodeFileWatchProvider: FileWatchProvider = (filePaths, onDi
 
   for (const [dir, files] of filesByDirectory) {
     if (watchedDirectories.some(directoryPath => isInside(directoryPath, dir))) continue;
-    const watcher = workspace.createFileSystemWatcher(new RelativePattern(Uri.file(dir), '*'));
+    const watcher = workspace.createFileSystemWatcher(new RelativePattern(workspaceUriForPath(dir), '*'));
     const reportIfWatched = (uri: Uri) => {
       if (files.has(path.resolve(uri.fsPath))) reportChange(uri.fsPath);
     };

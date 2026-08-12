@@ -7,12 +7,14 @@ export class StatusBarManager {
   private readonly statusBarServerItem: vscode.StatusBarItem;
 
   constructor() {
-    const statusBarOpenItem = window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    const statusBarOpenItem = window.createStatusBarItem('p5-server.browser', vscode.StatusBarAlignment.Right, 100);
     this.statusBarOpenItem = statusBarOpenItem;
+    statusBarOpenItem.name = 'P5 Browser';
     statusBarOpenItem.text = `$(ports-open-browser-icon)P5 Browser`;
     statusBarOpenItem.command = 'p5-server.openBrowser';
 
-    this.statusBarServerItem = window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+    this.statusBarServerItem = window.createStatusBarItem('p5-server.server', vscode.StatusBarAlignment.Right, 100);
+    this.statusBarServerItem.name = 'P5 Server';
   }
 
   update(server: Server | null, state: string) {

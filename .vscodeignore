@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+.vscode-test.mjs
 .claude/**
 .github/**
 .husky/**
@@ -25,4 +26,4 @@ DEVELOPMENT.md
 NOTES.txt
 TODO
 MANUAL_TESTING.md
-package-lock.json
+bun.lock

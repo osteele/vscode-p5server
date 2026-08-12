@@ -11,6 +11,7 @@
   - [Sketch Explorer](#sketch-explorer)
   - [Integrated Web Server](#integrated-web-server)
   - [Integrated Browser](#integrated-browser)
+  - [Browser Debugging](#browser-debugging)
   - [Integrated Console](#integrated-console)
   - [Automatic Library Includes](#automatic-library-includes)
   - [Other Features](#other-features)
@@ -35,8 +36,9 @@ the Sketch Explorer is organized around sketches instead of files. It supports
 both sketches that are included in HTML files, and JavaScript-only sketches
 (that don't have an HTML file).
 
-The extension loads when you open the Sketch Explorer or run one of its
-commands. JavaScript files alone do not activate it in unrelated workspaces.
+The extension finishes loading after VS Code starts so the P5 Server status
+item remains immediately available. The server and its browser-console relay
+still load only when a sketch is run.
 
 ![Screenshot: Sketch explorer](images/sketch-explorer.png)
 
@@ -54,8 +56,10 @@ browser can play.
 ### Integrated Browser
 
 The Run Sketch command can open the sketch in an external web browser (such as
-Chrome, Safari, or Edge), or in an *integrated browser* inside Visual Studio
-Code. (The "P5-server: Browser" setting controls this.)
+Chrome, Safari, or Edge), or in VS Code's integrated browser. (The "P5-server:
+Browser" setting controls this.) The integrated route uses the current built-in
+browser when available and falls back to Simple Browser on compatible older
+builds.
 
 If the "P5-server > Explorer: Auto Run Sketch On Side" setting is enabled,
 clicking on a sketch in the Sketch Explorer also runs it next to the editor.
@@ -64,13 +68,22 @@ This makes it easy to quickly browse a collection of sketches.
 <!-- ![Screenshot: Run sketches inside VS Code](./images/exploring-sketches.gif) -->
 ![Gif: Run sketches inside VS Code](https://images.osteele.com/vscode-p5server/exploring-sketches.gif)
 
+### Browser Debugging
+
+**Debug P5 Sketch** starts the server if necessary and launches VS Code's
+browser debugger. Breakpoints, stepping, variables, the Debug Console, and the
+usual debug controls work without creating a `launch.json` file. The command is
+available from the editor title, Command Palette, and Sketch Explorer.
+
 ### Integrated Console
 
 ![Integrated console](images/integrated-console.png)
 
 When the "P5-server: Browser" setting is set to `integrated`, messages from
-`console.log()` and other console output will display in the output pane. These
-messages also appear inline in the JavaScript source file.
+`console.log()` and other console output will display in the P5 Sketch log
+output. These messages also appear as inlay hints in the JavaScript source
+file. Runtime exceptions appear in VS Code's Problems view and at the failing
+source location.
 
 The console output pane automatically appears when a message is printed to it.
 This behavior can be changed via the "Console > Integrated Browser > Auto Show:
@@ -78,8 +91,8 @@ Level" setting.
 
 High-volume output is batched to keep the editor responsive. Inline messages
 are coalesced and retain a bounded recent history. Turning off the Editor >
-Info Lens setting also stops collecting inline messages; output-channel logging
-continues.
+Info Lens setting removes the extension's inlay hints and diagnostics;
+output-channel logging continues.
 
 ### Automatic Library Includes
 
@@ -107,10 +120,19 @@ sketch, because it's the argument to the p5.js function `loadSound()`.
 - **Sketch scripts generation**. Create a JavaScript-only sketch that contains a
   minimal `setup()` and `draw()` function; or create a pair of `index.html` and
   `sketch.js`.
+- **Remote workspaces**. The workspace extension runs with Remote SSH, Dev
+  Containers, WSL, and Codespaces-style hosts. Browser URLs are forwarded
+  through VS Code before they open on the local machine.
+- **Safe file operations**. Deleted sketches go to the operating system trash,
+  and renames participate in VS Code's workspace-edit flow.
 
 ## Installation
 
 View the [Visual Studio Code Marketplace extension page](https://marketplace.visualstudio.com/items?itemName=osteele.p5-server), and click the Install button.
+
+P5 Server requires Visual Studio Code 1.115 or newer. After installation, open
+**Help: Get Started** and select **Get Started with P5 Server** for an in-editor
+walkthrough.
 
 ## Step by Step
 
@@ -135,6 +157,11 @@ that also affect this extension.
 In particular:
 
 - The extension has not been tested on Windows.
+- Virtual workspaces that do not expose an extension-host filesystem path are
+  not supported. Remote workspace folders with filesystem paths are supported.
+- In Restricted Mode, the Sketch Explorer and file-management commands remain
+  available, but starting, running, and debugging sketches require workspace
+  trust because they execute workspace JavaScript in a browser.
 - The sketches that are created by the “Create p5.js Sketch Folder” command
   require an internet connection to run. (They load the p5.js and other libraries
   from a content delivery network, or “CDN”.) Browsers cache these files, so

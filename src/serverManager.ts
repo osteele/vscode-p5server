@@ -1,9 +1,9 @@
 import type { Server } from 'p5-server';
 import * as vscode from 'vscode';
-import { commands, Uri, window, workspace } from 'vscode';
+import { commands, debug, env, Uri, window, workspace, WorkspaceFolder } from 'vscode';
 import type ScriptConsole from './console/scriptConsole';
 import { withConsoleRelayQuery } from './helpers';
-import { getWorkspaceFolderPaths } from './helpers/fileHelpers';
+import { getWorkspaceFolderForPath } from './helpers/fileHelpers';
 import { openInBrowser } from './openInBrowser';
 import { StatusBarManager } from './statusBar';
 import type { AppName, Options as OpenOptions } from 'open';
@@ -19,6 +19,7 @@ export class ServerManager {
   private statusBarManager: StatusBarManager;
   private scriptConsole: ScriptConsole | null = null;
   private startPromise: Promise<void> | null = null;
+  private servedWorkspaceFolder: WorkspaceFolder | undefined;
 
   constructor(context: vscode.ExtensionContext) {
     this.statusBarManager = new StatusBarManager();
@@ -38,6 +39,7 @@ export class ServerManager {
     context.subscriptions.push(
       commands.registerCommand('p5-server.start', this.startServer.bind(this)),
       commands.registerCommand('p5-server.stop', this.stopServer.bind(this)),
+      commands.registerCommand('p5-server.debug', this.debugSketch.bind(this)),
       commands.registerCommand('p5-server.showScriptOutput', async () => {
         const scriptConsole = await this.getScriptConsole();
         scriptConsole.show();
@@ -89,10 +91,11 @@ export class ServerManager {
     this.updateStatusBar();
   }
 
-  async startServer(uri?: Uri, options?: { browser: string }) {
+  async startServer(uri?: Uri, options?: { browser: string }, openAfterStart = true) {
+    if (!(await this.requireTrustedWorkspace())) return;
     if (this.startPromise) {
       await this.startPromise;
-      if (this.state === 'running') {
+      if (openAfterStart && this.state === 'running') {
         await this.openBrowser(uri, options);
       }
       return;
@@ -101,7 +104,7 @@ export class ServerManager {
       return;
     }
 
-    const startPromise = this.startServerOnce(uri, options);
+    const startPromise = this.startServerOnce(uri, options, openAfterStart);
     this.startPromise = startPromise;
     try {
       await startPromise;
@@ -112,23 +115,18 @@ export class ServerManager {
     }
   }
 
-  private async startServerOnce(uri?: Uri, options?: { browser: string }) {
+  private async startServerOnce(uri?: Uri, options?: { browser: string }, openAfterStart = true) {
     this.state = 'starting';
     let sbm: vscode.Disposable | undefined;
 
     try {
-      const wsFolders = getWorkspaceFolderPaths();
-      // TODO: select the folder that contains uri
-      const root =
-        wsFolders.length > 1
-          ? await window.showQuickPick(wsFolders, {
-              placeHolder: 'Select a folder to serve',
-            })
-          : wsFolders[0] || '.';
-      if (!root) {
+      const folder = await this.selectWorkspaceFolder(uri);
+      if (!folder) {
         this.state = 'stopped';
         return; // the user cancelled
       }
+      const root = folder.uri.fsPath;
+      this.servedWorkspaceFolder = folder;
 
       await this.server?.close();
       this.server = null;
@@ -155,6 +153,7 @@ export class ServerManager {
     } catch (error) {
       await this.server?.close();
       this.server = null;
+      this.servedWorkspaceFolder = undefined;
       this.disposeScriptConsole();
       this.state = 'stopped';
       sbm?.dispose();
@@ -167,7 +166,7 @@ export class ServerManager {
         this.state = 'stopped';
       }
     }
-    await this.openBrowser(uri, options);
+    if (openAfterStart) await this.openBrowser(uri, options);
   }
 
   async stopServer() {
@@ -184,6 +183,7 @@ export class ServerManager {
     try {
       await this.server.close();
       this.server = null;
+      this.servedWorkspaceFolder = undefined;
       this.disposeScriptConsole();
       this.state = 'stopped';
 
@@ -212,7 +212,7 @@ export class ServerManager {
       }
       return;
     }
-    const target = withConsoleRelayQuery(serverTarget);
+    const target = Uri.parse(withConsoleRelayQuery(serverTarget));
 
     // Wrap open.xxx with versions that know about Safari
     type SupportedAppName = AppName | 'safari';
@@ -226,35 +226,102 @@ export class ServerManager {
     const browserKey = browserName.toLowerCase() as BrowserKey;
 
     if (browserKey === 'integrated') {
-      await commands.executeCommand('simpleBrowser.api.open', target, {
-        viewColumn: vscode.ViewColumn.Beside,
-      });
+      await this.openIntegratedBrowser(await env.asExternalUri(target));
+      return;
+    }
+
+    if (browserKey === 'system' || env.remoteName) {
+      const opened = await env.openExternal(await env.asExternalUri(target));
+      if (!opened) await window.showErrorMessage('The system browser could not open the sketch.');
       return;
     }
 
     // TODO: exit with an error message if the browserKey === 'safari' and the os is not macOS
-    let openOptions: OpenOptions | undefined;
-    if (browserKey !== 'system') {
-      const { apps } = await import('open');
-      const openApps = { safari: 'safari', ...apps };
-      const name = openApps[browserKey];
-      openOptions = { app: { name } };
-    }
+    const { apps } = await import('open');
+    const openApps = { safari: 'safari', ...apps };
+    const name = openApps[browserKey];
+    const openOptions: OpenOptions = { app: { name } };
 
-    let process = await openInBrowser(target, openOptions);
-    if (process.exitCode !== 0 && browserKey !== 'system') {
+    let process = await openInBrowser(target.toString(), openOptions);
+    if (process.exitCode !== 0) {
       const msg = `The ${browserName} browser failed to open. Retrying with the default system browser.`;
       const messageStatus = window.setStatusBarMessage(msg);
-      process = await openInBrowser(target);
+      process = await openInBrowser(target.toString());
       await messageStatus.dispose();
     }
     if (process.exitCode !== 0) {
-      const msg =
-        browserKey === 'system'
-          ? 'The default system browser failed to open.'
-          : `The ${browserName} browser failed to open. It may not be available on your system.`;
+      const msg = `The ${browserName} browser failed to open. It may not be available on your system.`;
       await window.showErrorMessage(msg);
     }
+  }
+
+  async debugSketch(uri?: Uri) {
+    if (!(await this.requireTrustedWorkspace())) return;
+    const resource = uri ?? window.activeTextEditor?.document.uri;
+    if (this.state === 'stopped') await this.startServer(resource, undefined, false);
+    else if (this.state === 'starting') await this.startPromise;
+    const server = this.server;
+    if (!server?.url || this.state !== 'running') return;
+
+    const serverTarget = resource ? server.filePathToUrl(resource.fsPath) : server.url;
+    if (!serverTarget) {
+      await window.showErrorMessage(
+        `${resource?.fsPath ?? 'The selected file'} is outside the served workspace folder.`,
+      );
+      return;
+    }
+    const target = await env.asExternalUri(Uri.parse(withConsoleRelayQuery(serverTarget)));
+    const folder = resource
+      ? (workspace.getWorkspaceFolder(resource) ?? getWorkspaceFolderForPath(resource.fsPath))
+      : this.servedWorkspaceFolder;
+    await debug.startDebugging(folder, {
+      type: 'editor-browser',
+      request: 'launch',
+      name: 'Debug p5.js Sketch',
+      url: target.toString(),
+      webRoot: folder?.uri.fsPath,
+    });
+  }
+
+  private async openIntegratedBrowser(target: Uri) {
+    const availableCommands = await commands.getCommands(true);
+    if (availableCommands.includes('workbench.action.browser.open')) {
+      await commands.executeCommand('workbench.action.browser.open', target.toString());
+    } else {
+      await commands.executeCommand('simpleBrowser.api.open', target, {
+        viewColumn: vscode.ViewColumn.Beside,
+      });
+    }
+  }
+
+  private async selectWorkspaceFolder(uri?: Uri): Promise<WorkspaceFolder | undefined> {
+    const folders = workspace.workspaceFolders ?? [];
+    if (uri) {
+      const containingFolder = workspace.getWorkspaceFolder(uri) ?? getWorkspaceFolderForPath(uri.fsPath);
+      if (containingFolder) return containingFolder;
+    }
+    if (folders.length === 1) return folders[0];
+    if (folders.length === 0) {
+      await window.showErrorMessage('Open a workspace folder before starting P5 Server.');
+      return undefined;
+    }
+    const selection = await window.showQuickPick(
+      folders.map(folder => ({ label: folder.name, description: folder.uri.fsPath, folder })),
+      { placeHolder: 'Select a folder to serve' },
+    );
+    return selection?.folder;
+  }
+
+  private async requireTrustedWorkspace(): Promise<boolean> {
+    if (workspace.isTrusted) return true;
+    const choice = await window.showWarningMessage(
+      'P5 Server can run JavaScript from this workspace. Trust the workspace before starting or debugging a sketch.',
+      'Manage Workspace Trust',
+    );
+    if (choice === 'Manage Workspace Trust') {
+      await commands.executeCommand('workbench.trust.manage');
+    }
+    return false;
   }
 
   /** Clean up resources */
@@ -263,9 +330,10 @@ export class ServerManager {
       await this.server.close();
       this.server = null;
     }
+    this.servedWorkspaceFolder = undefined;
     this.disposeScriptConsole();
-    this.statusBarManager.dispose();
     this.state = 'stopped';
+    this.statusBarManager.dispose();
     ServerManager.instance = null;
   }
 }

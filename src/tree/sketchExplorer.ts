@@ -1,8 +1,8 @@
 import { Library, Sketch } from 'p5-server';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { commands, Uri, window, workspace } from 'vscode';
-import { getWorkspaceFolderPaths } from '../helpers/fileHelpers';
+import { commands, window, workspace } from 'vscode';
+import { getWorkspaceFolderPaths, workspaceUriForPath } from '../helpers/fileHelpers';
 import { sketchIsEntireDirectory } from '../helpers/sketchHelpers';
 import { validateChildName } from '../helpers/fileNames';
 import { DirectoryItem, Element, FileItem, FilePathItem, LibraryItem } from './elements';
@@ -60,11 +60,12 @@ export class SketchExplorer {
         ),
       ),
       commands.registerCommand('p5-server.explorer.open', (item: Sketch | FileItem) => {
-        const uri = item instanceof Sketch ? Uri.file(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
+        const uri =
+          item instanceof Sketch ? workspaceUriForPath(item.scriptFilePath || item.mainFilePath) : item.resourceUri;
         return commands.executeCommand('vscode.open', uri);
       }),
       commands.registerCommand('p5-server.explorer.openSketch', (sketch: Sketch) => {
-        const uri = Uri.file(sketch.scriptFilePath);
+        const uri = workspaceUriForPath(sketch.scriptFilePath);
         return workspace.getConfiguration('p5-server.explorer').get<boolean>('autoRunSketchOnSide')
           ? Promise.all([
               commands.executeCommand('vscode.open', uri, { preview: true, viewColumn: 1 }),
@@ -81,6 +82,10 @@ export class SketchExplorer {
       commands.registerCommand('p5-server.explorer.run#external', (item: Sketch | FilePathItem) =>
         this.runSelectedSketch(item, 'external'),
       ),
+      commands.registerCommand('p5-server.explorer.debug', (item: Sketch | FilePathItem) => {
+        const uri = item instanceof Sketch ? workspaceUriForPath(item.mainFilePath) : item.resourceUri;
+        return commands.executeCommand('p5-server.debug', uri);
+      }),
       commands.registerCommand('p5-server.explorer.openLibrary', async (item: LibraryItem) =>
         (await import('../commands/runCommands')).openLibraryPane(item.library),
       ),
@@ -106,7 +111,7 @@ export class SketchExplorer {
     const name = await window.showInputBox({ validateInput: validateChildName });
     if (!name) return;
 
-    await workspace.fs.createDirectory(Uri.file(path.join(dir, name.trim())));
+    await workspace.fs.createDirectory(workspaceUriForPath(path.join(dir, name.trim())));
   }
 
   async createSketchInSelectedFolder(type: 'script' | 'html' | 'folder') {
@@ -130,7 +135,7 @@ export class SketchExplorer {
   }
 
   runSelectedSketch(item: Sketch | FilePathItem, where: 'integrated' | 'external' | undefined = undefined) {
-    const uri = item instanceof Sketch ? Uri.file(item.mainFilePath) : item.resourceUri;
+    const uri = item instanceof Sketch ? workspaceUriForPath(item.mainFilePath) : item.resourceUri;
     return commands.executeCommand('p5-server.openBrowser', uri, { browser: where });
   }
 }

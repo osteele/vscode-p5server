@@ -1,7 +1,7 @@
 import { parse as parseHTML } from 'node-html-parser';
 import { Sketch } from 'p5-server';
-import { commands, Uri, window, workspace } from 'vscode';
-import { fsExists } from '../helpers/fileHelpers';
+import { commands, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import { fsExists, workspaceUriForPath } from '../helpers/fileHelpers';
 import { exclusions } from '../configuration';
 import path = require('path');
 import { validateChildName } from '../helpers/fileNames';
@@ -22,13 +22,16 @@ export async function duplicateSketch(sketch: Sketch) {
   // if the sketch is the only sketch in the directory, copy the directory
   const { sketches } = await Sketch.analyzeDirectory(sketch.dir, { exclusions });
   if (sketches.length === 1 && sketches[0].mainFilePath === sketch.mainFilePath) {
-    await workspace.fs.copy(Uri.file(sketch.dir), Uri.file(path.join(path.dirname(sketch.dir), name)));
+    await workspace.fs.copy(
+      workspaceUriForPath(sketch.dir),
+      workspaceUriForPath(path.join(path.dirname(sketch.dir), name)),
+    );
   } else {
     // copy the sketch files within the same directory
     const basename = name.replace(/\.(js|html?)$/i, '');
     const replacements = ([sketch.scriptFile, sketch.htmlFile].filter(Boolean) as string[]).map(name => ({
-      src: Uri.file(path.join(sketch.dir, name)),
-      target: Uri.file(path.join(sketch.dir, basename + path.extname(name))),
+      src: workspaceUriForPath(path.join(sketch.dir, name)),
+      target: workspaceUriForPath(path.join(sketch.dir, basename + path.extname(name))),
     }));
     const targetsExist = await Promise.all(replacements.map(({ target }) => fsExists(target)));
     if (targetsExist.some(Boolean)) {
@@ -66,16 +69,30 @@ export async function renameSketch(item: Sketch | Uri): Promise<void> {
     switch (item.structureType) {
       case 'html':
         if (!/\.html?$/i.test(name)) name += '.html';
-        await workspace.fs.rename(Uri.file(item.mainFilePath), Uri.file(path.join(item.dir, name)));
+        await renameWithWorkspaceEdit(
+          workspaceUriForPath(item.mainFilePath),
+          workspaceUriForPath(path.join(item.dir, name)),
+        );
         break;
       case 'script':
         if (!/\.js$/i.test(name)) name += '.js';
-        await workspace.fs.rename(Uri.file(item.scriptFilePath), Uri.file(path.join(item.dir, name)));
+        await renameWithWorkspaceEdit(
+          workspaceUriForPath(item.scriptFilePath),
+          workspaceUriForPath(path.join(item.dir, name)),
+        );
         break;
     }
   } else {
-    const target = Uri.file(path.join(path.dirname(item.fsPath), name));
-    await workspace.fs.rename(item, target);
+    const target = workspaceUriForPath(path.join(path.dirname(item.fsPath), name));
+    await renameWithWorkspaceEdit(item, target);
   }
   await commands.executeCommand('p5-server.explorer.refresh');
+}
+
+async function renameWithWorkspaceEdit(source: Uri, target: Uri): Promise<void> {
+  const edit = new WorkspaceEdit();
+  edit.renameFile(source, target);
+  if (!(await workspace.applyEdit(edit))) {
+    throw new Error(`VS Code could not rename ${source.fsPath}`);
+  }
 }

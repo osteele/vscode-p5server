@@ -2,18 +2,18 @@
 
 Use this checklist for behavior that automated tests cannot yet establish reliably: VS Code UI state, browser rendering, timing, external integrations, and resource use.
 
-Run `npm test` before starting. The automated suite already covers:
+Run `bun test` before starting. The automated suite already covers:
 
-- extension activation when explicitly requested and command registration
+- startup activation, command registration, and contribution metadata
 - configuration exclusions and filename validation rules
 - file watcher delivery, filtering, and duplicate-event suppression
-- console CodeLens summaries, update coalescing, history limits, and lens limits
+- console inlay-hint summaries, diagnostic lifecycle, update coalescing, and retention limits
 
 Do not repeat those assertions manually unless an automated test is failing. The checklist below tests their user-visible integration only.
 
 ## Setup
 
-1. Run `npm install` and `npm run compile` in this repository.
+1. Run `bun install` and `bun run compile` in this repository.
 2. Press `F5` to open an Extension Development Host.
 3. Copy `test-workspaces/` to a temporary writable directory, then open the copy in the Extension Development Host.
 4. Keep these views available:
@@ -26,13 +26,14 @@ Record the extension version, VS Code version, operating system, browser, and an
 
 ## Release smoke test
 
-### 1. Lazy activation and explorer shell
+### 1. Startup activation, status bar, and explorer shell
 
-- [ ] Before opening the P5 Server view or running a P5 Server command, **Developer: Show Running Extensions** does not list P5 Server as active.
-- [ ] The P5 activity-bar icon is visible. Open it and confirm that the extension becomes active.
+- [ ] After VS Code finishes starting, **Developer: Show Running Extensions** lists P5 Server as active without opening its view or running a command.
+- [ ] Before opening the Sketch Explorer, confirm that the configured P5 Server status-bar item is visible. This eager visibility is an intentional compatibility behavior.
+- [ ] The P5 activity-bar icon is visible. Open it and confirm that the explorer is ready.
 - [ ] The explorer lists the workspace's top-level directories and representative sketches without an explicit refresh.
 - [ ] Expand one nested sketch and confirm that its files appear under the correct directory.
-- [ ] The P5 Server status-bar item appears after activation, and the Output view contains no activation or initial-scan error.
+- [ ] The Output view contains no activation or initial-scan error.
 
 ### 2. Server lifecycle and browser routing
 
@@ -40,6 +41,7 @@ Record the extension version, VS Code version, operating system, browser, and an
 - [ ] After startup, the Output view reports the listening address, the status-bar icon becomes solid, and the server/browser status items show the active state.
 - [ ] Run the simple circle sketch in the integrated browser. Confirm that the red circle renders and the Output view records the run.
 - [ ] Run the same sketch from its explorer action and editor-title action. Each route opens the intended sketch.
+- [ ] Set a breakpoint in the sketch and run **Debug P5 Sketch**. VS Code opens its browser debugger, stops at the breakpoint, and supports stepping and variable inspection without creating or changing `.vscode/launch.json`.
 - [ ] Change **P5 Server > Browser** to the system browser and rerun the interactive sketch. Confirm that interaction works and relayed console output reaches the Output view.
 - [ ] Use **Run in External Browser** while the integrated browser is configured. Confirm that this command still uses an external browser.
 - [ ] Run **P5 Server: Stop Server**. The icon shows the stopping transition, then the server-only status items disappear and the server no longer accepts requests.
@@ -61,7 +63,7 @@ Exercise each creation shape because the automated command tests do not yet crea
 - [ ] **Create p5.js Sketch (HTML + JS)** creates a matching HTML and JavaScript pair, links them correctly, opens the HTML file, and groups them in the explorer.
 - [ ] **Create p5.js Sketch Folder** creates a folder containing `index.html` and `sketch.js`, links them correctly, opens the sketch, and adds the folder to the explorer.
 - [ ] Invoke one creation command from a selected nested file. The new item is created beside that file rather than at the workspace root.
-- [ ] Duplicate a sketch, rename the duplicate, cancel one delete, and then confirm a second delete. The filesystem and explorer agree after every step.
+- [ ] Duplicate a sketch, rename the duplicate, cancel one delete, and then confirm a second delete. The filesystem and explorer agree after every step, the deleted files are in the operating system trash, and the rename appears in VS Code's workspace-edit history.
 - [ ] Convert a script sketch to HTML, then convert a separate HTML sketch to a script. The expected source files remain intact and the explorer grouping updates.
 - [ ] Enter one path-traversal name such as `../outside.js`. VS Code shows a validation error and creates nothing outside the selected directory.
 
@@ -78,15 +80,15 @@ Command registration is automated. These checks cover menu placement, enablement
 
 ### 6. Console and error presentation
 
-- [ ] With **Console > Auto Show** set to its default, run the console fixture. `log`, `info`, `warn`, and `error` messages appear with readable source locations, and recent messages appear as CodeLens annotations at the correct lines.
-- [ ] Generate a short burst of messages. Editing and scrolling remain responsive, and CodeLens settles to the final recent-message state.
+- [ ] With **Console > Auto Show** set to its default, run the console fixture. `log`, `info`, `warn`, and `error` messages appear with VS Code log timestamps and severity, and recent messages appear as inlay hints at the correct lines.
+- [ ] Generate a short burst of messages. Editing and scrolling remain responsive, and the inlay hints settle to the final recent-message state.
 - [ ] Set **Console > Auto Show** to **never**, close the Output view, and rerun the fixture. The view stays closed. **Show Script Output** then reveals the buffered messages.
 - [ ] Enable **Console > Clear On Reload**, reload, and confirm that old messages disappear. Disable it, reload again, and confirm that old and new sessions remain distinguishable.
 - [ ] Run the syntax-error fixture. The browser error page identifies the source and location, and the Output view reports the same failure.
-- [ ] Run the runtime-error fixture. The Output view and CodeLens point to the failing source location.
-- [ ] Disable **Console > Info Lens**. Existing P5 Server lenses disappear while messages continue to reach the Output view.
+- [ ] Run the runtime-error fixture. The Output view and Problems view point to the failing source location. Selecting the diagnostic opens the correct line.
+- [ ] Disable **Console > Info Lens**. Existing P5 Server inlay hints and diagnostics disappear while messages continue to reach the Output view.
 
-CodeLens capacity and coalescing are automated. The burst step checks perceived editor behavior and final presentation, not the exact internal limits.
+Inlay-hint capacity, coalescing, and diagnostic cleanup are automated. The burst step checks perceived editor behavior and final presentation, not the exact internal limits.
 
 ### 7. Settings, visibility, and automatic run behavior
 
@@ -94,6 +96,7 @@ CodeLens capacity and coalescing are automated. The burst step checks perceived 
 - [ ] Change the configured browser. The editor-title action and its label or tooltip update to match the route.
 - [ ] Disable the editor-title icon. It disappears without reloading the window and reappears when enabled.
 - [ ] Toggle the server and browser status-bar settings independently. Only the requested items change visibility.
+- [ ] Reload the window with the server status item enabled. It is visible after startup without first opening the Sketch Explorer.
 - [ ] Enable automatic run in the configured side view, open a sketch, and confirm that it runs there. Disable automatic run, open another sketch, and confirm that no run starts.
 
 ### 8. Library integration
@@ -111,7 +114,7 @@ Run these checks for release candidates, performance-sensitive changes, or chang
 ### High-volume console traffic
 
 - [ ] Run the high-volume console fixture for a bounded interval.
-- [ ] The Output view continues to receive messages, the editor remains usable, and CodeLens updates settle after the burst.
+- [ ] The Output view continues to receive messages, the editor remains usable, and inlay-hint updates settle after the burst.
 - [ ] Record peak Extension Host CPU and resident memory. After traffic stops and editors close, memory should level off rather than continue growing.
 
 ### Large explorer tree
@@ -132,6 +135,13 @@ Run these checks for release candidates, performance-sensitive changes, or chang
 - [ ] Configure an unavailable browser and run a sketch.
 - [ ] The extension reports an actionable error or uses the documented fallback without leaving the server or status bar in a transitional state.
 
+### Remote and restricted workspaces
+
+- [ ] Open the fixtures through one supported remote environment: Remote SSH, a Dev Container, WSL, or Codespaces. The Sketch Explorer loads the remote files, live reload works, and the integrated and system browser routes open a forwarded URL on the client.
+- [ ] Debug a remote sketch. Breakpoints map to the remote source file and the debugger reaches the forwarded server URL.
+- [ ] Open an untrusted copy of the fixture workspace. Sketch browsing, creation, rename, and delete remain available, while start, run, and debug actions are disabled.
+- [ ] Invoke a server command indirectly in Restricted Mode. The extension explains the trust requirement and offers the Workspace Trust manager rather than starting the server.
+
 ## Automation migration backlog
 
 Remove a manual item only after its replacement asserts the same user-visible contract and runs in the normal automated suite. Keep one integrated-browser visual smoke test even after browser automation is added because VS Code webview behavior varies by release.
@@ -141,8 +151,8 @@ Remove a manual item only after its replacement asserts the same user-visible co
 | P1 | Filesystem command tests | Run creation, duplicate, rename, delete, and conversion commands against a temporary VS Code workspace; assert file contents, unique naming, selection-relative paths, and tree refresh signals. | Most of **Sketch and file workflows**, retaining one creation and one conversion smoke test. |
 | P1 | Explorer model tests | Extract directory analysis and cache invalidation behind a filesystem adapter; feed create, change, rename, and delete events into the tree provider. | Hierarchy, external refresh, and large-tree correctness checks. Keep visual menu placement and performance timing. |
 | P1 | Console state tests | Put auto-show policy, clear-on-reload behavior, source banners, severity formatting, and InfoLens enablement behind injected output/editor adapters. | Most console setting combinations, retaining one real relay and error-location smoke test. |
-| P2 | Lazy activation suite | Launch a separate Extension Development Host that does not explicitly activate the extension; inspect `isActive` before and after opening the contributed view. | The Running Extensions activation check. |
-| P2 | Contribution manifest tests | Validate activation events, menus and `when` clauses, configuration keys, and visibility commands directly from `package.json`. | Exhaustive context-menu and settings-contribution checks. Keep a UI spot check. |
+| P2 | Status-bar activation suite | Launch a separate Extension Development Host and inspect the contributed status items after `onStartupFinished`. | The Running Extensions and pre-explorer status checks. |
+| P2 | Contribution manifest tests | Extend current manifest assertions to cover every menu `when` clause and visibility command. | Exhaustive context-menu and settings-contribution checks. Keep a UI spot check. |
 | P2 | Server and browser controller tests | Inject the server factory, browser opener, status-bar items, and clock; assert transitions, concurrent starts, stops, failures, and unavailable-browser fallback. | Transitional-state and fallback permutations. Keep one real start/run/stop path. |
 | P3 | External-browser end-to-end suite | Use a real browser against a bounded fixture workspace to assert rendering, live reload routing, console relay, syntax/runtime errors, and multi-client isolation. | Most browser and live-reload scenarios. Keep integrated-browser rendering and interaction checks. |
 | P3 | Repeatable performance harness | Generate fixed console and explorer workloads; record p50/p95 latency, Extension Host CPU, and resident memory with generous regression thresholds. | Ad hoc resource measurements, once the harness is stable across supported platforms. |
@@ -186,7 +196,7 @@ OS:
 Browser:
 
 Automated suite:                 PASS / FAIL
-Lazy activation and explorer:    PASS / FAIL
+Startup activation and explorer: PASS / FAIL
 Server lifecycle and routing:    PASS / FAIL
 Live reload and directory state: PASS / FAIL
 Sketch and file workflows:       PASS / FAIL
@@ -195,6 +205,7 @@ Console and errors:              PASS / FAIL
 Settings and automatic run:      PASS / FAIL
 Library integration:             PASS / FAIL
 Stress and compatibility:        PASS / FAIL / NOT RUN
+Remote and restricted workspace: PASS / FAIL / NOT RUN
 
 Peak Extension Host CPU:
 Peak Extension Host RSS:

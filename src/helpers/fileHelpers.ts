@@ -1,8 +1,9 @@
-import { Uri, workspace } from 'vscode';
+import path from 'node:path';
+import { Uri, WorkspaceFolder, workspace } from 'vscode';
 
 export async function fileExists(filepath: string): Promise<boolean> {
   try {
-    await workspace.fs.stat(Uri.file(filepath));
+    await workspace.fs.stat(workspaceUriForPath(filepath));
     return true;
   } catch (e) {
     if (e instanceof Error && 'code' in e && e.code === 'FileNotFound') {
@@ -19,15 +20,25 @@ export async function fsExists(uri: Uri): Promise<boolean> {
   );
 }
 
-/** Return a list of the file paths for workspace folder with scheme 'file'.
- * If no workspace folders are found, return an empty list.
- * If the workspace folders have no scheme 'file', return an empty list.
- */
+/** Return paths as seen by the extension host, including a remote extension host. */
 export function getWorkspaceFolderPaths(): string[] {
-  return workspace.workspaceFolders
-    ? workspace.workspaceFolders
-        .map(folder => folder.uri)
-        .filter(uri => uri.scheme === 'file')
-        .map(uri => uri.fsPath)
-    : [];
+  return workspace.workspaceFolders?.map(folder => folder.uri.fsPath).filter(Boolean) ?? [];
+}
+
+/** Find the workspace folder whose extension-host path contains a resource. */
+export function getWorkspaceFolderForPath(filePath: string): WorkspaceFolder | undefined {
+  return workspace.workspaceFolders?.find(folder => isPathInside(folder.uri.fsPath, filePath));
+}
+
+/** Convert an extension-host path back to a URI with its workspace's scheme and authority. */
+export function workspaceUriForPath(filePath: string): Uri {
+  const folder = getWorkspaceFolderForPath(filePath);
+  if (!folder) return Uri.file(filePath);
+  const relative = path.relative(folder.uri.fsPath, filePath);
+  return relative ? Uri.joinPath(folder.uri, ...relative.split(path.sep)) : folder.uri;
+}
+
+function isPathInside(parent: string, candidate: string): boolean {
+  const relative = path.relative(parent, candidate);
+  return relative === '' || (!relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative));
 }

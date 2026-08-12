@@ -1,19 +1,19 @@
 import { BrowserConnectionEvent, BrowserConsoleEvent, BrowserErrorEvent, Server } from 'p5-server';
-import { BrowserConsoleEventMethods, BrowserDocumentEvent } from 'p5-server/dist/server/eventTypes';
+import { BrowserConsoleEventMethods, BrowserDocumentEvent, ConsoleLogLevel } from 'p5-server/dist/server/eventTypes';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
 import { padCenter } from '../helpers';
 import { formatConsoleEventArgs } from './consoleHelpers';
-import { ConsoleMessageLensProvider } from './consoleMessageLensProvider';
+import { ConsoleMessageProvider } from './consoleMessageProvider';
 import util = require('util');
 
 /** Manages the output channel that displays console logs and errors from the
  * running sketch. */
 export default class ScriptConsole {
-  private _channel: vscode.OutputChannel | null = null;
+  private _channel: vscode.LogOutputChannel | null = null;
   private banner: string | null = null;
   private source?: string; // the current file or URL that is being displayed in the output
-  private lensProvider: ConsoleMessageLensProvider;
+  private messageProvider: ConsoleMessageProvider;
   private readonly disposables: vscode.Disposable[];
   private messageCount = 0; // how many messages have been displayed since clear()?
   private browser: string = 'integrated';
@@ -24,7 +24,7 @@ export default class ScriptConsole {
   private messageTimes: number[] = [];
   private messageTimeIndex = 0; // Track start of valid timestamps
   private batchMode = false;
-  private messageBuffer: string[] = [];
+  private messageBuffer: { level: LogOutputMethod; value: string }[] = [];
   private batchTimer?: NodeJS.Timeout;
   private readonly rateWindowMs = 1000; // Track messages over 1 second
   private readonly highRateThreshold = 20; // Messages per second
@@ -32,10 +32,10 @@ export default class ScriptConsole {
   private readonly batchIntervalMs = 100; // Flush every 100ms when batching
 
   constructor() {
-    const provider = new ConsoleMessageLensProvider();
-    this.lensProvider = provider;
+    const provider = new ConsoleMessageProvider();
+    this.messageProvider = provider;
     this.disposables = [
-      vscode.languages.registerCodeLensProvider('javascript', provider),
+      vscode.languages.registerInlayHintsProvider({ language: 'javascript' }, provider),
       workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration('p5-server.browser') || event.affectsConfiguration('p5-server.console')) {
           this.updateConfiguration();
@@ -55,13 +55,13 @@ export default class ScriptConsole {
       const { method, args, file, url, clientId } = event;
       if (method === 'clear') {
         this.clear();
-        this.lensProvider.removeMessages({ clientId });
+        this.messageProvider.removeMessages({ clientId });
       } else {
         this.setFile(file, url);
         this.maybeShowConsole(method);
-        this.appendLine(util.format(`[${method.toUpperCase()}] ${formatConsoleEventArgs(event)}`));
+        this.appendLine(normalizeLogLevel(method), util.format(`console.${method}: ${formatConsoleEventArgs(event)}`));
         if (file && event.line && args.length > 0) {
-          this.lensProvider.addMessage(event);
+          this.messageProvider.addMessage(event);
         }
       }
     });
@@ -69,7 +69,7 @@ export default class ScriptConsole {
     server.onScriptEvent('document', (event: BrowserDocumentEvent) => {
       const { type, clientId, visibilityState } = event;
       if (type === 'visibilitychange' && visibilityState === 'hidden') {
-        this.lensProvider.removeMessages({ clientId });
+        this.messageProvider.removeMessages({ clientId });
       }
     });
 
@@ -84,21 +84,21 @@ export default class ScriptConsole {
       if (file || url) {
         msg += ` of ${file || url}`;
       }
-      this.appendLine(stack || `${msg}: ${message}`);
+      this.appendLine('error', stack || `${msg}: ${message}`);
       if (event.type === 'error' && file && event.line) {
-        this.lensProvider.addMessage(event);
+        this.messageProvider.addMessage(event);
       }
     });
 
     server.onScriptEvent('connection', (event: BrowserConnectionEvent) => {
-      const { type, file, url } = event;
+      const { type, file, url, clientId } = event;
       if (type === 'opened') {
         this.autoShownForSource = false;
-        if (file) this.lensProvider.removeMessages({ file });
+        this.messageProvider.removeMessages({ clientId });
         if (!this.setFile(file, url) && this.messageCount > 0) {
           const label = '[RELOAD]';
           const halfLen = Math.floor((80 - label.length) / 2);
-          this.channel.appendLine('-'.repeat(halfLen) + label + '-'.repeat(halfLen));
+          this.channel.info('-'.repeat(halfLen) + label + '-'.repeat(halfLen));
         }
         this.messageCount = 0;
         if (workspace.getConfiguration('p5-server').get('console.clearOnReload', true)) {
@@ -110,23 +110,23 @@ export default class ScriptConsole {
   }
 
   private get channel() {
-    this._channel ??= window.createOutputChannel('P5 Sketch');
+    this._channel ??= window.createOutputChannel('P5 Sketch', { log: true });
     return this._channel;
   }
 
-  private appendLine(value: string) {
+  private appendLine(level: LogOutputMethod, value: string) {
     this.updateMessageRate();
 
     if (this.batchMode) {
       // In batch mode, buffer the message
-      this.messageBuffer.push(value);
+      this.messageBuffer.push({ level, value });
     } else {
       // Immediate mode - output directly
       if (this.banner) {
-        this.channel.appendLine(this.banner);
+        this.channel.info(this.banner);
         this.banner = null;
       }
-      this.channel.appendLine(value);
+      this.writeLog(level, value);
     }
     this.messageCount++;
   }
@@ -240,13 +240,16 @@ export default class ScriptConsole {
     if (this.messageBuffer.length === 0) return;
 
     if (this.banner) {
-      this.channel.appendLine(this.banner);
+      this.channel.info(this.banner);
       this.banner = null;
     }
 
-    // Join all messages and append at once for better performance
-    this.channel.append(this.messageBuffer.join('\n') + '\n');
+    for (const { level, value } of this.messageBuffer) this.writeLog(level, value);
     this.messageBuffer = [];
+  }
+
+  private writeLog(level: LogOutputMethod, value: string) {
+    this.channel[level](value);
   }
 
   /** Clean up resources */
@@ -274,3 +277,9 @@ const logLevelOrder: (BrowserConsoleEventMethods | 'always' | 'never')[] = [
   'debug',
   'always',
 ];
+
+type LogOutputMethod = Exclude<ConsoleLogLevel, 'log'>;
+
+function normalizeLogLevel(method: BrowserConsoleEventMethods): LogOutputMethod {
+  return method === 'clear' || method === 'log' ? 'info' : method;
+}

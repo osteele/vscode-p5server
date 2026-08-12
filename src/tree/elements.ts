@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { RESOURCE_DIR_PATH } from '../configuration';
+import { workspaceUriForPath } from '../helpers/fileHelpers';
 import { fileDisplay } from './treeHelpers';
 
 export type Element = LibraryItem | Sketch | FilePathItem;
@@ -15,7 +16,7 @@ export class DirectoryItem extends vscode.TreeItem {
     name?: string,
   ) {
     super(name || path.basename(file), vscode.TreeItemCollapsibleState.Collapsed);
-    this.resourceUri = Uri.file(file);
+    this.resourceUri = workspaceUriForPath(file);
     this.tooltip = fileDisplay(file);
   }
 
@@ -29,12 +30,12 @@ export class FileItem extends vscode.TreeItem {
     public readonly parent: DirectoryItem | Sketch | null,
   ) {
     super(path.basename(file), vscode.TreeItemCollapsibleState.None);
-    this.resourceUri = Uri.file(file);
+    this.resourceUri = workspaceUriForPath(file);
     this.tooltip = fileDisplay(file);
     this.command = {
       command: 'vscode.open',
       title: 'Edit File',
-      arguments: [Uri.file(file)],
+      arguments: [workspaceUriForPath(file)],
     };
   }
 

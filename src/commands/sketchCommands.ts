@@ -1,7 +1,7 @@
 import { Sketch } from 'p5-server';
 import * as vscode from 'vscode';
-import { Uri, window, workspace } from 'vscode';
-import { fileExists, getWorkspaceFolderPaths } from '../helpers/fileHelpers';
+import { window, workspace } from 'vscode';
+import { fileExists, getWorkspaceFolderPaths, workspaceUriForPath } from '../helpers/fileHelpers';
 import { validateChildName } from '../helpers/fileNames';
 import path = require('path');
 
@@ -31,7 +31,7 @@ export async function createSketch({ dir, type }: { dir?: string; type: 'script'
   let filePath = path.join(wsPath, sketchName);
   switch (type) {
     case 'folder':
-      await workspace.fs.createDirectory(Uri.file(filePath));
+      await workspace.fs.createDirectory(workspaceUriForPath(filePath));
       sketch = Sketch.create(path.join(filePath, 'index.html'), {
         scriptFile: 'sketch.js',
         title: sketchName,
@@ -68,7 +68,7 @@ export async function createSketch({ dir, type }: { dir?: string; type: 'script'
     return;
   }
 
-  window.showTextDocument(Uri.file(sketch.scriptFilePath));
+  window.showTextDocument(workspaceUriForPath(sketch.scriptFilePath));
   vscode.commands.executeCommand('p5-server.explorer.refresh');
 }
 
@@ -84,5 +84,5 @@ export async function deleteSketch(sketch: Sketch) {
     'Cancel',
   );
   if (result !== 'Delete') return;
-  await Promise.all(files.map(Uri.file).map(uri => workspace.fs.delete(uri)));
+  await Promise.all(files.map(workspaceUriForPath).map(uri => workspace.fs.delete(uri, { useTrash: true })));
 }

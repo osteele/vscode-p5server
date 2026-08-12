@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, workspace } from 'vscode';
 import { exclusions } from '../configuration';
+import { workspaceUriForPath } from '../helpers/fileHelpers';
 import { Element, SketchItem, LibraryItem, FileItem, DirectoryItem } from './elements';
 
 export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vscode.Disposable {
@@ -92,9 +93,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vsc
   }
 
   private async getRootChildren(): Promise<Element[]> {
-    const wsFolders = workspace.workspaceFolders
-      ? workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')
-      : [];
+    const wsFolders = workspace.workspaceFolders ?? [];
     this._fileElementMap.clear();
     try {
       switch (wsFolders.length) {
@@ -111,7 +110,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vsc
   }
 
   private updateWatchers() {
-    const wsFolders = workspace.workspaceFolders?.filter(folder => folder.uri.scheme === 'file') ?? [];
+    const wsFolders = workspace.workspaceFolders ?? [];
     this.watchers.forEach(watcher => watcher.dispose());
     this.watchers = wsFolders.map(folder => {
       const w = workspace.createFileSystemWatcher(new vscode.RelativePattern(folder, '**/*.{htm,html,js}'));
@@ -166,7 +165,7 @@ export class SketchTreeProvider implements vscode.TreeDataProvider<Element>, vsc
     const classifiedFiles = await Promise.all(
       files.map(async filePath => ({
         filePath,
-        isDirectory: (await workspace.fs.stat(vscode.Uri.file(filePath))).type === vscode.FileType.Directory,
+        isDirectory: (await workspace.fs.stat(workspaceUriForPath(filePath))).type === vscode.FileType.Directory,
       })),
     );
     const children = [

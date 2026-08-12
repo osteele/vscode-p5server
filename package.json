@@ -10,7 +10,20 @@
     "email": "steele@osteele.com"
   },
   "engines": {
-    "vscode": "^1.103.0"
+    "vscode": "^1.115.0"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "P5 Server requires an extension-host filesystem path for sketch analysis and serving."
+    },
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Sketch browsing and file management remain available. Starting, running, and debugging sketches require workspace trust."
+    }
   },
   "categories": [
     "Other"
@@ -35,6 +48,7 @@
   },
   "homepage": "https://github.com/osteele/vscode-p5server#readme",
   "activationEvents": [
+    "onStartupFinished",
     "onView:p5sketchExplorer"
   ],
   "main": "./out/extension.js",
@@ -43,7 +57,7 @@
       {
         "command": "p5-server.start",
         "title": "P5 Server: Start",
-        "enablement": "workspaceFolderCount != 0"
+        "enablement": "workspaceFolderCount != 0 && isWorkspaceTrusted"
       },
       {
         "command": "p5-server.stop",
@@ -53,12 +67,18 @@
       {
         "command": "p5-server.run",
         "title": "Run P5 Sketch (in Browser or Sidebar)",
-        "enablement": "workspaceFolderCount != 0"
+        "enablement": "workspaceFolderCount != 0 && isWorkspaceTrusted"
+      },
+      {
+        "command": "p5-server.debug",
+        "title": "Debug P5 Sketch",
+        "enablement": "workspaceFolderCount != 0 && isWorkspaceTrusted",
+        "icon": "$(debug-alt)"
       },
       {
         "command": "p5-server.run#browser",
         "title": "Run P5 Sketch in Browser",
-        "enablement": "workspaceFolderCount != 0",
+        "enablement": "workspaceFolderCount != 0 && isWorkspaceTrusted",
         "icon": {
           "dark": "./resources/dark/sketch.svg",
           "light": "./resources/light/sketch.svg"
@@ -67,7 +87,7 @@
       {
         "command": "p5-server.run#sidebar",
         "title": "Run P5 Sketch in Sidebar",
-        "enablement": "workspaceFolderCount != 0",
+        "enablement": "workspaceFolderCount != 0 && isWorkspaceTrusted",
         "icon": {
           "dark": "./resources/dark/sketch.svg",
           "light": "./resources/light/sketch.svg"
@@ -163,20 +183,26 @@
       {
         "command": "p5-server.explorer.run",
         "title": "Run sketch",
-        "enablement": "view == p5sketchExplorer",
+        "enablement": "view == p5sketchExplorer && isWorkspaceTrusted",
         "icon": "$(run)"
       },
       {
         "command": "p5-server.explorer.run#integrated",
         "title": "Run in integrated browser",
-        "enablement": "view == p5sketchExplorer",
+        "enablement": "view == p5sketchExplorer && isWorkspaceTrusted",
         "icon": "$(run)"
       },
       {
         "command": "p5-server.explorer.run#external",
         "title": "Run in external browser",
-        "enablement": "view == p5sketchExplorer",
+        "enablement": "view == p5sketchExplorer && isWorkspaceTrusted",
         "icon": "$(run)"
+      },
+      {
+        "command": "p5-server.explorer.debug",
+        "title": "Debug sketch",
+        "enablement": "view == p5sketchExplorer && isWorkspaceTrusted",
+        "icon": "$(debug-alt)"
       }
     ],
     "configuration": {
@@ -237,7 +263,7 @@
         "p5-server.editor.infoLens": {
           "type": "boolean",
           "default": true,
-          "description": "Display console and error information in the editor"
+          "description": "Display console messages as inlay hints and runtime errors in the Problems view."
         },
         "p5-server.explorer.autoReveal": {
           "type": "boolean",
@@ -275,12 +301,17 @@
       "editor/title": [
         {
           "command": "p5-server.run#browser",
-          "when": "config.p5-server.editorTitle.RunIcon.enabled && workspaceFolderCount != 0 && config.p5-server.browser != integrated && resourceExtname =~ /\\.(js|html)/",
+          "when": "config.p5-server.editorTitle.RunIcon.enabled && workspaceFolderCount != 0 && isWorkspaceTrusted && config.p5-server.browser != integrated && resourceExtname =~ /\\.(js|html)/",
           "group": "navigation"
         },
         {
           "command": "p5-server.run#sidebar",
-          "when": "config.p5-server.editorTitle.RunIcon.enabled && workspaceFolderCount != 0 && config.p5-server.browser == integrated && resourceExtname =~ /\\.(js|html)/",
+          "when": "config.p5-server.editorTitle.RunIcon.enabled && workspaceFolderCount != 0 && isWorkspaceTrusted && config.p5-server.browser == integrated && resourceExtname =~ /\\.(js|html)/",
+          "group": "navigation"
+        },
+        {
+          "command": "p5-server.debug",
+          "when": "workspaceFolderCount != 0 && isWorkspaceTrusted && resourceExtname =~ /\\.(js|html)/",
           "group": "navigation"
         }
       ],
@@ -324,7 +355,12 @@
         },
         {
           "command": "p5-server.explorer.run",
-          "when": "view == p5sketchExplorer && viewItem =~ /^sketch/",
+          "when": "view == p5sketchExplorer && viewItem =~ /^sketch/ && isWorkspaceTrusted",
+          "group": "inline"
+        },
+        {
+          "command": "p5-server.explorer.debug",
+          "when": "view == p5sketchExplorer && viewItem =~ /^sketch/ && isWorkspaceTrusted",
           "group": "inline"
         },
         {
@@ -339,12 +375,12 @@
         },
         {
           "command": "p5-server.explorer.run#integrated",
-          "when": "view == p5sketchExplorer && viewItem =~ /^file$|^sketch/",
+          "when": "view == p5sketchExplorer && viewItem =~ /^file$|^sketch/ && isWorkspaceTrusted",
           "group": "2_run"
         },
         {
           "command": "p5-server.explorer.run#external",
-          "when": "view == p5sketchExplorer && viewItem =~ /^file$|^sketch/",
+          "when": "view == p5sketchExplorer && viewItem =~ /^file$|^sketch/ && isWorkspaceTrusted",
           "group": "2_run"
         },
         {
@@ -414,7 +450,52 @@
           "icon": "resources/light/sketch.svg"
         }
       ]
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "p5-server.gettingStarted",
+        "title": "Get Started with P5 Server",
+        "description": "Create, run, inspect, and debug a p5.js sketch.",
+        "steps": [
+          {
+            "id": "createSketch",
+            "title": "Create or open a sketch",
+            "description": "Open the P5.js Sketch Explorer, or run [Create a p5.js Sketch File](command:p5-server.createSketchFile).",
+            "media": {
+              "markdown": "walkthrough/create.md"
+            },
+            "completionEvents": ["onCommand:p5-server.createSketchFile", "onCommand:p5-server.createSketchFolder"]
+          },
+          {
+            "id": "runSketch",
+            "title": "Run with live reload",
+            "description": "Run [Run P5 Sketch](command:p5-server.run), then save an edit to reload it.",
+            "media": {
+              "markdown": "walkthrough/run.md"
+            },
+            "completionEvents": ["onCommand:p5-server.run", "onCommand:p5-server.run#browser", "onCommand:p5-server.run#sidebar"]
+          },
+          {
+            "id": "inspectConsole",
+            "title": "Inspect console output and errors",
+            "description": "Use [Show Script Output](command:p5-server.showScriptOutput). Console values also appear inline, and runtime errors appear in Problems.",
+            "media": {
+              "markdown": "walkthrough/console.md"
+            },
+            "completionEvents": ["onCommand:p5-server.showScriptOutput"]
+          },
+          {
+            "id": "debugSketch",
+            "title": "Debug in VS Code",
+            "description": "Set a breakpoint, then run [Debug P5 Sketch](command:p5-server.debug).",
+            "media": {
+              "markdown": "walkthrough/debug.md"
+            },
+            "completionEvents": ["onCommand:p5-server.debug"]
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
     "build:changelog": "ts-node scripts/changelog2html.ts",
@@ -422,17 +503,19 @@
     "compile": "tsc -p ./",
     "format": "prettier --write \"src/**/*.ts\" && eslint --fix \"src/**/*.ts\"",
     "lint": "eslint src --ext ts",
-    "pretest": "npm run compile && npm run lint && npm run test:unit",
-    "test": "node ./out/test/runTest.js",
-    "test:integration": "node ./out/test/runTest.js",
-    "test:unit": "npx mocha --ui tdd out/test/suite/helpers.test.js",
-    "test:quick": "npm run pretest",
+    "pretest": "bun run compile && bun run lint && bun run test:unit",
+    "test": "vscode-test",
+    "test:integration": "vscode-test",
+    "test:integration:minimum": "vscode-test --label minimum",
+    "test:integration:stable": "vscode-test --label stable",
+    "test:unit": "bunx mocha --ui tdd out/test/suite/helpers.test.js",
+    "test:quick": "bun run pretest",
     "package": "vsce package",
     "prepare": "husky",
     "p5-server:link": "npm uninstall --no-save p5-server && npm link ../p5-server",
     "p5-server:unlink": "npm unlink --no-save p5-server && npm install -E p5-server",
     "publish": "vsce publish",
-    "vscode:prepublish": "npm run build:changelog && npm run compile",
+    "vscode:prepublish": "bun run build:changelog && bun run compile",
     "watch": "tsc -watch -p ./"
   },
   "dependencies": {
@@ -447,12 +530,12 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/pug": "^2.0.10",
-    "@types/vscode": "1.103.0",
+    "@types/vscode": "1.115.0",
+    "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.9.2",
     "cross-env": "^10.1.0",
     "eslint": "^10.8.1",
-    "glob": "^13.0.6",
     "husky": "^9.1.7",
     "mocha": "^11.8.0",
     "prettier": "^3.9.6",

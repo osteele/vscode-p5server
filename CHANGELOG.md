@@ -2,9 +2,23 @@
 
 ## [Unreleased]
 
+Added:
+
+- Added **Debug P5 Sketch**, backed by VS Code's browser debugger and requiring no `launch.json` file.
+- Added a Getting Started walkthrough for creating, running, inspecting, and debugging sketches.
+- Added support for workspace extension hosts such as Remote SSH, Dev Containers, WSL, and Codespaces, including browser URL forwarding.
+- Added explicit Restricted Mode behavior. File browsing and management remain available, while starting and running workspace code requires trust.
+
 Changed:
 
 - Use VS Code's file watcher for live reload instead of starting a second watcher in the extension host.
+- Use VS Code's integrated browser when available, with Simple Browser as a compatibility fallback.
+- Use VS Code's external-URI service for library homepages instead of retaining an unused custom webview implementation.
+- Show relayed console values as inlay hints and runtime exceptions as Problems diagnostics instead of CodeLens entries.
+- Use a VS Code log output channel for timestamped, severity-aware sketch console output.
+- Send deleted sketch files to the operating system trash and perform renames through a `WorkspaceEdit`.
+- Use the official `@vscode/test-cli` runner against both VS Code 1.115 and the current stable release.
+- Preserve eager startup activation and the existing independent status-bar visibility settings. A future release may reconsider this behavior.
 
 ## [1.11.1] - 2026-08-12
 

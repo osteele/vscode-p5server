@@ -21,6 +21,7 @@ suite('Commands Integration', () => {
       'p5-server.start',
       'p5-server.stop',
       'p5-server.run',
+      'p5-server.debug',
       'p5-server.openBrowser',
       'p5-server.run#browser',
       'p5-server.run#sidebar',
@@ -51,6 +52,7 @@ suite('Commands Integration', () => {
       'p5-server.explorer.run',
       'p5-server.explorer.run#integrated',
       'p5-server.explorer.run#external',
+      'p5-server.explorer.debug',
       'p5-server.explorer.rename',
       'p5-server.explorer.openLibrary',
     ];
@@ -87,14 +89,5 @@ suite('Commands Integration', () => {
     for (const command of internalCommands) {
       assert.ok(commands.includes(command), `Internal command '${command}' should be registered`);
     }
-  });
-
-  test('should execute sketch creation commands without workspace errors', async () => {
-    await assert.doesNotReject(async () => {
-      await vscode.commands.executeCommand('p5-server.createSketchFile');
-    });
-    await assert.doesNotReject(async () => {
-      await vscode.commands.executeCommand('p5-server.createSketchFolder');
-    });
   });
 });

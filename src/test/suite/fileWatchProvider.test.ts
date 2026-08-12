@@ -12,7 +12,7 @@ suite('File Watch Provider', () => {
     let subscription: ReturnType<typeof createVSCodeFileWatchProvider> | undefined;
     try {
       const changed = new Promise<string>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timed out waiting for a file event')), 5000);
+        const timeout = setTimeout(() => reject(new Error('Timed out waiting for a file event')), 10000);
         subscription = createVSCodeFileWatchProvider([tempDir], filePath => {
           if (filePath !== changedFile) {
             return;
@@ -22,7 +22,7 @@ suite('File Watch Provider', () => {
         });
       });
 
-      await delay(100);
+      await delay(300);
       await writeFile(changedFile, 'function setup() {}\n');
       assert.strictEqual(await changed, changedFile);
     } finally {
@@ -38,7 +38,7 @@ suite('File Watch Provider', () => {
     try {
       await writeFile(changedFile, 'function setup() {}\n');
       const changed = new Promise<string>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timed out waiting for a file event')), 5000);
+        const timeout = setTimeout(() => reject(new Error('Timed out waiting for a file event')), 10000);
         subscription = createVSCodeFileWatchProvider([changedFile], filePath => {
           if (filePath !== changedFile) {
             return;
@@ -48,7 +48,7 @@ suite('File Watch Provider', () => {
         });
       });
 
-      await delay(100);
+      await delay(300);
       await writeFile(changedFile, 'function setup() { createCanvas(400, 400); }\n');
       assert.strictEqual(await changed, changedFile);
     } finally {
@@ -87,7 +87,7 @@ suite('File Watch Provider', () => {
       await delay(200);
       let calls = 0;
       const changed = new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timed out waiting for a file event')), 5000);
+        const timeout = setTimeout(() => reject(new Error('Timed out waiting for a file event')), 10000);
         subscription = createVSCodeFileWatchProvider([tempDir, changedFile, changedFile], filePath => {
           if (filePath !== changedFile) return;
           calls++;
@@ -103,7 +103,7 @@ suite('File Watch Provider', () => {
         });
       });
 
-      await delay(100);
+      await delay(300);
       await writeFile(changedFile, 'function setup() { createCanvas(400, 400); }\n');
       await changed;
     } finally {

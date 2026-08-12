@@ -5,8 +5,14 @@
 ```sh
 git clone <repository>
 cd vscode-p5server
-npm install
+bun install
 ```
+
+`bun.lock` is the installation lockfile. The repository also retains
+`package-lock.json` because VS Code's packaging tool uses npm to discover the
+production dependency tree. After changing dependencies with Bun, refresh that
+interoperability lockfile with
+`npm install --package-lock-only --ignore-scripts`.
 
 ## Development Workflow
 
@@ -14,16 +20,16 @@ npm install
 
 ```sh
 # Compile TypeScript
-npm run compile
+bun run compile
 
 # Run linting
-npm run lint
+bun run lint
 
 # Run automated tests
-npm run test
+bun run test
 
 # Format code
-npm run format
+bun run format
 ```
 
 ### Running in Development
@@ -41,20 +47,22 @@ This extension uses a multi-layered testing approach:
 **Unit Tests**: Test pure functions and utilities
 - Location: `src/test/suite/helpers.test.ts`
 - Focus: Version comparison, file helpers, configuration utilities
-- Run with: `npm run test`
+- Run with: `bun run test`
 
-**Integration Tests**: Test VS Code API integration
+**Integration Tests**: Test VS Code API integration through the official
+`@vscode/test-cli` runner
 - Location: `src/test/suite/commands.test.ts`, `src/test/suite/extension.test.ts`,
   `src/test/suite/fileWatchProvider.test.ts`, and
-  `src/test/suite/consoleMessageLensProvider.test.ts`
+  `src/test/suite/consoleMessageProvider.test.ts`
 - Focus: Command registration, activation, file-watcher behavior, console
-  update coalescing, and message-retention limits
-- Run with: `npm run test`
+  inlay-hint updates, diagnostic lifecycle, contribution metadata, and
+  message-retention limits
+- Run with: `bun run test`
 
 **Configuration Tests**: Test settings and exclusions
 - Location: `src/test/suite/configuration.test.ts`
 - Focus: Default settings, exclusion patterns
-- Run with: `npm run test`
+- Run with: `bun run test`
 
 ### 2. Manual Testing
 
@@ -96,35 +104,41 @@ For this project, I've made a pragmatic decision to rely heavily on manual testi
 
 ```sh
 # Run all automated tests (includes VS Code integration tests)
-npm run test
+bun run test
 
 # Run VS Code integration tests without rebuilding
-npm run test:integration
+bun run test:integration
+
+# Run only the minimum supported VS Code test configuration
+bun run test:integration:minimum
+
+# Run only the current stable VS Code test configuration
+bun run test:integration:stable
 
 # Run only unit tests (fast, no VS Code required)
-npm run test:unit
+bun run test:unit
 
 # Quick test: compile, lint, and run unit tests
-npm run test:quick
+bun run test:quick
 
 # Run only specific test
-npx mocha --ui tdd out/test/suite/helpers.test.js
+bunx mocha --ui tdd out/test/suite/helpers.test.js
 
 # Compile and test
-npm run pretest
+bun run pretest
 
 # Watch mode for development
-npm run watch
+bun run watch
 ```
 
-**VS Code Test Optimizations:**
-- **Caching**: VS Code test instance cached in `.vscode-test/` directory
-- **Platform Detection**: Automatically downloads ARM64 version on Apple Silicon Macs
-- **Shell Isolation**: Tests bypass shell environment resolution for reliability
-- **Performance Flags**: Disabled GPU, extensions, telemetry for faster startup
-- **Environment**: Sets `CI=true` and other variables for consistent behavior
-- **Timeout**: 4-minute timeout accommodates initial ARM64 download
-- **Reliability**: Independent of developer's shell configuration and CPU architecture
+**VS Code test setup:**
+
+- `.vscode-test.mjs` defines minimum-supported and current-stable runs.
+- Downloaded VS Code builds are cached under `.vscode-test/`.
+- Each run gets separate user data while extensions, updates, telemetry, and
+  workspace-trust prompts are disabled.
+- The initial run can take several minutes while it downloads VS Code. Later
+  runs reuse the cached application.
 
 ## Code Quality
 
@@ -132,10 +146,10 @@ npm run watch
 
 ```sh
 # Check code style
-npm run lint
+bun run lint
 
 # Auto-fix formatting issues
-npm run format
+bun run format
 ```
 
 ### TypeScript Configuration
@@ -143,7 +157,7 @@ npm run format
 - Strict mode enabled for type safety
 - DOM library included for browser APIs
 - Source maps enabled for debugging
-- TypeScript auto-detection disabled in favor of npm scripts for consistent build process
+- TypeScript auto-detection disabled in favor of repository scripts for a consistent build process
 
 ## Architecture
 
@@ -166,21 +180,25 @@ Commands are modularized into focused areas:
 
 ### Runtime performance
 
-- VS Code activates the extension when its view or a command is opened. A
-  JavaScript file in an unrelated workspace does not activate it.
+- VS Code activates the extension after startup so the status-bar controls are
+  visible without an extra interaction. The server, console relay, conversion
+  code, and external-browser package still load on demand.
 - Conversion commands, the script console, and the external-browser package
   load when first used. The server instance is created only when requested.
 - The Sketch Explorer caches directory analysis. File-system events invalidate
   affected directories and coalesce refreshes.
 - Live-reload watchers combine duplicate paths and overlapping directory
   coverage.
-- Console output is batched under load. CodeLens updates are coalesced, indexed
-  by file, and limited to a fixed number of source locations.
+- Console output uses a `LogOutputChannel` and is batched under load. Inlay-hint
+  updates are coalesced, indexed by file, and limited to a fixed number of
+  source locations. Runtime errors use a `DiagnosticCollection`.
+- The extension runs in the workspace extension host. Filesystem URIs preserve
+  remote schemes, and browser URLs pass through VS Code's URI forwarding.
 
 ## Local Install
 
 ```sh
-npm run package
+bun run package
 code --install-extension $(ls *.vsix|tail -1)
 ```
 
@@ -201,7 +219,7 @@ END
 ## Publish
 
 ```sh
-npm run publish
+bun run publish
 ```
 
 Note that this is not `npm publish`, which would try to publish the npm package to the npm package registry.
@@ -209,9 +227,9 @@ Note that this is not `npm publish`, which would try to publish the npm package 
 ## Contributing
 
 1. **Before making changes**: Run existing tests to ensure they pass
-2. **During development**: Use `npm run watch` for continuous compilation
+2. **During development**: Use `bun run watch` for continuous compilation
 3. **Before committing**:
-   - Run `npm run compile` and `npm run lint`
+   - Run `bun run compile` and `bun run lint`
    - Perform relevant manual testing from `./docs/manual-testing.md`
    - Add tests for new functionality
 4. **For significant changes**: Run full manual testing suite
