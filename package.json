@@ -521,12 +521,13 @@
   "dependencies": {
     "node-html-parser": "^9.0.1",
     "open": "^10.2.0",
-    "p5-server": "1.0.1"
+    "p5-server": "2.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@osteele/changelog-parser": "0.1.0",
+    "@osteele/changelog-parser": "1.0.0",
     "@tsconfig/node22": "^22.0.5",
+    "@types/livereload": "^0.9.5",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/pug": "^2.0.10",

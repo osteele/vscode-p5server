@@ -1,5 +1,12 @@
-import { BrowserConnectionEvent, BrowserConsoleEvent, BrowserErrorEvent, Server } from 'p5-server';
-import { BrowserConsoleEventMethods, BrowserDocumentEvent, ConsoleLogLevel } from 'p5-server/dist/server/eventTypes';
+import {
+  BrowserConnectionEvent,
+  BrowserConsoleEvent,
+  BrowserConsoleEventMethods,
+  BrowserDocumentEvent,
+  BrowserErrorEvent,
+  ConsoleLogLevel,
+  Server,
+} from 'p5-server';
 import * as vscode from 'vscode';
 import { window, workspace } from 'vscode';
 import { padCenter } from '../helpers';
