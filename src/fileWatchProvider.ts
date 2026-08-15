@@ -3,7 +3,7 @@ import path from 'node:path';
 import { Disposable, RelativePattern, Uri, workspace } from 'vscode';
 import { workspaceUriForPath } from './helpers/fileHelpers';
 
-type FileWatchProvider = (filePaths: readonly string[], onDidChange: (filePath: string) => void) => Disposable;
+export type FileWatchProvider = (filePaths: readonly string[], onDidChange: (filePath: string) => void) => Disposable;
 
 /** Use VS Code's out-of-process file watcher for p5-server live reload. */
 export const createVSCodeFileWatchProvider: FileWatchProvider = (filePaths, onDidChange) => {

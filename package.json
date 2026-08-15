@@ -508,7 +508,7 @@
     "test:integration": "vscode-test",
     "test:integration:minimum": "vscode-test --label minimum",
     "test:integration:stable": "vscode-test --label stable",
-    "test:unit": "bunx mocha --ui tdd out/test/suite/helpers.test.js",
+    "test:unit": "bunx mocha --ui tdd out/test/suite/helpers.test.js out/test/suite/serverManager.test.js",
     "test:quick": "bun run pretest",
     "package": "vsce package",
     "prepare": "husky",
