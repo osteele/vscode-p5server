@@ -11,6 +11,7 @@ Added:
 
 Changed:
 
+- Update p5-server to 2.0.0. Generated and JavaScript-only sketches now use p5.js 2.3 with async asset-loading `setup` functions, p5.sound loads from its p5 2.x-compatible package, and sketch rendering, screenshots, and CDN caching follow the p5 2 lifecycle.
 - Use VS Code's file watcher for live reload instead of starting a second watcher in the extension host.
 - Use VS Code's integrated browser when available, with Simple Browser as a compatibility fallback.
 - Use VS Code's external-URI service for library homepages instead of retaining an unused custom webview implementation.
@@ -18,7 +19,11 @@ Changed:
 - Use a VS Code log output channel for timestamped, severity-aware sketch console output.
 - Send deleted sketch files to the operating system trash and perform renames through a `WorkspaceEdit`.
 - Use the official `@vscode/test-cli` runner against both VS Code 1.115 and the current stable release.
+- Guard server state transitions against an explicit state table, so overlapping start and stop requests, failed startups, and failed shutdowns leave the server and status bar in a consistent state.
+- Document the server and console state machines in `docs/server-state-table.md` and `docs/console-message-provider-state-table.md`, and cover every documented transition with tests.
+- Inject the server factory, browser opener, and status-bar dependencies into `ServerManager` so its transitions are testable without a live server.
 - Preserve eager startup activation and the existing independent status-bar visibility settings. A future release may reconsider this behavior.
+- Upgrade the changelog parser used to build the What's New page, and add a Bun lockfile alongside the npm one.
 
 ## [1.11.1] - 2026-08-12
 
