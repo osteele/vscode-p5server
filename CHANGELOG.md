@@ -25,6 +25,10 @@ Changed:
 - Preserve eager startup activation and the existing independent status-bar visibility settings. A future release may reconsider this behavior.
 - Upgrade the changelog parser used to build the What's New page, and add a Bun lockfile alongside the npm one.
 
+Fixed:
+
+- Subscribe to browser script events before the server accepts connections. A sketch error that arrived during startup, such as from a browser tab left open from an earlier run, was reported as an unhandled `error` event and could take down the extension host.
+
 ## [1.11.1] - 2026-08-12
 
 Changed:

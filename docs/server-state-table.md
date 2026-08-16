@@ -13,7 +13,7 @@ This document describes the lifecycle state machine managed by `ServerManager` i
 
 | Current State | Event / Command | Guard | Next State | Side Effects |
 |---|---|---|---|---|
-| `stopped` | `start` | Workspace trusted | `starting` → `running` | Create and start `Server`; subscribe `ScriptConsole`; update status bar; open browser (default) |
+| `stopped` | `start` | Workspace trusted | `starting` → `running` | Create `Server`; subscribe `ScriptConsole`; start the server; update status bar; open browser (default) |
 | `stopped` | `start` | Workspace not trusted | `stopped` | Show workspace-trust warning; return |
 | `stopped` | `stop` | — | `stopped` | No-op |
 | `stopped` | `openBrowser` | — | `stopped` | No-op (server has no URL) |

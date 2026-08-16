@@ -277,9 +277,13 @@ export class ServerManager {
         relayConsoleMessages: true,
       };
       this.server = await this.createServer(serverOptions);
-      await this.server.start();
+      // Subscribe before starting. The relay reports failures as an 'error' event, which
+      // throws if it is emitted before a listener is attached. A browser left open from a
+      // previous run reconnects as soon as the server accepts connections, so subscribing
+      // afterwards leaves a window in which a sketch error takes down the extension host.
       const scriptConsole = await this.getScriptConsole();
       scriptConsole.subscribe(this.server);
+      await this.server.start();
       this.state = 'running';
 
       sbm.dispose();

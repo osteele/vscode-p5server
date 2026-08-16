@@ -101,6 +101,7 @@ class FakeStatusBarManager implements StatusBarManagerLike {
 
 class FakeScriptConsole {
   subscribedServers: Server[] = [];
+  serverStartedAtSubscribe: boolean[] = [];
   shown = false;
   disposed = false;
 
@@ -110,6 +111,7 @@ class FakeScriptConsole {
 
   subscribe(server: Server) {
     this.subscribedServers.push(server);
+    this.serverStartedAtSubscribe.push((server as unknown as FakeServer).started);
   }
 
   dispose() {
@@ -259,6 +261,24 @@ suite('ServerManager state transitions', () => {
     assert.deepStrictEqual(
       statusBarManager.updates.map(u => u.state),
       ['stopped', 'starting', 'running'],
+    );
+  });
+
+  test('stopped + start subscribes to script events before the server accepts connections', async () => {
+    const fakeServer = new FakeServer();
+    const fakeConsole = new FakeScriptConsole();
+    const { manager } = createManager({
+      createServer: async () => fakeServer,
+      createScriptConsole: async () => fakeConsole,
+    });
+
+    await manager.startServer();
+
+    assert.strictEqual(fakeServer.started, true);
+    assert.deepStrictEqual(
+      fakeConsole.serverStartedAtSubscribe,
+      [false],
+      'the relay reports failures as an EventEmitter "error" event, which throws when it is emitted before a listener is attached',
     );
   });
 

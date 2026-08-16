@@ -6,3 +6,4 @@ node_modules
 *.vsix
 *.log
 resources/changelog.html
+test-workspaces/.vscode/settings.json
