@@ -26,6 +26,20 @@ suite('Extension manifest', () => {
     assert.match(debugCommand.enablement, /isWorkspaceTrusted/);
   });
 
+  test('offers the p5.js 2 conversion on a compatibility add-on row', () => {
+    const command = manifest.contributes.commands.find(
+      (contribution: { command: string }) => contribution.command === 'p5-server.convertSketch#p5v2',
+    );
+    assert.ok(command, 'the conversion command is contributed');
+
+    const menuItem = manifest.contributes.menus['view/item/context'].find(
+      (contribution: { command: string }) => contribution.command === 'p5-server.convertSketch#p5v2',
+    );
+    // The row is what tells the user the sketch has not been converted, so the
+    // conversion has to be reachable from it.
+    assert.match(menuItem.when, /viewItem == compat-library/);
+  });
+
   test('contributes the getting-started walkthrough', () => {
     const walkthrough = manifest.contributes.walkthroughs.find(
       (contribution: { id: string }) => contribution.id === 'p5-server.gettingStarted',

@@ -1,6 +1,7 @@
 import type { Sketch } from 'p5-server';
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
+import type { LibraryItem } from './tree/elements';
 
 export function registerCommands(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -15,6 +16,14 @@ export function registerCommands(context: vscode.ExtensionContext) {
     commands.registerCommand('p5-server.convertSketch#script', async (sketch: Sketch) =>
       (await import('./commands/conversionCommands')).convertSketch(sketch, 'script'),
     ),
+    commands.registerCommand('p5-server.convertSketch#p5v2', async (item: Sketch | LibraryItem) => {
+      // The command appears on the compatibility add-on row as well as on the
+      // sketch, so it can arrive with either. `Sketch` is a type-only import,
+      // so discriminate structurally rather than with instanceof.
+      const sketch = 'library' in item ? item.parent : item;
+      if (!sketch) return;
+      return (await import('./commands/conversionCommands')).convertSketchToP5v2(sketch);
+    }),
     commands.registerCommand('p5-server.createSketchFile', async () =>
       (await import('./commands/sketchCommands')).createSketch({ type: 'script' }),
     ),

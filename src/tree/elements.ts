@@ -79,9 +79,30 @@ export class LibraryItem extends vscode.TreeItem {
   ) {
     super(path.basename(library.name), vscode.TreeItemCollapsibleState.None);
     const description = library.description.replace(/\.?$/, '.');
-    this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${description}`;
+    if (isCompatibilityAddon(library)) {
+      // A compatibility add-on is not a library the author chose. Its presence
+      // records that the sketch still targets p5.js 1.x, so it reads as work
+      // outstanding rather than as a dependency.
+      this.description = 'p5.js 1.x';
+      this.tooltip =
+        `This sketch targets p5.js 1.x and is running through a compatibility add-on.\n` +
+        `Convert it to p5.js 2 to drop the add-on.\n\nAdd-on description: ${description}`;
+      this.contextValue = 'compat-library';
+      this.iconPath = new vscode.ThemeIcon(
+        'warning',
+        new vscode.ThemeColor('problemsWarningIcon.foreground'),
+      );
+    } else {
+      this.tooltip = `This sketch includes the ${library.name} library.\nLibrary description: ${description}`;
+    }
   }
 
   contextValue = 'library';
   iconPath = new vscode.ThemeIcon('library');
+}
+
+/** Whether a library is one of the p5.js 1.x compatibility add-ons, which the
+ * catalog groups in its own collection. */
+export function isCompatibilityAddon(library: Library): boolean {
+  return library.categoryKey === 'compat';
 }

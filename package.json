@@ -132,6 +132,11 @@
         "enablement": "view == p5sketchExplorer"
       },
       {
+        "command": "p5-server.convertSketch#p5v2",
+        "title": "Convert to p5.js 2",
+        "enablement": "view == p5sketchExplorer"
+      },
+      {
         "command": "p5-server.deleteSketch",
         "title": "Delete",
         "enablement": "view == p5sketchExplorer"
@@ -374,6 +379,10 @@
           "group": "inline"
         },
         {
+          "command": "p5-server.convertSketch#p5v2",
+          "when": "view == p5sketchExplorer && viewItem == compat-library"
+        },
+        {
           "command": "p5-server.explorer.run#integrated",
           "when": "view == p5sketchExplorer && viewItem =~ /^file$|^sketch/ && isWorkspaceTrusted",
           "group": "2_run"
@@ -464,7 +473,10 @@
             "media": {
               "markdown": "walkthrough/create.md"
             },
-            "completionEvents": ["onCommand:p5-server.createSketchFile", "onCommand:p5-server.createSketchFolder"]
+            "completionEvents": [
+              "onCommand:p5-server.createSketchFile",
+              "onCommand:p5-server.createSketchFolder"
+            ]
           },
           {
             "id": "runSketch",
@@ -473,7 +485,11 @@
             "media": {
               "markdown": "walkthrough/run.md"
             },
-            "completionEvents": ["onCommand:p5-server.run", "onCommand:p5-server.run#browser", "onCommand:p5-server.run#sidebar"]
+            "completionEvents": [
+              "onCommand:p5-server.run",
+              "onCommand:p5-server.run#browser",
+              "onCommand:p5-server.run#sidebar"
+            ]
           },
           {
             "id": "inspectConsole",
@@ -482,7 +498,9 @@
             "media": {
               "markdown": "walkthrough/console.md"
             },
-            "completionEvents": ["onCommand:p5-server.showScriptOutput"]
+            "completionEvents": [
+              "onCommand:p5-server.showScriptOutput"
+            ]
           },
           {
             "id": "debugSketch",
@@ -491,7 +509,9 @@
             "media": {
               "markdown": "walkthrough/debug.md"
             },
-            "completionEvents": ["onCommand:p5-server.debug"]
+            "completionEvents": [
+              "onCommand:p5-server.debug"
+            ]
           }
         ]
       }
@@ -512,7 +532,7 @@
     "test:quick": "bun run pretest",
     "package": "vsce package",
     "prepare": "husky",
-    "p5-server:link": "npm uninstall --no-save p5-server && npm link ../p5-server",
+    "p5-server:link": "npm uninstall --no-save p5-server && npm link ../p5-tools/p5-server",
     "p5-server:unlink": "npm unlink --no-save p5-server && npm install -E p5-server",
     "publish": "vsce publish",
     "vscode:prepublish": "bun run build:changelog && bun run compile",
@@ -521,7 +541,7 @@
   "dependencies": {
     "node-html-parser": "^9.0.1",
     "open": "^10.2.0",
-    "p5-server": "2.0.0"
+    "p5-server": "2.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

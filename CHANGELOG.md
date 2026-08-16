@@ -1,5 +1,16 @@
 # Change Log
 
+## [Unreleased]
+
+Added:
+
+- Sketches written for p5.js 1.x keep running. When a sketch shows a 1.x-only signal, such as loading its assets in `preload()`, P5 Server includes the matching [official compatibility add-on](https://github.com/processing/p5.js-compatibility) automatically.
+- Added **Convert to p5.js 2**, which rewrites a `preload()` sketch into the asynchronous form so it no longer needs a compatibility add-on. The conversion is shown as a diff before it is applied, and reports anything it will not change automatically rather than guessing.
+
+Changed:
+
+- The Sketch Explorer marks a compatibility add-on as work outstanding rather than listing it as an ordinary library. Unlike every other entry, its presence means the sketch has not been converted yet.
+
 ## [2.0.0] - 2026-08-15
 
 Added:

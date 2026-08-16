@@ -1,6 +1,6 @@
 import { parse as parseHTML } from 'node-html-parser';
-import { Sketch } from 'p5-server';
-import { commands, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import { migrateToP5v2, Sketch } from 'p5-server';
+import { commands, Range, Uri, window, workspace, WorkspaceEdit } from 'vscode';
 import { fsExists, workspaceUriForPath } from '../helpers/fileHelpers';
 import { exclusions } from '../configuration';
 import path = require('path');
@@ -85,6 +85,55 @@ export async function renameSketch(item: Sketch | Uri): Promise<void> {
   } else {
     const target = workspaceUriForPath(path.join(path.dirname(item.fsPath), name));
     await renameWithWorkspaceEdit(item, target);
+  }
+  await commands.executeCommand('p5-server.explorer.refresh');
+}
+
+/** Rewrite a p5.js 1.x sketch to the p5.js 2 asynchronous form, after showing
+ * the author what would change. The transform reports anything it will not do
+ * mechanically; those cases are surfaced rather than applied silently. */
+export async function convertSketchToP5v2(sketch: Sketch): Promise<void> {
+  if (!(sketch instanceof Sketch)) throw new Error(`${sketch} is not a Sketch`);
+
+  const scriptUri = workspaceUriForPath(sketch.scriptFilePath);
+  const document = await workspace.openTextDocument(scriptUri);
+  const { code, warnings, changed } = migrateToP5v2(document.getText());
+
+  if (!changed) {
+    const message = warnings.length
+      ? `${path.basename(sketch.scriptFilePath)} needs changes that cannot be made automatically. ${warnings.join(' ')}`
+      : `${path.basename(sketch.scriptFilePath)} does not use preload(), so there is nothing to convert.`;
+    await window.showWarningMessage(message);
+    return;
+  }
+
+  // Show the change before making it. The preview is a scratch document, so
+  // declining leaves the sketch untouched.
+  const preview = await workspace.openTextDocument({ content: code, language: 'javascript' });
+  await commands.executeCommand(
+    'vscode.diff',
+    scriptUri,
+    preview.uri,
+    `${path.basename(sketch.scriptFilePath)} — convert to p5.js 2`,
+  );
+
+  const confirmation = await window.showInformationMessage(
+    `Convert ${path.basename(sketch.scriptFilePath)} to p5.js 2?`,
+    { modal: true, detail: warnings.join('\n') || undefined },
+    'Convert',
+  );
+  if (confirmation !== 'Convert') return;
+
+  const edit = new WorkspaceEdit();
+  edit.replace(scriptUri, document.validateRange(new Range(0, 0, document.lineCount, 0)), code);
+  if (!(await workspace.applyEdit(edit))) {
+    throw new Error(`VS Code could not update ${scriptUri.fsPath}`);
+  }
+
+  if (warnings.length) {
+    await window.showWarningMessage(
+      `Converted with ${warnings.length} thing${warnings.length === 1 ? '' : 's'} to check by hand. ${warnings.join(' ')}`,
+    );
   }
   await commands.executeCommand('p5-server.explorer.refresh');
 }
