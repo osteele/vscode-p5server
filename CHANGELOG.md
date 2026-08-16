@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased]
+## [2.0.0] - 2026-08-15
 
 Added:
 
@@ -11,7 +11,8 @@ Added:
 
 Changed:
 
-- Update p5-server to 2.0.0. Generated and JavaScript-only sketches now use p5.js 2.3 with async asset-loading `setup` functions, p5.sound loads from its p5 2.x-compatible package, and sketch rendering, screenshots, and CDN caching follow the p5 2 lifecycle.
+- Update p5-server to 2.0.0. Generated and JavaScript-only sketches now use p5.js 2.3 with async asset-loading `setup` functions, p5.sound loads from its p5 2.x-compatible package, and sketch rendering, screenshots, and CDN caching follow the p5 2 lifecycle. p5.js 2 removes and changes APIs, so an existing JavaScript-only sketch may need updating; see the [p5.js compatibility guide](https://github.com/processing/p5.js-compatibility). Sketches with their own HTML file are served unchanged and continue to load whichever p5.js version that file specifies.
+- Require VS Code 1.115 or later, raised from 1.103.
 - Use VS Code's file watcher for live reload instead of starting a second watcher in the extension host.
 - Use VS Code's integrated browser when available, with Simple Browser as a compatibility fallback.
 - Use VS Code's external-URI service for library homepages instead of retaining an unused custom webview implementation.
